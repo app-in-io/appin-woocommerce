@@ -1,0 +1,169 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AppIn\WooCommerce\Sync;
+
+use AppIn\WooCommerce\Api\Client;
+use AppIn\WooCommerce\Mapper\ProductMapper;
+
+final class ProductSync
+{
+    /** @var array<int, true> Prevent duplicate processing within same request */
+    private static array $processed = [];
+
+    public function register(): void
+    {
+        if (! get_option('appin_auto_sync', true)) {
+            return;
+        }
+
+        // Product create/update — debounced via Action Scheduler
+        add_action('woocommerce_new_product', [$this, 'scheduleSync']);
+        add_action('woocommerce_update_product', [$this, 'scheduleSync']);
+        add_action('woocommerce_product_set_stock', [$this, 'scheduleSync']);
+
+        // Product delete
+        add_action('wp_trash_post', [$this, 'scheduleDelete']);
+
+        // Product restore from trash
+        add_action('untrashed_post', [$this, 'scheduleSync']);
+
+        // Deferred execution via Action Scheduler
+        add_action('appin_sync_product', [$this, 'syncProduct']);
+        add_action('appin_delete_product', [$this, 'deleteProduct']);
+    }
+
+    /**
+     * Schedule a product sync with 5-second debounce.
+     * Cancels existing scheduled action to coalesce rapid-fire hooks.
+     */
+    public function scheduleSync(int|\WC_Product $productOrId): void
+    {
+        $productId = $productOrId instanceof \WC_Product
+            ? $productOrId->get_id()
+            : $productOrId;
+
+        if ($productId <= 0) {
+            return;
+        }
+
+        // Skip variations — we index the parent product only
+        if (get_post_type($productId) === 'product_variation') {
+            $productId = wp_get_post_parent_id($productId) ?: $productId;
+        }
+
+        $this->cancelPending($productId);
+
+        if (function_exists('as_schedule_single_action')) {
+            as_schedule_single_action(
+                time() + 5,
+                'appin_sync_product',
+                [$productId],
+                'appin-search'
+            );
+        } else {
+            // Fallback if Action Scheduler not available
+            $this->syncProduct($productId);
+        }
+    }
+
+    /**
+     * Schedule a product deletion.
+     */
+    public function scheduleDelete(int $postId): void
+    {
+        if (get_post_type($postId) !== 'product') {
+            return;
+        }
+
+        $this->cancelPending($postId);
+
+        if (function_exists('as_schedule_single_action')) {
+            as_schedule_single_action(
+                time() + 2,
+                'appin_delete_product',
+                [$postId],
+                'appin-search'
+            );
+        } else {
+            $this->deleteProduct($postId);
+        }
+    }
+
+    /**
+     * Execute product sync — called by Action Scheduler.
+     */
+    public function syncProduct(int $productId): void
+    {
+        if (isset(self::$processed[$productId])) {
+            return;
+        }
+        self::$processed[$productId] = true;
+
+        $product = wc_get_product($productId);
+        if (! $product) {
+            return;
+        }
+
+        // Only sync published products. If no longer published, delete from index.
+        if ($product->get_status() !== 'publish') {
+            $this->deleteProduct($productId);
+
+            return;
+        }
+
+        $mapper = new ProductMapper();
+        $data = $mapper->toApiData($product);
+
+        $client = new Client();
+        $result = $client->indexProduct($data);
+
+        if ($result['ok']) {
+            $this->updateSyncedCount();
+        } else {
+            $this->logError($productId, 'index', $result);
+        }
+    }
+
+    /**
+     * Execute product deletion — called by Action Scheduler.
+     */
+    public function deleteProduct(int $productId): void
+    {
+        $client = new Client();
+        $result = $client->deleteProduct((string) $productId);
+
+        if (! $result['ok'] && $result['status'] !== 404) {
+            $this->logError($productId, 'delete', $result);
+        }
+    }
+
+    private function cancelPending(int $productId): void
+    {
+        if (function_exists('as_unschedule_all_actions')) {
+            as_unschedule_all_actions('appin_sync_product', [$productId], 'appin-search');
+            as_unschedule_all_actions('appin_delete_product', [$productId], 'appin-search');
+        }
+    }
+
+    private function updateSyncedCount(): void
+    {
+        $count = (int) get_option('appin_synced_count', 0);
+        update_option('appin_synced_count', $count + 1, false);
+    }
+
+    /**
+     * @param  array{ok: bool, status: int, body: array<string, mixed>}  $result
+     */
+    private function logError(int $productId, string $action, array $result): void
+    {
+        error_log(sprintf(
+            '[AppIn Search] Failed to %s product #%d: HTTP %d — %s',
+            $action,
+            $productId,
+            $result['status'],
+            $result['body']['error'] ?? 'Unknown error'
+        ));
+    }
+}
