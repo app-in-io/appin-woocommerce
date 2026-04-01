@@ -51,7 +51,7 @@ final class Client
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
                 'X-API-Key' => $this->apiKey,
-                'X-Ecommerce-Platform' => 'woocommerce',
+                'X-Platform' => 'woocommerce',
             ],
             'body' => wp_json_encode($body),
             'timeout' => 30,
