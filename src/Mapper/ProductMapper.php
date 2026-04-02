@@ -25,6 +25,8 @@ final class ProductMapper
             'currency' => get_woocommerce_currency(),
             'image_url' => $this->resolveImageUrl($product),
             'in_stock' => $product->is_in_stock(),
+            'on_sale' => $product->is_on_sale(),
+            'product_type' => $product->get_type(),
             'sku' => $product->get_sku() ?: null,
             'rating' => (float) $product->get_average_rating(),
             'reviews_count' => (int) $product->get_review_count(),
@@ -32,6 +34,14 @@ final class ProductMapper
             'tags' => $this->resolveTags($product),
             'attributes' => $this->resolveAttributes($product),
         ];
+
+        if ($product instanceof WC_Product_Variable) {
+            $prices = $product->get_variation_prices(true)['price'] ?? [];
+            if ($prices) {
+                $data['price_min'] = (float) min($prices);
+                $data['price_max'] = (float) max($prices);
+            }
+        }
 
         $compareAtPrice = $this->resolveCompareAtPrice($product);
         if ($compareAtPrice !== null) {
@@ -43,7 +53,12 @@ final class ProductMapper
             $data['brand'] = $brand;
         }
 
-        return array_filter($data, fn ($v) => $v !== null && $v !== '' && $v !== []);
+        $children = $this->resolveChildren($product);
+        if ($children !== []) {
+            $data['children'] = $children;
+        }
+
+        return array_filter($data, fn ($v) => $v !== null && $v !== '' && $v !== [] || is_bool($v));
     }
 
     private function buildContent(WC_Product $product): string
@@ -153,5 +168,36 @@ final class ProductMapper
         }
 
         return $attributes;
+    }
+
+    /**
+     * @return list<array{id: string, title: string, url: string, price: ?float, sku: ?string, image_url: ?string, in_stock: bool}>
+     */
+    private function resolveChildren(WC_Product $product): array
+    {
+        if ($product->get_type() !== 'grouped') {
+            return [];
+        }
+
+        $children = [];
+
+        foreach ($product->get_children() as $childId) {
+            $child = wc_get_product($childId);
+            if (! $child || $child->get_status() !== 'publish') {
+                continue;
+            }
+
+            $children[] = [
+                'id' => (string) $child->get_id(),
+                'title' => $child->get_name(),
+                'url' => (string) get_permalink($child->get_id()),
+                'price' => $child->get_price() !== '' ? (float) $child->get_price() : null,
+                'sku' => $child->get_sku() ?: null,
+                'image_url' => $child->get_image_id() ? (string) wp_get_attachment_url($child->get_image_id()) : null,
+                'in_stock' => $child->is_in_stock(),
+            ];
+        }
+
+        return $children;
     }
 }
