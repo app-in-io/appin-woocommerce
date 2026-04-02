@@ -16,20 +16,20 @@ final class Plugin
 
     public static function instance(): self
     {
-        return self::$instance ??= new self();
+        return self::$instance ??= new self;
     }
 
     public function boot(): void
     {
         $apiKey = get_option('appin_api_key', '');
 
-        (new SettingsPage())->register();
+        (new SettingsPage)->register();
 
         if ($apiKey === '') {
             return;
         }
 
-        (new ProductSync())->register();
-        (new BulkSync())->register();
+        (new ProductSync)->register();
+        (new BulkSync)->register();
     }
 }

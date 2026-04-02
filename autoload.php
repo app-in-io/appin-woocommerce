@@ -9,7 +9,7 @@ spl_autoload_register(function (string $class): void {
         return;
     }
 
-    $relative = substr($class, strlen($prefix));
+    $relative = substr($class, \strlen($prefix));
     $file = __DIR__ . '/src/' . str_replace('\\', '/', $relative) . '.php';
 
     if (file_exists($file)) {

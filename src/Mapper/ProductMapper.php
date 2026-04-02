@@ -58,7 +58,7 @@ final class ProductMapper
             $data['children'] = $children;
         }
 
-        return array_filter($data, fn ($v) => $v !== null && $v !== '' && $v !== [] || is_bool($v));
+        return array_filter($data, fn ($v) => $v !== null && $v !== '' && $v !== [] || \is_bool($v));
     }
 
     private function buildContent(WC_Product $product): string
