@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      - name: Install dependencies (no dev)
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Build plugin zip
+        run: |
+          mkdir -p build/appin-search
+          cp -r appin-search.php autoload.php README.md src/ build/appin-search/
+          # Include Composer autoloader only if vendor has production deps
+          if [ -d vendor ] && [ "$(ls -A vendor)" ]; then
+            cp -r vendor/ composer.json build/appin-search/
+          fi
+          cd build && zip -r appin-search.zip appin-search/
+
+      - name: Upload zip to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} build/appin-search.zip --clobber
+
+      - name: Slack notification
+        if: success() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "{\"text\": \"🔌 AppIn WooCommerce Plugin ${{ github.event.release.tag_name }} released\\n${{ github.event.release.html_url }}\"}"
