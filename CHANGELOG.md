@@ -7,6 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **HPOS compatibility**: declare `custom_order_tables` compatibility via `FeaturesUtil` — removes WooCommerce "Incompatible" warning
 - **Search widget**: `SearchWidget` class — enqueues `search.js` from CDN, renders `<semantic-search>` element
 - **Category ID filtering**: `ProductMapper` sends `category_id` (WP term ID) alongside category name
 - **Settings**: Public Key and Search Input Selector fields in new "Search Widget" section

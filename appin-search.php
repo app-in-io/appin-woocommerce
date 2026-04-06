@@ -25,7 +25,7 @@ if (! \defined('APPIN_API_URL')) {
 }
 
 if (! \defined('APPIN_CDN_URL')) {
-    \define('APPIN_CDN_URL', 'https://cdn.app-in.io/v1');
+    \define('APPIN_CDN_URL', 'https://cdn.app-in.io/v1/search.js');
 }
 
 \define('APPIN_PLUGIN_FILE', __FILE__);
@@ -34,6 +34,16 @@ if (! \defined('APPIN_CDN_URL')) {
 \define('APPIN_VERSION', '0.0.0-dev');
 
 require_once __DIR__ . '/autoload.php';
+
+add_action('before_woocommerce_init', function (): void {
+    if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'custom_order_tables',
+            __FILE__,
+            true,
+        );
+    }
+});
 
 add_action('plugins_loaded', function (): void {
     if (! class_exists('WooCommerce')) {
