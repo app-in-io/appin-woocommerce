@@ -4,7 +4,7 @@
  * Plugin Name: AppIn Search
  * Plugin URI:  https://app-in.io
  * Description: Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync.
- * Version:     1.0.0
+ * Version:     0.0.0-dev
  * Author:      AppIn
  * Author URI:  https://app-in.io
  * License:     GPL-2.0-or-later
@@ -31,7 +31,7 @@ if (! \defined('APPIN_CDN_URL')) {
 \define('APPIN_PLUGIN_FILE', __FILE__);
 \define('APPIN_PLUGIN_DIR', plugin_dir_path(__FILE__));
 \define('APPIN_PLUGIN_URL', plugin_dir_url(__FILE__));
-\define('APPIN_VERSION', '1.0.0');
+\define('APPIN_VERSION', '0.0.0-dev');
 
 require_once __DIR__ . '/autoload.php';
 

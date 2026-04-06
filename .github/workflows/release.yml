@@ -14,6 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Inject version into plugin file
+        run: |
+          sed -i "s/Version:     0.0.0-dev/Version:     ${{ steps.version.outputs.version }}/" appin-search.php
+          sed -i "s/APPIN_VERSION', '0.0.0-dev'/APPIN_VERSION', '${{ steps.version.outputs.version }}'/" appin-search.php
+
       - name: Build plugin zip
         run: |
           mkdir -p build/appin-search
@@ -32,4 +41,4 @@ jobs:
         run: |
           curl -s -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
-            -d "{\"text\": \"🔌 AppIn WooCommerce Plugin ${{ github.event.release.tag_name }} released\\n${{ github.event.release.html_url }}\"}"
+            -d "{\"text\": \"🔌 AppIn WooCommerce Plugin ${{ steps.version.outputs.version }} released\\n${{ github.event.release.html_url }}\"}"
