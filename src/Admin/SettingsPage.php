@@ -38,6 +38,18 @@ final class SettingsPage
             'default' => true,
         ]);
 
+        register_setting('appin_search', 'appin_public_key', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => '',
+        ]);
+
+        register_setting('appin_search', 'appin_search_selector', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => '',
+        ]);
+
         add_settings_section(
             'appin_main',
             __('Connection', 'appin-search'),
@@ -63,6 +75,32 @@ final class SettingsPage
             'appin-search',
             'appin_main',
         );
+
+        add_settings_section(
+            'appin_widget',
+            __('Search Widget', 'appin-search'),
+            fn () => printf(
+                '<p>%s</p>',
+                esc_html__('Configure the live search widget that appears on your store.', 'appin-search')
+            ),
+            'appin-search',
+        );
+
+        add_settings_field(
+            'appin_public_key',
+            __('Public Key', 'appin-search'),
+            [$this, 'renderPublicKeyField'],
+            'appin-search',
+            'appin_widget',
+        );
+
+        add_settings_field(
+            'appin_search_selector',
+            __('Search Input Selector', 'appin-search'),
+            [$this, 'renderSearchSelectorField'],
+            'appin-search',
+            'appin_widget',
+        );
     }
 
     public function renderApiKeyField(): void
@@ -85,6 +123,32 @@ final class SettingsPage
             '<label><input type="checkbox" name="appin_auto_sync" value="1" %s /> %s</label>',
             checked($checked, true, false),
             esc_html__('Automatically sync products when created, updated, or deleted.', 'appin-search')
+        );
+    }
+
+    public function renderPublicKeyField(): void
+    {
+        $value = get_option('appin_public_key', '');
+        printf(
+            '<input type="text" name="appin_public_key" value="%s" class="regular-text" placeholder="pk_live_..." />',
+            esc_attr($value)
+        );
+        printf(
+            '<p class="description">%s</p>',
+            esc_html__('Public key for the search widget. Safe to expose in browser. Found in the AppIn dashboard under Sites > API Keys.', 'appin-search')
+        );
+    }
+
+    public function renderSearchSelectorField(): void
+    {
+        $value = get_option('appin_search_selector', '');
+        printf(
+            '<input type="text" name="appin_search_selector" value="%s" class="regular-text" placeholder="input[name=&quot;s&quot;]" />',
+            esc_attr($value)
+        );
+        printf(
+            '<p class="description">%s</p>',
+            esc_html__('Custom CSS selector for the search input. Leave empty to use automatic detection.', 'appin-search')
         );
     }
 
