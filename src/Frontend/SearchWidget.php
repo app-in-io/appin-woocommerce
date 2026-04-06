@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AppIn\WooCommerce\Frontend;
+
+final class SearchWidget
+{
+    public function register(): void
+    {
+        add_action('wp_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_action('wp_footer', [$this, 'renderElement']);
+    }
+
+    public function enqueueAssets(): void
+    {
+        if (empty($this->getSearchKey())) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'appin-search-widget',
+            APPIN_CDN_URL . '/search.js',
+            [],
+            APPIN_VERSION,
+            ['strategy' => 'defer']
+        );
+    }
+
+    public function renderElement(): void
+    {
+        $key = $this->getSearchKey();
+
+        if (empty($key)) {
+            return;
+        }
+
+        $attrs = sprintf('api-key="%s" platform="woocommerce"', esc_attr($key));
+
+        if (function_exists('is_product_category') && is_product_category()) {
+            $attrs .= sprintf(' category-id="%d"', get_queried_object_id());
+        }
+
+        $selector = get_option('appin_search_selector', '');
+
+        if (! empty($selector)) {
+            $attrs .= sprintf(' input-selector="%s"', esc_attr($selector));
+        }
+
+        printf('<semantic-search %s></semantic-search>', $attrs);
+    }
+
+    private function getSearchKey(): string
+    {
+        return get_option('appin_public_key', '');
+    }
+}
