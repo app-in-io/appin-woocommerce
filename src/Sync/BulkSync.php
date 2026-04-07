@@ -17,6 +17,21 @@ final class BulkSync
         add_action('admin_post_appin_bulk_delete', [$this, 'handleBulkDelete']);
         add_action('appin_bulk_sync_batch', [$this, 'processBatch']);
         add_action('appin_bulk_delete_batch', [$this, 'processDeleteBatch']);
+        add_action('wp_ajax_appin_sync_status', [$this, 'ajaxSyncStatus']);
+    }
+
+    /**
+     * AJAX endpoint: return sync status as JSON.
+     */
+    public function ajaxSyncStatus(): void
+    {
+        check_ajax_referer('appin_sync_status');
+
+        wp_send_json([
+            'running' => (bool) get_option('appin_bulk_sync_running', false),
+            'synced' => (int) get_option('appin_synced_count', 0),
+            'last_sync' => get_option('appin_last_sync', ''),
+        ]);
     }
 
     /**
