@@ -14,7 +14,7 @@ if (! defined('APPIN_API_URL')) {
 }
 
 if (! defined('APPIN_CDN_URL')) {
-    define('APPIN_CDN_URL', 'https://cdn.app-in.io/v1');
+    define('APPIN_CDN_URL', 'https://cdn.app-in.io/v1/search.js');
 }
 
 if (! defined('APPIN_PLUGIN_FILE')) {

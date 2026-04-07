@@ -43,10 +43,10 @@ class SearchWidgetTest extends TestCase
             ->once()
             ->with(
                 'appin-search-widget',
-                APPIN_CDN_URL . '/search.js',
+                APPIN_CDN_URL,
                 [],
                 APPIN_VERSION,
-                ['strategy' => 'defer']
+                ['strategy' => 'defer', 'in_footer' => true]
             );
 
         $widget = new SearchWidget;
