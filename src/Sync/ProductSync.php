@@ -55,7 +55,7 @@ final class ProductSync
 
         $this->cancelPending($productId);
 
-        if (function_exists('as_schedule_single_action')) {
+        if (\function_exists('as_schedule_single_action')) {
             as_schedule_single_action(
                 time() + 5,
                 'appin_sync_product',
@@ -79,7 +79,7 @@ final class ProductSync
 
         $this->cancelPending($postId);
 
-        if (function_exists('as_schedule_single_action')) {
+        if (\function_exists('as_schedule_single_action')) {
             as_schedule_single_action(
                 time() + 2,
                 'appin_delete_product',
@@ -113,10 +113,10 @@ final class ProductSync
             return;
         }
 
-        $mapper = new ProductMapper();
+        $mapper = new ProductMapper;
         $data = $mapper->toApiData($product);
 
-        $client = new Client();
+        $client = new Client;
         $result = $client->indexProduct($data);
 
         if ($result['ok']) {
@@ -131,7 +131,7 @@ final class ProductSync
      */
     public function deleteProduct(int $productId): void
     {
-        $client = new Client();
+        $client = new Client;
         $result = $client->deleteProduct((string) $productId);
 
         if (! $result['ok'] && $result['status'] !== 404) {
@@ -141,7 +141,7 @@ final class ProductSync
 
     private function cancelPending(int $productId): void
     {
-        if (function_exists('as_unschedule_all_actions')) {
+        if (\function_exists('as_unschedule_all_actions')) {
             as_unschedule_all_actions('appin_sync_product', [$productId], 'appin-search');
             as_unschedule_all_actions('appin_delete_product', [$productId], 'appin-search');
         }
@@ -158,7 +158,7 @@ final class ProductSync
      */
     private function logError(int $productId, string $action, array $result): void
     {
-        error_log(sprintf(
+        error_log(\sprintf(
             '[AppIn Search] Failed to %s product #%d: HTTP %d — %s',
             $action,
             $productId,

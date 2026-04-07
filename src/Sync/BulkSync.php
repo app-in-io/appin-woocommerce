@@ -17,6 +17,21 @@ final class BulkSync
         add_action('admin_post_appin_bulk_delete', [$this, 'handleBulkDelete']);
         add_action('appin_bulk_sync_batch', [$this, 'processBatch']);
         add_action('appin_bulk_delete_batch', [$this, 'processDeleteBatch']);
+        add_action('wp_ajax_appin_sync_status', [$this, 'ajaxSyncStatus']);
+    }
+
+    /**
+     * AJAX endpoint: return sync status as JSON.
+     */
+    public function ajaxSyncStatus(): void
+    {
+        check_ajax_referer('appin_sync_status');
+
+        wp_send_json([
+            'running' => (bool) get_option('appin_bulk_sync_running', false),
+            'synced' => (int) get_option('appin_synced_count', 0),
+            'last_sync' => get_option('appin_last_sync', ''),
+        ]);
     }
 
     /**
@@ -78,8 +93,8 @@ final class BulkSync
             return;
         }
 
-        $mapper = new ProductMapper();
-        $client = new Client();
+        $mapper = new ProductMapper;
+        $client = new Client;
 
         foreach ($products as $product) {
             $data = $mapper->toApiData($product);
@@ -89,7 +104,7 @@ final class BulkSync
                 $count = (int) get_option('appin_synced_count', 0);
                 update_option('appin_synced_count', $count + 1, false);
             } else {
-                error_log(sprintf(
+                error_log(\sprintf(
                     '[AppIn Search] Bulk sync failed for product #%d: HTTP %d',
                     $product->get_id(),
                     $result['status']
@@ -98,7 +113,7 @@ final class BulkSync
         }
 
         // Schedule next batch
-        if (count($products) === self::BATCH_SIZE) {
+        if (\count($products) === self::BATCH_SIZE) {
             as_schedule_single_action(time(), 'appin_bulk_sync_batch', [$page + 1], 'appin-search');
         } else {
             $this->finishSync();
@@ -122,13 +137,13 @@ final class BulkSync
             return;
         }
 
-        $client = new Client();
+        $client = new Client;
 
         foreach ($products as $productId) {
             $client->deleteProduct((string) $productId);
         }
 
-        if (count($products) === self::BATCH_SIZE) {
+        if (\count($products) === self::BATCH_SIZE) {
             as_schedule_single_action(time(), 'appin_bulk_delete_batch', [$page + 1], 'appin-search');
         } else {
             $this->finishDelete();
