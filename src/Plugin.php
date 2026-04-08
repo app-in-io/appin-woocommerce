@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppIn\WooCommerce;
 
 use AppIn\WooCommerce\Admin\SettingsPage;
+use AppIn\WooCommerce\Frontend\SearchWidget;
 use AppIn\WooCommerce\Sync\BulkSync;
 use AppIn\WooCommerce\Sync\ProductSync;
 
@@ -24,6 +25,7 @@ final class Plugin
         $apiKey = get_option('appin_api_key', '');
 
         (new SettingsPage)->register();
+        (new SearchWidget)->register();
 
         if ($apiKey === '') {
             return;

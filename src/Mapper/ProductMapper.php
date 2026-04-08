@@ -31,6 +31,7 @@ final class ProductMapper
             'rating' => (float) $product->get_average_rating(),
             'reviews_count' => (int) $product->get_review_count(),
             'category' => $this->resolveCategory($product),
+            'category_id' => $this->resolveCategoryId($product),
             'tags' => $this->resolveTags($product),
             'attributes' => $this->resolveAttributes($product),
         ];
@@ -101,16 +102,33 @@ final class ProductMapper
 
     private function resolveCategory(WC_Product $product): ?string
     {
+        $terms = $this->getProductCategoryTerms($product);
+
+        return $terms ? $terms[0]->name : null;
+    }
+
+    private function resolveCategoryId(WC_Product $product): ?int
+    {
+        $terms = $this->getProductCategoryTerms($product);
+
+        return $terms ? (int) $terms[0]->term_id : null;
+    }
+
+    /**
+     * @return \WP_Term[]|null
+     */
+    private function getProductCategoryTerms(WC_Product $product): ?array
+    {
         $terms = get_the_terms($product->get_id(), 'product_cat');
 
         if (! $terms || is_wp_error($terms)) {
             return null;
         }
 
-        // Return deepest (most specific) category
+        // Return deepest (most specific) category first
         usort($terms, fn ($a, $b) => $b->parent <=> $a->parent);
 
-        return $terms[0]->name;
+        return $terms;
     }
 
     /**

@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Inject version into plugin file
+        run: |
+          sed -i "s/Version:     0.0.0-dev/Version:     ${{ steps.version.outputs.version }}/" appin-search.php
+          sed -i "s/APPIN_VERSION', '0.0.0-dev'/APPIN_VERSION', '${{ steps.version.outputs.version }}'/" appin-search.php
+
+      - name: Build plugin zip
+        run: |
+          mkdir -p build/appin-search
+          cp -r appin-search.php autoload.php README.md src/ build/appin-search/
+          cd build && zip -r appin-search.zip appin-search/
+
+      - name: Upload zip to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} build/appin-search.zip --clobber
+
+      - name: Slack notification
+        if: success() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "{\"text\": \"🔌 AppIn WooCommerce Plugin ${{ steps.version.outputs.version }} released\\n${{ github.event.release.html_url }}\"}"
