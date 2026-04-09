@@ -43,6 +43,24 @@ tests/
   Frontend/SearchWidgetTest.php ← 7 tests (hooks, assets, rendering)
 ```
 
+## Running (Docker)
+
+Own `compose.yml` — isolated from the main API project. Requires `search-network` to reach the API.
+
+```bash
+docker network create search-network       # once, shared with api
+docker compose up -d                       # wordpress + mariadb
+docker compose run --rm wp-cli wp theme install storefront --activate
+docker compose run --rm wp-cli wp plugin install woocommerce --activate
+docker compose run --rm wp-cli wp plugin activate appin-search
+```
+
+Or from the root repo: `make up-wp && make wp-setup`.
+
+WordPress available at `woo.app-in.local` (OrbStack). Plugin auto-mounted at `wp-content/plugins/appin-search`.
+
+First start auto-loads `seed.sql` into MariaDB (WP tables + WooCommerce + plugin settings). To reset: `docker compose down -v && docker compose up -d && make wp-setup`.
+
 ## Commands
 
 ```bash

@@ -1,5 +1,6 @@
 # Exclude from plugin distribution (git archive / GitHub source zip)
 /.github        export-ignore
+/.claude        export-ignore
 /tests          export-ignore
 /vendor         export-ignore
 /.gitattributes export-ignore
@@ -8,3 +9,7 @@
 /composer.json  export-ignore
 /composer.lock  export-ignore
 /phpunit.xml    export-ignore
+/compose.yml    export-ignore
+/seed.sql       export-ignore
+/CLAUDE.md      export-ignore
+/CHANGELOG.md   export-ignore
