@@ -13,7 +13,7 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: secret
       WORDPRESS_CONFIG_EXTRA: |
-        define('APPIN_API_URL', 'http://api:8000/v1');
+        define('APPIN_API_URL', 'http://api.app-in.local/v1');
         define('APPIN_CDN_URL', 'http://localhost:5174/src/search/loader.ts');
     depends_on:
       wordpress-db:

@@ -6,6 +6,8 @@ namespace AppIn\WooCommerce\Api;
 
 final class Client
 {
+    private const int MAX_RETRIES = 3;
+
     private string $apiUrl;
 
     private string $apiKey;
@@ -17,7 +19,7 @@ final class Client
     }
 
     /**
-     * Index a product (upsert).
+     * Index a product (upsert). Returns 202 when queued.
      *
      * @param  array<string, mixed>  $data
      * @return array{ok: bool, status: int, body: array<string, mixed>}
@@ -25,6 +27,17 @@ final class Client
     public function indexProduct(array $data): array
     {
         return $this->request('POST', '/index/products', $data);
+    }
+
+    /**
+     * Index multiple products in one request (max 20). Returns 202 when queued.
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return array{ok: bool, status: int, body: array<string, mixed>}
+     */
+    public function indexProductBatch(array $items): array
+    {
+        return $this->request('POST', '/index/products/batch', ['items' => $items]);
     }
 
     /**
@@ -57,17 +70,28 @@ final class Client
             'timeout' => 30,
         ];
 
-        $response = wp_remote_request($url, $args);
+        for ($attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++) {
+            $response = wp_remote_request($url, $args);
 
-        if (is_wp_error($response)) {
-            return [
-                'ok' => false,
-                'status' => 0,
-                'body' => ['error' => $response->get_error_message()],
-            ];
+            if (is_wp_error($response)) {
+                return [
+                    'ok' => false,
+                    'status' => 0,
+                    'body' => ['error' => $response->get_error_message()],
+                ];
+            }
+
+            $status = (int) wp_remote_retrieve_response_code($response);
+
+            if ($status !== 429) {
+                break;
+            }
+
+            $retryAfter = (int) wp_remote_retrieve_header($response, 'retry-after') ?: $attempt * 2;
+            sleep(min($retryAfter, 30));
         }
 
-        $status = (int) wp_remote_retrieve_response_code($response);
+        /** @var array<string, mixed> $decoded */
         $decoded = json_decode(wp_remote_retrieve_body($response), true) ?: [];
 
         return [

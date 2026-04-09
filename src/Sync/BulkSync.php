@@ -75,7 +75,7 @@ final class BulkSync
     }
 
     /**
-     * Process a batch of products. Schedules next batch if more remain.
+     * Process a batch of products via batch endpoint. Schedules next batch if more remain.
      */
     public function processBatch(int $page): void
     {
@@ -96,20 +96,23 @@ final class BulkSync
         $mapper = new ProductMapper;
         $client = new Client;
 
+        $items = [];
         foreach ($products as $product) {
-            $data = $mapper->toApiData($product);
-            $result = $client->indexProduct($data);
+            $items[] = $mapper->toApiData($product);
+        }
 
-            if ($result['ok']) {
-                $count = (int) get_option('appin_synced_count', 0);
-                update_option('appin_synced_count', $count + 1, false);
-            } else {
-                error_log(\sprintf(
-                    '[AppIn Search] Bulk sync failed for product #%d: HTTP %d',
-                    $product->get_id(),
-                    $result['status']
-                ));
-            }
+        $result = $client->indexProductBatch($items);
+
+        if ($result['ok']) {
+            $count = (int) get_option('appin_synced_count', 0);
+            update_option('appin_synced_count', $count + \count($items), false);
+        } else {
+            error_log(\sprintf(
+                '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
+                $page,
+                $result['status'],
+                $result['body']['error'] ?? $result['body']['message'] ?? 'unknown'
+            ));
         }
 
         // Schedule next batch
