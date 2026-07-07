@@ -1,25 +1,25 @@
 <?php
+
 /**
  * WooCommerce Product Seeder — 250 products with rich descriptions.
  *
  * Usage: docker compose run --rm wp-cli wp eval-file /seed-products.php --allow-root
  */
-
-if (! function_exists('wc_get_product')) {
+if (! \function_exists('wc_get_product')) {
     WP_CLI::error('WooCommerce is not active.');
 }
 
 // --- Categories -----------------------------------------------------------
 
 $categories = [
-    'Electronics'       => ['Smartphones', 'Laptops', 'Headphones', 'Cameras', 'Tablets'],
-    'Home & Kitchen'    => ['Furniture', 'Kitchenware', 'Lighting', 'Storage'],
+    'Electronics' => ['Smartphones', 'Laptops', 'Headphones', 'Cameras', 'Tablets'],
+    'Home & Kitchen' => ['Furniture', 'Kitchenware', 'Lighting', 'Storage'],
     'Sports & Outdoors' => ['Fitness', 'Camping', 'Cycling', 'Running'],
-    'Books'             => ['Fiction', 'Non-Fiction', 'Technical', 'Children'],
-    'Beauty & Health'   => ['Skincare', 'Haircare', 'Supplements', 'Tools'],
-    'Toys & Games'      => ['Board Games', 'Puzzles', 'Outdoor Toys', 'Educational'],
-    'Clothing'          => ['Men', 'Women', 'Kids'],
-    'Shoes'             => ['Sneakers', 'Boots', 'Sandals', 'Formal'],
+    'Books' => ['Fiction', 'Non-Fiction', 'Technical', 'Children'],
+    'Beauty & Health' => ['Skincare', 'Haircare', 'Supplements', 'Tools'],
+    'Toys & Games' => ['Board Games', 'Puzzles', 'Outdoor Toys', 'Educational'],
+    'Clothing' => ['Men', 'Women', 'Kids'],
+    'Shoes' => ['Sneakers', 'Boots', 'Sandals', 'Formal'],
 ];
 
 $category_ids = [];
@@ -29,7 +29,7 @@ foreach ($categories as $parent => $children) {
     if (! $parent_id) {
         $parent_id = wp_insert_term($parent, 'product_cat');
     }
-    $parent_tid = is_array($parent_id) ? $parent_id['term_id'] : $parent_id;
+    $parent_tid = \is_array($parent_id) ? $parent_id['term_id'] : $parent_id;
     $category_ids[$parent] = (int) $parent_tid;
 
     foreach ($children as $child) {
@@ -37,11 +37,11 @@ foreach ($categories as $parent => $children) {
         if (! $child_id) {
             $child_id = wp_insert_term($child, 'product_cat', ['parent' => $parent_tid]);
         }
-        $category_ids[$child] = (int) (is_array($child_id) ? $child_id['term_id'] : $child_id);
+        $category_ids[$child] = (int) (\is_array($child_id) ? $child_id['term_id'] : $child_id);
     }
 }
 
-WP_CLI::log('Categories created: ' . count($category_ids));
+WP_CLI::log('Categories created: ' . \count($category_ids));
 
 // --- Product definitions --------------------------------------------------
 
@@ -319,26 +319,28 @@ $skipped = 0;
 foreach ($products as [$title, $subcategory, $price, $description, $attributes]) {
     // Check if product already exists
     $existing = get_posts([
-        'post_type'  => 'product',
-        'title'      => $title,
-        'fields'     => 'ids',
+        'post_type' => 'product',
+        'title' => $title,
+        'fields' => 'ids',
         'numberposts' => 1,
     ]);
 
     if (! empty($existing)) {
         $skipped++;
+
         continue;
     }
 
     $post_id = wp_insert_post([
-        'post_title'   => $title,
+        'post_title' => $title,
         'post_content' => $description,
-        'post_status'  => 'publish',
-        'post_type'    => 'product',
+        'post_status' => 'publish',
+        'post_type' => 'product',
     ]);
 
     if (is_wp_error($post_id)) {
         WP_CLI::warning("Failed to create: {$title}");
+
         continue;
     }
 
@@ -371,7 +373,7 @@ foreach ($products as [$title, $subcategory, $price, $description, $attributes])
     }
     // Also add parent category
     foreach ($categories as $parent => $children) {
-        if (in_array($subcategory, $children, true) && isset($category_ids[$parent])) {
+        if (\in_array($subcategory, $children, true) && isset($category_ids[$parent])) {
             $cat_ids[] = $category_ids[$parent];
             break;
         }
@@ -390,11 +392,11 @@ foreach ($products as [$title, $subcategory, $price, $description, $attributes])
         if (taxonomy_exists($taxonomy)) {
             wp_set_object_terms($post_id, $attr_value, $taxonomy, true);
             $product_attributes[$taxonomy] = [
-                'name'         => $taxonomy,
-                'value'        => '',
-                'is_visible'   => 1,
+                'name' => $taxonomy,
+                'value' => '',
+                'is_visible' => 1,
                 'is_variation' => 0,
-                'is_taxonomy'  => 1,
+                'is_taxonomy' => 1,
             ];
         }
     }

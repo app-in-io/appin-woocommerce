@@ -6,7 +6,7 @@ namespace AppIn\WooCommerce\Api;
 
 final class Client
 {
-    private const int MAX_RETRIES = 3;
+    private const MAX_RETRIES = 3;
 
     private string $apiUrl;
 

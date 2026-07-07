@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppIn\WooCommerce\Tests\Mapper;
 
 use AppIn\WooCommerce\Mapper\ProductMapper;
+use AppIn\WooCommerce\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -12,6 +13,8 @@ use PHPUnit\Framework\TestCase;
 
 class ProductMapperTest extends TestCase
 {
+    use MocksWooCommerceProduct;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,7 +29,7 @@ class ProductMapperTest extends TestCase
 
     public function test_to_api_data_includes_category_and_category_id(): void
     {
-        $product = $this->createMockProduct();
+        $product = $this->makeWcProduct();
 
         $term = Mockery::mock('WP_Term');
         $term->name = 'Shoes';
@@ -47,7 +50,7 @@ class ProductMapperTest extends TestCase
 
     public function test_category_and_category_id_null_when_no_terms(): void
     {
-        $product = $this->createMockProduct();
+        $product = $this->makeWcProduct();
 
         Functions\when('get_the_terms')->justReturn(false);
 
@@ -60,7 +63,7 @@ class ProductMapperTest extends TestCase
 
     public function test_category_uses_deepest_term(): void
     {
-        $product = $this->createMockProduct();
+        $product = $this->makeWcProduct();
 
         $parent = Mockery::mock('WP_Term');
         $parent->name = 'Clothing';
@@ -84,30 +87,206 @@ class ProductMapperTest extends TestCase
         self::assertSame(42, $data['category_id']);
     }
 
-    private function createMockProduct(): \WC_Product
+    public function test_maps_base_scalar_fields(): void
     {
-        $product = Mockery::mock('WC_Product');
-        $product->allows('get_id')->andReturn(1);
-        $product->allows('get_name')->andReturn('Test Product');
-        $product->allows('get_short_description')->andReturn('Short desc');
-        $product->allows('get_description')->andReturn('Full desc');
-        $product->allows('get_price')->andReturn('29.99');
-        $product->allows('get_regular_price')->andReturn('29.99');
-        $product->allows('get_image_id')->andReturn(0);
-        $product->allows('is_in_stock')->andReturn(true);
-        $product->allows('is_on_sale')->andReturn(false);
-        $product->allows('get_type')->andReturn('simple');
-        $product->allows('get_sku')->andReturn('TEST-001');
-        $product->allows('get_average_rating')->andReturn('4.5');
-        $product->allows('get_review_count')->andReturn(10);
-        $product->allows('get_attributes')->andReturn([]);
-        $product->allows('get_attribute')->with('brand')->andReturn('');
+        $product = $this->makeWcProduct();
+        Functions\when('get_the_terms')->justReturn(false);
 
-        Functions\when('get_permalink')->justReturn('https://shop.test/product/test');
-        Functions\when('get_woocommerce_currency')->justReturn('EUR');
-        Functions\when('wp_strip_all_tags')->returnArg();
-        Functions\when('wp_get_attachment_url')->justReturn(null);
+        $data = (new ProductMapper)->toApiData($product);
 
-        return $product;
+        self::assertSame('1', $data['id']);
+        self::assertSame('Test Product', $data['title']);
+        self::assertSame("Short desc\n\nFull desc", $data['content']);
+        self::assertSame(29.99, $data['price']);
+        self::assertSame('EUR', $data['currency']);
+        self::assertTrue($data['in_stock']);
+        self::assertFalse($data['on_sale']);
+        self::assertSame('simple', $data['product_type']);
+        self::assertSame('TEST-001', $data['sku']);
+        self::assertSame(4.5, $data['rating']);
+        self::assertSame(10, $data['reviews_count']);
+        // Not on sale and no image → these keys are filtered out.
+        self::assertArrayNotHasKey('compare_at_price', $data);
+        self::assertArrayNotHasKey('image_url', $data);
+    }
+
+    public function test_sku_absent_when_empty(): void
+    {
+        $product = $this->makeWcProduct(['get_sku' => '']);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertArrayNotHasKey('sku', $data);
+    }
+
+    public function test_compare_at_price_is_regular_price_when_on_sale(): void
+    {
+        $product = $this->makeWcProduct([
+            'is_on_sale' => true,
+            'get_price' => '30.00',
+            'get_regular_price' => '40.00',
+        ]);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertTrue($data['on_sale']);
+        self::assertSame(30.0, $data['price']);
+        self::assertSame(40.0, $data['compare_at_price']);
+    }
+
+    public function test_image_url_resolved_when_image_present(): void
+    {
+        $product = $this->makeWcProduct(['get_image_id' => 77]);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('https://shop.test/image.jpg', $data['image_url']);
+    }
+
+    public function test_tags_mapped_from_product_tag_terms(): void
+    {
+        $product = $this->makeWcProduct();
+
+        $summer = Mockery::mock('WP_Term');
+        $summer->name = 'Summer';
+        $sale = Mockery::mock('WP_Term');
+        $sale->name = 'Sale';
+
+        Functions\when('get_the_terms')->alias(fn ($id, $taxonomy) => match ($taxonomy) {
+            'product_tag' => [$summer, $sale],
+            default => false,
+        });
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame(['Summer', 'Sale'], $data['tags']);
+    }
+
+    public function test_custom_attributes_mapped_to_name_value_pairs(): void
+    {
+        $attribute = Mockery::mock('WC_Product_Attribute');
+        $attribute->allows('get_name')->andReturn('color');
+        $attribute->allows('is_taxonomy')->andReturn(false);
+        $attribute->allows('get_options')->andReturn(['Red', 'Blue']);
+
+        $product = $this->makeWcProduct(['get_attributes' => [$attribute]]);
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('wc_attribute_label')->justReturn('Color');
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame([
+            ['name' => 'Color', 'value' => 'Red'],
+            ['name' => 'Color', 'value' => 'Blue'],
+        ], $data['attributes']);
+    }
+
+    public function test_taxonomy_attributes_use_product_terms(): void
+    {
+        $attribute = Mockery::mock('WC_Product_Attribute');
+        $attribute->allows('get_name')->andReturn('pa_size');
+        $attribute->allows('is_taxonomy')->andReturn(true);
+
+        $product = $this->makeWcProduct(['get_attributes' => [$attribute]]);
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('wc_attribute_label')->justReturn('Size');
+        Functions\when('wc_get_product_terms')->justReturn(['S', 'M']);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame([
+            ['name' => 'Size', 'value' => 'S'],
+            ['name' => 'Size', 'value' => 'M'],
+        ], $data['attributes']);
+    }
+
+    public function test_variable_product_exposes_price_range(): void
+    {
+        // WC_Product_Variable extends WC_Product (see tests/bootstrap.php) → instanceof both.
+        $product = Mockery::mock('WC_Product_Variable');
+        $this->applyWcProductStubs($product, ['get_id' => 2, 'get_type' => 'variable']);
+        $product->allows('get_variation_prices')->with(true)->andReturn([
+            'price' => ['10' => 10.0, '11' => 25.0, '12' => 15.0],
+        ]);
+
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame(10.0, $data['price_min']);
+        self::assertSame(25.0, $data['price_max']);
+    }
+
+    public function test_grouped_product_includes_published_children(): void
+    {
+        $product = $this->makeWcProduct(['get_type' => 'grouped', 'get_children' => [101, 102]]);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $children = [101 => $this->mockChild(101, 'publish'), 102 => $this->mockChild(102, 'publish')];
+        Functions\when('wc_get_product')->alias(fn ($id) => $children[$id] ?? false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertCount(2, $data['children']);
+        self::assertSame('101', $data['children'][0]['id']);
+        self::assertSame('Child 101', $data['children'][0]['title']);
+    }
+
+    public function test_grouped_product_skips_unpublished_children(): void
+    {
+        $product = $this->makeWcProduct(['get_type' => 'grouped', 'get_children' => [201, 202]]);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $children = [201 => $this->mockChild(201, 'publish'), 202 => $this->mockChild(202, 'draft')];
+        Functions\when('wc_get_product')->alias(fn ($id) => $children[$id] ?? false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertCount(1, $data['children']);
+        self::assertSame('201', $data['children'][0]['id']);
+    }
+
+    public function test_brand_from_taxonomy_takes_priority(): void
+    {
+        $product = $this->makeWcProduct();
+
+        $brand = Mockery::mock('WP_Term');
+        $brand->name = 'Adidas';
+
+        Functions\when('get_the_terms')->alias(fn ($id, $taxonomy) => match ($taxonomy) {
+            'product_brand' => [$brand],
+            default => false,
+        });
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Adidas', $data['brand']);
+    }
+
+    public function test_brand_falls_back_to_attribute(): void
+    {
+        $product = $this->makeWcProduct(['__brand' => 'Nike']);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Nike', $data['brand']);
+    }
+
+    private function mockChild(int $id, string $status): \WC_Product
+    {
+        $child = Mockery::mock('WC_Product');
+        $child->allows('get_status')->andReturn($status);
+        $child->allows('get_id')->andReturn($id);
+        $child->allows('get_name')->andReturn("Child $id");
+        $child->allows('get_price')->andReturn('9.99');
+        $child->allows('get_sku')->andReturn("C$id");
+        $child->allows('get_image_id')->andReturn(0);
+        $child->allows('is_in_stock')->andReturn(true);
+
+        return $child;
     }
 }
