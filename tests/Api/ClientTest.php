@@ -152,12 +152,31 @@ class ClientTest extends TestCase
         self::assertSame('rate limited', $result['body']['error']);
     }
 
-    public function test_5xx_is_not_retried(): void
+    public function test_retries_on_5xx_then_succeeds(): void
     {
-        // Documents current behavior: only 429 retries; a 5xx breaks the loop on the first attempt.
-        Functions\expect('wp_remote_request')->once()->andReturn('R500');
+        // Transient server errors are retryable, just like 429.
+        Functions\when('AppIn\WooCommerce\Api\sleep')->justReturn(0);
+
+        Functions\expect('wp_remote_request')->twice()->andReturn('R503', 'R200');
         Functions\when('is_wp_error')->justReturn(false);
-        Functions\when('wp_remote_retrieve_response_code')->justReturn(500);
+        Functions\expect('wp_remote_retrieve_response_code')->twice()->andReturn(503, 200);
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"ok":true}');
+
+        $result = (new Client)->indexProduct(['id' => '1']);
+
+        self::assertTrue($result['ok']);
+        self::assertSame(200, $result['status']);
+    }
+
+    public function test_exhausts_max_retries_on_persistent_5xx(): void
+    {
+        Functions\when('AppIn\WooCommerce\Api\sleep')->justReturn(0);
+
+        Functions\expect('wp_remote_request')->times(3)->andReturn('R500');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\expect('wp_remote_retrieve_response_code')->times(3)->andReturn(500);
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
         Functions\when('wp_remote_retrieve_body')->justReturn('');
 
         $result = (new Client)->indexProduct(['id' => '1']);

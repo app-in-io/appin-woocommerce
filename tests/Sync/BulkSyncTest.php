@@ -11,12 +11,6 @@ use Brain\Monkey\Functions;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
-/**
- * NOTE: handleBulkSync()/handleBulkDelete() are not unit-tested here — they call exit()
- * after wp_safe_redirect(), which is not test-safe without extracting the redirect
- * (a refactor, out of scope for a tests-only change). The batch processors below hold the
- * real pagination logic those handlers merely kick off.
- */
 class BulkSyncTest extends TestCase
 {
     use MocksWooCommerceProduct;
@@ -47,6 +41,46 @@ class BulkSyncTest extends TestCase
         self::assertNotFalse(has_action('appin_bulk_sync_batch', [$bulk, 'processBatch']));
         self::assertNotFalse(has_action('appin_bulk_delete_batch', [$bulk, 'processDeleteBatch']));
         self::assertNotFalse(has_action('wp_ajax_appin_sync_status', [$bulk, 'ajaxSyncStatus']));
+    }
+
+    public function test_handle_bulk_sync_starts_first_batch_and_redirects(): void
+    {
+        Functions\when('check_admin_referer')->justReturn(true);
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('admin_url')->alias(static fn ($p) => "https://wp.test/wp-admin/$p");
+        $this->captureOptions();
+
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appin_bulk_sync_batch', [1], 'appin-search');
+
+        // Partial mock so the real handler runs but redirect() does not exit().
+        $bulk = Mockery::mock(BulkSync::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appin-search&syncing=1');
+
+        $bulk->handleBulkSync();
+
+        self::assertTrue($this->options['appin_bulk_sync_running']);
+        self::assertSame(0, $this->options['appin_synced_count']);
+    }
+
+    public function test_handle_bulk_delete_starts_first_batch_and_redirects(): void
+    {
+        Functions\when('check_admin_referer')->justReturn(true);
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('admin_url')->alias(static fn ($p) => "https://wp.test/wp-admin/$p");
+        $this->captureOptions();
+
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appin_bulk_delete_batch', [1], 'appin-search');
+
+        $bulk = Mockery::mock(BulkSync::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appin-search&deleting=1');
+
+        $bulk->handleBulkDelete();
+
+        self::assertTrue($this->options['appin_bulk_sync_running']);
     }
 
     public function test_process_batch_indexes_and_finishes_when_page_not_full(): void
@@ -184,6 +218,19 @@ class BulkSyncTest extends TestCase
     /**
      * Stub everything the inline `new Client` needs, and record option writes into $this->options.
      */
+    /**
+     * Record every update_option() write into $this->options so finish/handler
+     * transitions can be asserted.
+     */
+    private function captureOptions(): void
+    {
+        Functions\when('update_option')->alias(function ($key, $value) {
+            $this->options[$key] = $value;
+
+            return true;
+        });
+    }
+
     private function stubClientHttp(int $status): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
@@ -191,11 +238,7 @@ class BulkSyncTest extends TestCase
             'appin_synced_count' => $this->options['appin_synced_count'] ?? 0,
             default => $default,
         });
-        Functions\when('update_option')->alias(function ($key, $value) {
-            $this->options[$key] = $value;
-
-            return true;
-        });
+        $this->captureOptions();
         Functions\when('wp_json_encode')->alias(static fn ($d) => json_encode($d));
         Functions\when('is_wp_error')->justReturn(false);
         Functions\when('wp_remote_retrieve_response_code')->justReturn($status);

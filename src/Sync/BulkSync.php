@@ -7,7 +7,7 @@ namespace AppIn\WooCommerce\Sync;
 use AppIn\WooCommerce\Api\Client;
 use AppIn\WooCommerce\Mapper\ProductMapper;
 
-final class BulkSync
+class BulkSync
 {
     private const BATCH_SIZE = 20;
 
@@ -51,8 +51,7 @@ final class BulkSync
         // Schedule first batch
         as_schedule_single_action(time(), 'appin_bulk_sync_batch', [1], 'appin-search');
 
-        wp_safe_redirect(admin_url('admin.php?page=appin-search&syncing=1'));
-        exit;
+        $this->redirect(admin_url('admin.php?page=appin-search&syncing=1'));
     }
 
     /**
@@ -70,7 +69,16 @@ final class BulkSync
 
         as_schedule_single_action(time(), 'appin_bulk_delete_batch', [1], 'appin-search');
 
-        wp_safe_redirect(admin_url('admin.php?page=appin-search&deleting=1'));
+        $this->redirect(admin_url('admin.php?page=appin-search&deleting=1'));
+    }
+
+    /**
+     * Redirect and halt after an admin-post action. Extracted (and protected, non-final)
+     * so the handlers above can be unit-tested — tests override this to avoid exit().
+     */
+    protected function redirect(string $url): void
+    {
+        wp_safe_redirect($url);
         exit;
     }
 

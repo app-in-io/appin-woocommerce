@@ -1,8 +1,5 @@
 includes:
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
-    # Pre-existing src/ findings surfaced when static analysis was first introduced (#221).
-    # Tracked as debt for a follow-up; not fixed here (tests/tooling-only change).
-    - phpstan-baseline.neon
 
 parameters:
     level: 5

@@ -83,7 +83,8 @@ final class Client
 
             $status = (int) wp_remote_retrieve_response_code($response);
 
-            if ($status !== 429) {
+            // Retry transient failures: 429 (rate limit) and any 5xx (server-side).
+            if ($status !== 429 && $status < 500) {
                 break;
             }
 
