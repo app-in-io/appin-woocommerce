@@ -15,6 +15,9 @@ class SearchWidgetTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+
+        // renderElement() wraps the element in wp_kses — pass the markup through.
+        Functions\when('wp_kses')->returnArg();
     }
 
     protected function tearDown(): void
@@ -45,7 +48,7 @@ class SearchWidgetTest extends TestCase
                 'appin-search-widget',
                 APPIN_CDN_URL,
                 [],
-                APPIN_VERSION,
+                null,
                 ['strategy' => 'defer', 'in_footer' => true]
             );
 

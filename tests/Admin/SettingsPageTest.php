@@ -1,0 +1,102 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AppIn\WooCommerce\Tests\Admin;
+
+use AppIn\WooCommerce\Admin\SettingsPage;
+use Brain\Monkey;
+use Brain\Monkey\Functions;
+use PHPUnit\Framework\TestCase;
+
+class SettingsPageTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Monkey\setUp();
+
+        // Escaping / i18n helpers: pass the text through so we can assert on it.
+        Functions\when('esc_html__')->returnArg();
+        Functions\when('esc_attr__')->returnArg();
+        Functions\when('esc_html')->returnArg();
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('esc_url')->returnArg();
+        Functions\when('__')->returnArg();
+        // Field descriptions wrap the link markup in wp_kses_post — pass it through.
+        Functions\when('wp_kses_post')->returnArg();
+    }
+
+    protected function tearDown(): void
+    {
+        Monkey\tearDown();
+        parent::tearDown();
+    }
+
+    public function test_api_key_field_links_to_dashboard(): void
+    {
+        Functions\when('get_option')->justReturn('');
+
+        ob_start();
+        (new SettingsPage)->renderApiKeyField();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('href="https://my.app-in.io"', $output);
+        self::assertStringContainsString('AppIn dashboard', $output);
+    }
+
+    public function test_public_key_field_links_to_dashboard(): void
+    {
+        Functions\when('get_option')->justReturn('');
+
+        ob_start();
+        (new SettingsPage)->renderPublicKeyField();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('href="https://my.app-in.io"', $output);
+    }
+
+    public function test_onboarding_shown_when_no_api_key(): void
+    {
+        Functions\when('get_option')->justReturn('');
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('settings_fields')->justReturn(null);
+        Functions\when('do_settings_sections')->justReturn(null);
+        Functions\when('submit_button')->justReturn(null);
+
+        ob_start();
+        (new SettingsPage)->render();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('Getting started', $output);
+        self::assertStringContainsString('Create a free AppIn account', $output);
+        self::assertStringContainsString('href="https://app-in.io"', $output);
+    }
+
+    public function test_sync_status_shown_when_api_key_set(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appin_api_key' => 'sk_live_x',
+            'appin_synced_count' => 5,
+            'appin_bulk_sync_running' => false,
+            'appin_last_sync' => '',
+            default => $default,
+        });
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('wp_count_posts')->justReturn((object) ['publish' => 10]);
+        Functions\when('wp_nonce_url')->returnArg();
+        Functions\when('admin_url')->returnArg();
+        Functions\when('settings_fields')->justReturn(null);
+        Functions\when('do_settings_sections')->justReturn(null);
+        Functions\when('submit_button')->justReturn(null);
+
+        ob_start();
+        (new SettingsPage)->render();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('Sync Status', $output);
+        self::assertStringNotContainsString('Getting started', $output);
+    }
+}

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace AppIn\WooCommerce\Api;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 final class Client
 {
     private const MAX_RETRIES = 3;
@@ -88,8 +92,11 @@ final class Client
                 break;
             }
 
-            $retryAfter = (int) wp_remote_retrieve_header($response, 'retry-after') ?: $attempt * 2;
-            sleep(min($retryAfter, 30));
+            // No point blocking after the final attempt — the loop is about to exit.
+            if ($attempt < self::MAX_RETRIES) {
+                $retryAfter = (int) wp_remote_retrieve_header($response, 'retry-after') ?: $attempt * 2;
+                sleep(min($retryAfter, 30));
+            }
         }
 
         /** @var array<string, mixed> $decoded */

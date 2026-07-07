@@ -8,7 +8,9 @@
     "blank_line_after_namespace": true,
     "blank_line_after_opening_tag": true,
     "blank_line_between_import_groups": true,
-    "native_function_invocation": true,
+    "native_function_invocation": {
+      "exclude": ["defined"]
+    },
     "single_trait_insert_per_statement": true,
     "fully_qualified_strict_types": true,
     "concat_space": {

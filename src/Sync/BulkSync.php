@@ -7,6 +7,10 @@ namespace AppIn\WooCommerce\Sync;
 use AppIn\WooCommerce\Api\Client;
 use AppIn\WooCommerce\Mapper\ProductMapper;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 class BulkSync
 {
     private const BATCH_SIZE = 20;
@@ -27,6 +31,10 @@ class BulkSync
     {
         check_ajax_referer('appin_sync_status');
 
+        if (! current_user_can('manage_woocommerce')) {
+            wp_send_json_error('', 403);
+        }
+
         wp_send_json([
             'running' => (bool) get_option('appin_bulk_sync_running', false),
             'synced' => (int) get_option('appin_synced_count', 0),
@@ -42,7 +50,7 @@ class BulkSync
         check_admin_referer('appin_bulk_sync');
 
         if (! current_user_can('manage_woocommerce')) {
-            wp_die(__('Unauthorized.', 'appin-search'));
+            wp_die(esc_html__('Unauthorized.', 'appin-search'));
         }
 
         update_option('appin_bulk_sync_running', true, false);
@@ -62,7 +70,7 @@ class BulkSync
         check_admin_referer('appin_bulk_delete');
 
         if (! current_user_can('manage_woocommerce')) {
-            wp_die(__('Unauthorized.', 'appin-search'));
+            wp_die(esc_html__('Unauthorized.', 'appin-search'));
         }
 
         update_option('appin_bulk_sync_running', true, false);
@@ -114,7 +122,7 @@ class BulkSync
         if ($result['ok']) {
             $count = (int) get_option('appin_synced_count', 0);
             update_option('appin_synced_count', $count + \count($items), false);
-        } else {
+        } elseif (defined('WP_DEBUG') && WP_DEBUG) {
             error_log(\sprintf(
                 '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
                 $page,

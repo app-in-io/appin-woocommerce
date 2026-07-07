@@ -7,6 +7,10 @@ namespace AppIn\WooCommerce\Sync;
 use AppIn\WooCommerce\Api\Client;
 use AppIn\WooCommerce\Mapper\ProductMapper;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 final class ProductSync
 {
     /** @var array<int, true> Prevent duplicate processing within same request */
@@ -158,6 +162,10 @@ final class ProductSync
      */
     private function logError(int $productId, string $action, array $result): void
     {
+        if (! defined('WP_DEBUG') || ! WP_DEBUG) {
+            return;
+        }
+
         error_log(\sprintf(
             '[AppIn Search] Failed to %s product #%d: HTTP %d — %s',
             $action,

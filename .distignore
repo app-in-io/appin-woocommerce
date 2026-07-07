@@ -1,0 +1,25 @@
+# Files excluded from the WordPress.org SVN deploy (10up action reads .distignore).
+# Mirrors .gitattributes export-ignore, which governs the git-archive release zip.
+/.github
+/.wordpress-org
+/.claude
+/tests
+/vendor
+/phpstan
+/languages/*.po
+/.gitattributes
+/.gitignore
+/.distignore
+/.phase1
+/.phpunit.cache
+/composer.json
+/composer.lock
+/phpunit.xml
+/phpstan.neon
+/pint.json
+/compose.yml
+/seed.sql
+/seed-products.php
+/CHANGELOG.md
+/README.md
+/CLAUDE.md

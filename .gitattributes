@@ -1,15 +1,35 @@
 # Exclude from plugin distribution (git archive / GitHub source zip)
-/.github        export-ignore
-/.claude        export-ignore
-/tests          export-ignore
-/vendor         export-ignore
-/.gitattributes export-ignore
-/.gitignore     export-ignore
-/.phase1        export-ignore
-/composer.json  export-ignore
-/composer.lock  export-ignore
-/phpunit.xml    export-ignore
-/compose.yml    export-ignore
-/seed.sql       export-ignore
-/CLAUDE.md      export-ignore
-/CHANGELOG.md   export-ignore
+/.github          export-ignore
+/.wordpress-org   export-ignore
+/.claude          export-ignore
+/tests            export-ignore
+/vendor           export-ignore
+/phpstan          export-ignore
+/languages/*.po   export-ignore
+/.gitattributes   export-ignore
+/.gitignore       export-ignore
+/.distignore      export-ignore
+/.phase1          export-ignore
+/.phpunit.cache   export-ignore
+/composer.json    export-ignore
+/composer.lock    export-ignore
+/phpunit.xml      export-ignore
+/phpstan.neon     export-ignore
+/pint.json        export-ignore
+/compose.yml      export-ignore
+/seed.sql         export-ignore
+/seed-products.php export-ignore
+/CHANGELOG.md     export-ignore
+/README.md        export-ignore
+/CLAUDE.md        export-ignore
+
+# Treat as text
+*.php  text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+
+# Binary assets — never normalize
+*.mo  binary
+*.png binary

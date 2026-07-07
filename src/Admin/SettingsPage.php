@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace AppIn\WooCommerce\Admin;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 final class SettingsPage
 {
     public function register(): void
@@ -27,13 +31,13 @@ final class SettingsPage
         $nonce = wp_create_nonce('appin_sync_status');
         $ajaxUrl = admin_url('admin-ajax.php');
 
-        return <<<JS
-        (function($) {
+        return "
+        (function(\$) {
             var container = document.getElementById('appin-sync-section');
             if (!container || !container.dataset.running) return;
 
             var poll = setInterval(function() {
-                $.post('{$ajaxUrl}', {
+                \$.post('{$ajaxUrl}', {
                     action: 'appin_sync_status',
                     _ajax_nonce: '{$nonce}'
                 }, function(resp) {
@@ -58,7 +62,7 @@ final class SettingsPage
                 });
             }, 3000);
         })(jQuery);
-        JS;
+        ";
     }
 
     public function addMenu(): void
@@ -161,7 +165,11 @@ final class SettingsPage
         );
         printf(
             '<p class="description">%s</p>',
-            esc_html__('Your AppIn API key. Found in the AppIn dashboard under Sites > API Keys.', 'appin-search')
+            wp_kses_post(\sprintf(
+                /* translators: %s: link to the AppIn dashboard */
+                esc_html__('Your AppIn API key. Found in the %s under Sites > API Keys.', 'appin-search'),
+                $this->dashboardLink()
+            ))
         );
     }
 
@@ -184,7 +192,11 @@ final class SettingsPage
         );
         printf(
             '<p class="description">%s</p>',
-            esc_html__('Public key for the search widget. Safe to expose in browser. Found in the AppIn dashboard under Sites > API Keys.', 'appin-search')
+            wp_kses_post(\sprintf(
+                /* translators: %s: link to the AppIn dashboard */
+                esc_html__('Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys.', 'appin-search'),
+                $this->dashboardLink()
+            ))
         );
     }
 
@@ -223,10 +235,59 @@ final class SettingsPage
         echo '</div>';
     }
 
+    /**
+     * Anchor tag linking to the AppIn dashboard, reused across field descriptions.
+     */
+    private function dashboardLink(): string
+    {
+        return '<a href="' . esc_url('https://my.app-in.io') . '" target="_blank" rel="noopener">'
+            . esc_html__('AppIn dashboard', 'appin-search') . '</a>';
+    }
+
+    /**
+     * Getting-started card shown when no API key is configured yet — guides a
+     * fresh installer from account creation to the first sync.
+     */
+    private function renderOnboarding(): void
+    {
+        echo '<div class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;">';
+        echo '<h2 style="margin-top:0;">' . esc_html__('Getting started', 'appin-search') . '</h2>';
+        echo '<ol style="margin-left:18px;">';
+        printf(
+            '<li>%s</li>',
+            wp_kses_post(\sprintf(
+                /* translators: %s: link to the AppIn website */
+                esc_html__('Create a free account at %s.', 'appin-search'),
+                '<a href="' . esc_url('https://app-in.io') . '" target="_blank" rel="noopener">app-in.io</a>'
+            ))
+        );
+        printf(
+            '<li>%s</li>',
+            wp_kses_post(\sprintf(
+                /* translators: %s: link to the AppIn dashboard */
+                esc_html__('Copy your API key from the %s under Sites > API Keys.', 'appin-search'),
+                $this->dashboardLink()
+            ))
+        );
+        printf(
+            '<li>%s</li>',
+            esc_html__('Paste it below, save, then run Sync All Products.', 'appin-search')
+        );
+        echo '</ol>';
+        printf(
+            '<p><a href="%s" class="button button-primary" target="_blank" rel="noopener">%s</a></p>',
+            esc_url('https://app-in.io'),
+            esc_html__('Create a free AppIn account', 'appin-search')
+        );
+        echo '</div>';
+    }
+
     private function renderSyncSection(): void
     {
         $apiKey = get_option('appin_api_key', '');
         if ($apiKey === '') {
+            $this->renderOnboarding();
+
             return;
         }
 
