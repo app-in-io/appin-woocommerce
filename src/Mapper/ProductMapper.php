@@ -59,7 +59,9 @@ final class ProductMapper
             $data['children'] = $children;
         }
 
-        return array_filter($data, fn ($v) => $v !== null && $v !== '' && $v !== [] || \is_bool($v));
+        // Drop null / empty-string / empty-array values. Booleans (in_stock, on_sale) are
+        // kept: false is distinct from null/'' under the strict comparisons below.
+        return array_filter($data, fn ($v) => $v !== null && $v !== '' && $v !== []);
     }
 
     private function buildContent(WC_Product $product): string
@@ -95,7 +97,7 @@ final class ProductMapper
 
     private function resolveImageUrl(WC_Product $product): ?string
     {
-        $imageId = $product->get_image_id();
+        $imageId = (int) $product->get_image_id();
 
         return $imageId ? (string) wp_get_attachment_url($imageId) : null;
     }
@@ -211,7 +213,7 @@ final class ProductMapper
                 'url' => (string) get_permalink($child->get_id()),
                 'price' => $child->get_price() !== '' ? (float) $child->get_price() : null,
                 'sku' => $child->get_sku() ?: null,
-                'image_url' => $child->get_image_id() ? (string) wp_get_attachment_url($child->get_image_id()) : null,
+                'image_url' => $child->get_image_id() ? (string) wp_get_attachment_url((int) $child->get_image_id()) : null,
                 'in_stock' => $child->is_in_stock(),
             ];
         }

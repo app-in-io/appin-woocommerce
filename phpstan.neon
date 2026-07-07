@@ -1,0 +1,18 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+    # The WooCommerce stubs are large; a single worker keeps peak memory in check.
+    parallel:
+        maximumNumberOfProcesses: 1
+    bootstrapFiles:
+        - phpstan/constants.php
+    scanFiles:
+        # WooCommerce classes/functions (WC_Product*, wc_get_products, wc_attribute_label, …)
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+        # Action Scheduler funcs — a tiny local stub; the full woocommerce-packages-stubs.php
+        # is enormous and exhausts PHPStan's memory.
+        - phpstan/action-scheduler-stubs.php

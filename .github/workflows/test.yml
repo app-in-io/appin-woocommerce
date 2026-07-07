@@ -26,5 +26,11 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
 
+      - name: Check code style
+        run: vendor/bin/pint --test
+
+      - name: Static analysis
+        run: composer analyse
+
       - name: Run tests
         run: vendor/bin/phpunit
