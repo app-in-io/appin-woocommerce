@@ -7,6 +7,10 @@ namespace AppIn\WooCommerce\Mapper;
 use WC_Product;
 use WC_Product_Variable;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 final class ProductMapper
 {
     /**

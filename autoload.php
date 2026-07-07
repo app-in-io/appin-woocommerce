@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 spl_autoload_register(function (string $class): void {
     $prefix = 'AppIn\\WooCommerce\\';
 

@@ -6,47 +6,51 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Added
-- **HPOS compatibility**: declare `custom_order_tables` compatibility via `FeaturesUtil` — removes WooCommerce "Incompatible" warning
-- **Search widget**: `SearchWidget` class — enqueues `search.js` from CDN, renders `<semantic-search>` element
-- **Category ID filtering**: `ProductMapper` sends `category_id` (WP term ID) alongside category name
-- **Settings**: Public Key and Search Input Selector fields in new "Search Widget" section
-- **`APPIN_CDN_URL` constant**: overridable via `wp-config.php` for dev/staging
-- **Tests**: PHPUnit 11 + Brain Monkey — SearchWidget (7 tests) + ProductMapper (3 tests)
-- **Sync-engine test coverage** (#221): `Api/Client` (headers/method/body, 429 + 5xx retry with
-  back-off, no-retry on WP_Error, `MAX_RETRIES` exhaustion), `Sync/ProductSync` (hook registration,
-  Action Scheduler debounce, variation→parent, status-guard delete), `Sync/BulkSync` (batch
-  pagination, delete batches, finish transitions, admin-post handlers), and expanded
-  `Mapper/ProductMapper` (price, stock, on-sale/compare-at, rating, sku, tags, attributes,
-  variable price range, grouped children, brand). Suite grew from 10 to 50 tests.
-- **Static analysis in CI** (#221): `laravel/pint` (code style) + `phpstan/phpstan` level 5 with
-  WordPress/WooCommerce stubs (`szepeviktor/phpstan-wordpress`, `php-stubs/woocommerce-stubs`).
-  `composer format` / `lint` / `analyse` scripts; `pint --test` + `phpstan` added to the CI
-  workflow. `src/` passes level 5 with no baseline.
-- **CI/CD**: GitHub Actions — test on PR (PHP 8.1–8.4), release zip on tag
+## [1.0.0] - 2026-07-07
 
-### Fixed
-- **PHP 8.1/8.2 compatibility** (#221): `Api/Client` declared a typed class constant
-  (`const int MAX_RETRIES`, a PHP 8.3+ feature) that would fatal on the declared minimum
-  PHP 8.1/8.2; removed the constant's type. Surfaced by the new `ClientTest` running on the
-  8.2 CI matrix leg.
-- **Retry transient server errors** (#221): `Api/Client` now retries `5xx` responses (with the
-  same back-off), not only `429` — a transient `502/503/504` during a product sync previously
-  failed immediately with no retry.
-- **`ProductMapper` type/lint fixes** (#221): cast attachment IDs to `int` before
-  `wp_get_attachment_url()`, and dropped a dead `is_bool()` clause from the output `array_filter`
-  (booleans are already retained by the strict comparisons) — clears all PHPStan level-5 findings.
+First public release — prepared for the WordPress.org plugin directory.
+
+### Added
+- WooCommerce product sync — real-time hooks (create, update, stock change, trash, restore) with
+  Action Scheduler debounce, plus one-click Bulk Sync / Delete All in background batches.
+- `ProductMapper`: full WC_Product → API payload mapping (title, description, price, sale/compare-at,
+  currency, image, stock, SKU, categories, `category_id`, tags, rating, review count, brand,
+  attributes, variable price range, grouped children).
+- **HPOS compatibility**: declare `custom_order_tables` compatibility via `FeaturesUtil`.
+- **Search widget**: `SearchWidget` — enqueues `search.js` from CDN, renders the `<semantic-search>`
+  element, category-aware, custom input selector; Public Key + Search Input Selector settings.
+- **Onboarding**: getting-started empty state with a signup CTA and clickable AppIn dashboard links
+  in the settings page.
+- API client for index/delete/batch operations with `429` + `5xx` retry and back-off.
+- `APPIN_CDN_URL` constant overridable via `wp-config.php` for dev/staging.
+- **WordPress.org readiness**: `readme.txt` (with an External Services disclosure), `uninstall.php`
+  (option + Action Scheduler cleanup), `LICENSE` (GPL-2.0), `Text Domain` / `Domain Path` /
+  `License URI` headers, and direct-file-access guards in every source file.
+- **Internationalization**: `languages/appin-search.pot` plus translations for German (de_DE),
+  Dutch (nl_NL), Ukrainian (uk), and Estonian (et).
+- **Tests**: PHPUnit 11 + Brain Monkey — 54 tests across Client, ProductSync, BulkSync,
+  ProductMapper, SearchWidget, and SettingsPage.
+- **Static analysis in CI**: `laravel/pint` + `phpstan` level 5 with WordPress/WooCommerce stubs.
+- **CI/CD**: GitHub Actions — test on PR (PHP 8.1–8.4), `git archive` release zip on tag, and a
+  manual-dispatch WordPress.org SVN deploy workflow.
 
 ### Changed
-- **`BulkSync` made testable** (#221): extracted the post-action `wp_safe_redirect(); exit;` into
-  a `protected redirect()` seam (class no longer `final`) so `handleBulkSync`/`handleBulkDelete`
-  are now unit-tested.
+- Removed the duplicate `Author URI` from the plugin header (WordPress.org requirement); author set
+  to `appinio`.
+- **WordPress.org Plugin Check compliance**: direct-access guards use `defined('ABSPATH')` (the
+  leading-backslash form was not recognised); dynamic output escaped via `wp_kses`/`wp_kses_post`;
+  `wp_die()` messages escaped with `esc_html__`; the sync-status inline script no longer uses a
+  heredoc; removed `load_plugin_textdomain` (WordPress.org auto-loads translations); aligned the
+  plugin name between the header and `readme.txt`; added `.distignore` for the SVN deploy. Pint
+  `native_function_invocation` now excludes `defined` so the guard stays Plugin-Check-friendly.
+- Gated `error_log()` calls behind `WP_DEBUG`.
+- `Api/Client` no longer sleeps after the final retry attempt (avoids needless blocking).
+- `BulkSync::ajaxSyncStatus` now enforces the `manage_woocommerce` capability.
+- `BulkSync` made testable via a `protected redirect()` seam.
 
-## [v1.0.0] - 2026-04-02
-
-### Added
-- Initial release
-- WooCommerce product sync (real-time hooks + bulk sync)
-- `ProductMapper`: full WC_Product → API payload mapping
-- Settings page: API key, auto sync toggle, sync status
-- API client for index/delete operations
+### Fixed
+- **PHP 8.1/8.2 compatibility**: removed a typed class constant (`const int MAX_RETRIES`, a PHP 8.3+
+  feature) that would fatal on the declared minimum.
+- Retry transient `5xx` server errors (502/503/504) during sync, not only `429`.
+- `ProductMapper` type/lint fixes: cast attachment IDs to `int` before `wp_get_attachment_url()`,
+  and dropped a dead `is_bool()` clause from the output filter.

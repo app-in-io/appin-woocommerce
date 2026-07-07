@@ -9,6 +9,10 @@ use AppIn\WooCommerce\Frontend\SearchWidget;
 use AppIn\WooCommerce\Sync\BulkSync;
 use AppIn\WooCommerce\Sync\ProductSync;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 final class Plugin
 {
     private static ?self $instance = null;

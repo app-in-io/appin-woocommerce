@@ -4,41 +4,135 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Extract version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Inject version into plugin file
+      - name: Set version from tag
         run: |
-          sed -i "s/Version:     0.0.0-dev/Version:     ${{ steps.version.outputs.version }}/" appin-search.php
-          sed -i "s/APPIN_VERSION', '0.0.0-dev'/APPIN_VERSION', '${{ steps.version.outputs.version }}'/" appin-search.php
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i -E "s/(\* Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
+          sed -i -E "s/(APPIN_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
+          sed -i -E "s/(Stable tag:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" readme.txt
+          if ! git diff --quiet; then
+            git config user.email "ci@app-in.io"
+            git config user.name "ci"
+            git commit -am "ci: set version $VERSION"
+          fi
 
-      - name: Build plugin zip
+      - name: Build zip
+        id: build_zip
         run: |
-          mkdir -p build/appin-search
-          cp -r appin-search.php autoload.php README.md src/ build/appin-search/
-          cd build && zip -r appin-search.zip appin-search/
+          git archive --format=zip --prefix=appin-search/ -o appin-search.zip HEAD
 
-      - name: Upload zip to release
+      - name: Upload to release
+        id: upload_release
+        run: gh release upload "$GITHUB_REF_NAME" appin-search.zip --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} build/appin-search.zip --clobber
 
-      - name: Slack notification
-        if: success() && env.SLACK_WEBHOOK_URL != ''
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Upload to R2
+        id: upload_r2
+        # Served publicly at https://cdn.app-in.io/plugins/appin-search.zip (stable "latest" path).
+        # Short max-age so the stable URL refreshes within minutes of a release — no CDN purge needed.
         run: |
-          curl -s -X POST "$SLACK_WEBHOOK_URL" \
-            -H 'Content-Type: application/json' \
-            -d "{\"text\": \"🔌 AppIn WooCommerce Plugin ${{ steps.version.outputs.version }} released\\n${{ github.event.release.html_url }}\"}"
+          aws s3 cp appin-search.zip "s3://${R2_BUCKET}/plugins/appin-search.zip" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --content-type application/zip \
+            --cache-control "public, max-age=300"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+
+      - name: Prepare Slack payload
+        id: slack_prep
+        if: always()
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          STATUS="${{ job.status }}"
+
+          FAILED_STEP=""
+          if [ "${{ steps.build_zip.outcome }}" = "failure" ]; then
+            FAILED_STEP="Build zip"
+          elif [ "${{ steps.upload_release.outcome }}" = "failure" ]; then
+            FAILED_STEP="Upload to release"
+          elif [ "${{ steps.upload_r2.outcome }}" = "failure" ]; then
+            FAILED_STEP="Upload to R2"
+          fi
+
+          BODY=$(cat <<'BODY_EOF'
+          ${{ github.event.release.body }}
+          BODY_EOF
+          )
+          if [ ${#BODY} -gt 2800 ]; then
+            BODY="${BODY:0:2800}..."
+          fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "failed_step=$FAILED_STEP" >> $GITHUB_OUTPUT
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload-templated: true
+          # JSON payload with toJSON() for the release body so quotes / colons /
+          # newlines in the notes can't break the parser (the old raw-YAML payload did).
+          payload: |
+            {
+              "text": "${{ steps.slack_prep.outputs.status == 'success' && '✅' || '❌' }} AppIn Search ${{ steps.slack_prep.outputs.tag }} — ${{ steps.slack_prep.outputs.status }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ steps.slack_prep.outputs.status == 'success' && '✅' || '❌' }} ${{ steps.slack_prep.outputs.tag }} ${{ steps.slack_prep.outputs.status == 'success' && 'released' || 'release failed' }}",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ steps.slack_prep.outputs.status == 'success' && toJSON(steps.slack_prep.outputs.body) || toJSON(format('*Failed at:* {0}', steps.slack_prep.outputs.failed_step)) }}
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "`AppIn Search` · ${{ github.repository }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ steps.slack_prep.outputs.status == 'success' && 'View Release' || 'View Run' }}"
+                      },
+                      "url": "${{ steps.slack_prep.outputs.status == 'success' && github.event.release.html_url || format('https://github.com/{0}/actions/runs/{1}', github.repository, github.run_id) }}",
+                      "action_id": "view_link"
+                    }
+                  ]
+                }
+              ]
+            }

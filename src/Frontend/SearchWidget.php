@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace AppIn\WooCommerce\Frontend;
 
+if (! defined('ABSPATH')) {
+    exit;
+}
+
 final class SearchWidget
 {
     public function register(): void
@@ -19,13 +23,17 @@ final class SearchWidget
             return;
         }
 
+        // null prevents WordPress from appending a ?ver= query. The CDN build is
+        // versioned via its /v1/ path, and a spurious ?ver breaks the dev server.
+        // phpcs:disable WordPress.WP.EnqueuedResourceParameters.MissingVersion
         wp_enqueue_script(
             'appin-search-widget',
             APPIN_CDN_URL,
             [],
-            APPIN_VERSION,
+            null,
             ['strategy' => 'defer', 'in_footer' => true]
         );
+        // phpcs:enable WordPress.WP.EnqueuedResourceParameters.MissingVersion
     }
 
     public function renderElement(): void
@@ -48,7 +56,10 @@ final class SearchWidget
             $attrs .= \sprintf(' input-selector="%s"', esc_attr($selector));
         }
 
-        printf('<semantic-search %s></semantic-search>', $attrs);
+        echo wp_kses(
+            \sprintf('<semantic-search %s></semantic-search>', $attrs),
+            ['semantic-search' => ['api-key' => true, 'platform' => true, 'category-id' => true, 'input-selector' => true]]
+        );
     }
 
     public function addModuleType(string $tag, string $handle): string

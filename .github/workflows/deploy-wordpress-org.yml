@@ -1,0 +1,37 @@
+name: Deploy to WordPress.org
+
+# Temporarily manual-only: the plugin is not yet approved on the WordPress.org
+# directory (no SVN repo / no WP_ORG_* secrets), so the SVN deploy would fail.
+# Distribution currently goes via GitHub Releases (see release.yml).
+# Re-enable by adding a `release: [published]` trigger once WP.org approves.
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to WordPress.org SVN
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "::error::Run this workflow from a version tag (e.g. v1.0.0), not '${GITHUB_REF_NAME}'."
+            exit 1
+          fi
+          sed -i -E "s/(Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
+          sed -i -E "s/(APPIN_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
+          sed -i -E "s/(Stable tag:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" readme.txt
+
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.WP_ORG_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.WP_ORG_PASSWORD }}
+          SLUG: appin-search
+          ASSETS_DIR: .wordpress-org
