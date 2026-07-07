@@ -6,9 +6,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-07-07
+## [0.9.0] - 2026-07-07
 
-First public release — prepared for the WordPress.org plugin directory.
+First public beta — distributed to early stores for feedback; prepared for the WordPress.org plugin directory.
 
 ### Added
 - WooCommerce product sync — real-time hooks (create, update, stock change, trash, restore) with

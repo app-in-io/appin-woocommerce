@@ -4,13 +4,15 @@ Tags: woocommerce, search, ai, semantic search, product search
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-AI-powered semantic search for WooCommerce. Auto-syncs your products to AppIn and adds a smart search widget to your store. Powered by AppIn.
+AI-powered semantic search for WooCommerce (public beta). Auto-syncs your products to AppIn and adds a smart search widget. Powered by AppIn.
 
 == Description ==
+
+**Public beta — your feedback shapes the roadmap.** AppIn Search is fully functional and safe to run on live stores, but it's new to the market: you're among the first shops using it, so expect the occasional rough edge — and please tell us what you find. Report bugs and ideas on [GitHub](https://github.com/app-in-io/appin-woocommerce/issues). Early adopters directly shape what ships next.
 
 AppIn Search connects your WooCommerce store to AppIn AI Search — semantic, typo-tolerant product search that understands what shoppers *mean*, not just the keywords they type.
 
@@ -72,7 +74,6 @@ Using this plugin means the search widget script runs in visitors' browsers and 
 == Support ==
 
 * Bug reports and feature requests: [github.com/app-in-io/appin-woocommerce/issues](https://github.com/app-in-io/appin-woocommerce/issues)
-* Account, billing, and search help: [app-in.io/support](https://app-in.io/support)
 
 == Frequently Asked Questions ==
 
@@ -111,8 +112,8 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 
 == Changelog ==
 
-= 1.0.0 =
-* Initial release.
+= 0.9.0 =
+* Public beta — first release.
 * Real-time WooCommerce product sync (create, update, stock, trash, restore) via Action Scheduler.
 * One-click Bulk Sync and Delete All from Index with live progress.
 * Full field mapping including variable/grouped products, brand, and attributes.
@@ -121,5 +122,5 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 
 == Upgrade Notice ==
 
-= 1.0.0 =
-Initial release.
+= 0.9.0 =
+Public beta.
