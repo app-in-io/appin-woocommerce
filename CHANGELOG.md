@@ -6,6 +6,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- readme.txt: WP.org listing SEO/GEO pass — keyworded title, optimized tags, multilingual
+  differentiator surfaced, GEO fact block, comparison-intent FAQ.
+
 ## [0.9.0] - 2026-07-07
 
 First public beta — distributed to early stores for feedback; prepared for the WordPress.org plugin directory.
