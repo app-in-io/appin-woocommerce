@@ -1,6 +1,6 @@
-=== AppIn Search ===
+=== AppIn Search – AI Semantic & Multilingual Product Search for WooCommerce ===
 Contributors: appinio
-Tags: woocommerce, search, ai, semantic search, product search
+Tags: woocommerce, semantic search, ai search, product search, multilingual
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.1
@@ -8,13 +8,13 @@ Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-AI-powered semantic search for WooCommerce (public beta). Auto-syncs your products to AppIn and adds a smart search widget. Powered by AppIn.
+AI semantic, multilingual, typo-tolerant product search for WooCommerce. Auto-syncs your catalog and adds a smart search widget.
 
 == Description ==
 
 **Public beta — your feedback shapes the roadmap.** AppIn Search is fully functional and safe to run on live stores, but it's new to the market: you're among the first shops using it, so expect the occasional rough edge — and please tell us what you find. Report bugs and ideas on [GitHub](https://github.com/app-in-io/appin-woocommerce/issues). Early adopters directly shape what ships next.
 
-AppIn Search connects your WooCommerce store to AppIn AI Search — semantic, typo-tolerant product search that understands what shoppers *mean*, not just the keywords they type.
+AppIn Search connects your WooCommerce store to AppIn AI Search — semantic, typo-tolerant product search that understands what shoppers *mean*, not just the keywords they type. It also speaks 100+ languages out of the box, including true cross-language search: a query typed in one language finds products described in another.
 
 The plugin does two things:
 
@@ -23,8 +23,17 @@ The plugin does two things:
 
 The plugin is a thin integration layer: all AI, indexing, embedding, and ranking runs on the AppIn cloud service. You need an AppIn account and an API key to use it.
 
+= At a glance =
+
+* 100+ languages, true cross-language search — no separate configuration per language.
+* Semantic + typo-tolerant — understands meaning and intent, not just exact keywords.
+* Real-time sync + one-click Bulk Sync — every change pushed automatically, whole catalog indexed in background batches.
+* 17+ product fields mapped — including variable/grouped products, brand, and attributes.
+* Managed cloud backend (bge-m3 embeddings), EU-hosted; BYOK (bring your own LLM key) supported.
+
 = Features =
 
+* Multilingual & cross-language — 100+ languages out of the box; a query in one language finds products described in another.
 * Real-time product sync — create, update, stock change, trash, and restore are all pushed automatically.
 * Debounced & reliable — Action Scheduler coalesces WooCommerce's multiple saves into one API call, so a single edit never triggers duplicate indexing.
 * One-click Bulk Sync — index your whole catalog in background batches, with a live progress indicator.
@@ -80,6 +89,14 @@ Using this plugin means the search widget script runs in visitors' browsers and 
 = Do I need an AppIn account? =
 
 Yes. The plugin is a WooCommerce integration for the AppIn cloud service. Create an account and get your API keys at [my.app-in.io](https://my.app-in.io).
+
+= Does it support multiple languages and cross-language search? =
+
+Yes. AppIn Search understands 100+ languages out of the box, including true cross-language search — a query typed in one language can find products described in another. No per-language setup required.
+
+= How is this different from a keyword search plugin? =
+
+Keyword plugins match the literal words a shopper types, so typos, synonyms, or descriptive phrasing ("warm winter jacket") often return nothing. AppIn Search uses semantic AI embeddings to understand intent and meaning, so it finds relevant products even when the query doesn't share exact words with the product title or description.
 
 = Where do I find my API Key and Public Key? =
 
