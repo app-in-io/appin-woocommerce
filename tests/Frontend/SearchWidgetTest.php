@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Tests\Frontend;
+namespace AppInIo\Tests\Frontend;
 
-use AppIn\WooCommerce\Frontend\SearchWidget;
+use AppInIo\Frontend\SearchWidget;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
@@ -38,15 +38,15 @@ class SearchWidgetTest extends TestCase
     public function test_enqueue_assets_when_public_key_set(): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
-            'appin_public_key' => 'pk_live_test123',
+            'appinio_public_key' => 'pk_live_test123',
             default => $default,
         });
 
         Functions\expect('wp_enqueue_script')
             ->once()
             ->with(
-                'appin-search-widget',
-                APPIN_CDN_URL,
+                'appinio-search-widget',
+                APPINIO_CDN_URL,
                 [],
                 null,
                 ['strategy' => 'defer', 'in_footer' => true]
@@ -74,8 +74,8 @@ class SearchWidgetTest extends TestCase
     public function test_render_element_with_public_key(): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
-            'appin_public_key' => 'pk_live_abc123',
-            'appin_search_selector' => '',
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
             default => $default,
         });
 
@@ -111,8 +111,8 @@ class SearchWidgetTest extends TestCase
     public function test_render_element_with_category_page(): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
-            'appin_public_key' => 'pk_live_abc123',
-            'appin_search_selector' => '',
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
             default => $default,
         });
 
@@ -132,8 +132,8 @@ class SearchWidgetTest extends TestCase
     public function test_render_element_with_custom_selector(): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
-            'appin_public_key' => 'pk_live_abc123',
-            'appin_search_selector' => '.my-search-input',
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '.my-search-input',
             default => $default,
         });
 

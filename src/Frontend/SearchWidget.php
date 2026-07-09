@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Frontend;
+namespace AppInIo\Frontend;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -27,8 +27,8 @@ final class SearchWidget
         // versioned via its /v1/ path, and a spurious ?ver breaks the dev server.
         // phpcs:disable WordPress.WP.EnqueuedResourceParameters.MissingVersion
         wp_enqueue_script(
-            'appin-search-widget',
-            APPIN_CDN_URL,
+            'appinio-search-widget',
+            APPINIO_CDN_URL,
             [],
             null,
             ['strategy' => 'defer', 'in_footer' => true]
@@ -50,7 +50,7 @@ final class SearchWidget
             $attrs .= \sprintf(' category-id="%d"', get_queried_object_id());
         }
 
-        $selector = get_option('appin_search_selector', '');
+        $selector = get_option('appinio_search_selector', '');
 
         if (! empty($selector)) {
             $attrs .= \sprintf(' input-selector="%s"', esc_attr($selector));
@@ -64,7 +64,7 @@ final class SearchWidget
 
     public function addModuleType(string $tag, string $handle): string
     {
-        if ($handle !== 'appin-search-widget') {
+        if ($handle !== 'appinio-search-widget') {
             return $tag;
         }
 
@@ -73,6 +73,6 @@ final class SearchWidget
 
     private function getSearchKey(): string
     {
-        return get_option('appin_public_key', '');
+        return get_option('appinio_public_key', '');
     }
 }

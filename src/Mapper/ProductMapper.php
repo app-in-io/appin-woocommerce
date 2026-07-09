@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Mapper;
+namespace AppInIo\Mapper;
 
 use WC_Product;
 use WC_Product_Variable;

@@ -11,7 +11,7 @@ Sync WooCommerce products with [AppIn AI Search](https://app-in.io) automaticall
 
 ## Installation
 
-1. Download the plugin zip or clone this repo into `wp-content/plugins/appin-search/`
+1. Download the plugin zip or clone this repo into `wp-content/plugins/appinio-search/`
 2. Activate in WordPress Admin > Plugins
 3. Go to WooCommerce > AppIn Search
 4. Enter your API key and save
@@ -76,13 +76,13 @@ Only `publish` products are indexed. Draft, pending, or private products are aut
 Override the API URL in `wp-config.php`:
 
 ```php
-define('APPIN_API_URL', 'http://api.search.local/v1');
+define('APPINIO_API_URL', 'http://api.search.local/v1');
 ```
 
 ## Architecture
 
 ```
-appin-search.php          Bootstrap, WooCommerce dependency check
+appinio-search.php          Bootstrap, WooCommerce dependency check
 autoload.php              PSR-4 autoloader (no Composer required)
 src/
   Plugin.php              Main class, singleton, boot sequence
@@ -91,9 +91,11 @@ src/
   Sync/ProductSync.php    Real-time hooks + Action Scheduler debounce
   Sync/BulkSync.php       Background bulk sync/delete
   Admin/SettingsPage.php  WP admin settings + sync dashboard
+  Frontend/SearchWidget.php   Search dropdown widget (<semantic-search>)
+  Frontend/SearchResults.php  AI-powered /?s= results page
 ```
 
-Namespace: `AppIn\WooCommerce`
+Namespace: `AppInIo`
 
 ## License
 

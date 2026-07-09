@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce;
+namespace AppInIo;
 
-use AppIn\WooCommerce\Admin\SettingsPage;
-use AppIn\WooCommerce\Frontend\SearchWidget;
-use AppIn\WooCommerce\Sync\BulkSync;
-use AppIn\WooCommerce\Sync\ProductSync;
+use AppInIo\Admin\SettingsPage;
+use AppInIo\Frontend\SearchResults;
+use AppInIo\Frontend\SearchWidget;
+use AppInIo\Sync\BulkSync;
+use AppInIo\Sync\ProductSync;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -26,7 +27,7 @@ final class Plugin
 
     public function boot(): void
     {
-        $apiKey = get_option('appin_api_key', '');
+        $apiKey = get_option('appinio_api_key', '');
 
         (new SettingsPage)->register();
         (new SearchWidget)->register();
@@ -37,5 +38,6 @@ final class Plugin
 
         (new ProductSync)->register();
         (new BulkSync)->register();
+        (new SearchResults)->register();
     }
 }

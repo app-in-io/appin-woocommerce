@@ -1,8 +1,8 @@
-# appin-search
+# appinio-search
 
 WordPress plugin: sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync + search widget. PHP 8.1+ | PSR-4 | PHPUnit 11 + Brain Monkey.
 
-> **Layout:** This plugin lives at `api/wordpress-plugin/appin-search/` as a subdirectory of the main API project. It has its own `.git`, CI/CD, and GitHub repo (`app-in-io/appin-woocommerce`). The parent API repo ignores this directory via `.gitignore`.
+> **Layout:** This plugin lives at `api/wordpress-plugin/appin-search/` as a subdirectory of the main API project (host checkout dir unchanged; the distributed / wp.org slug is `appinio-search`). It has its own `.git`, CI/CD, and GitHub repo (`app-in-io/appin-woocommerce`). The parent API repo ignores this directory via `.gitignore`.
 
 ## CRITICAL RULES
 
@@ -27,20 +27,22 @@ WordPress/WooCommerce plugin that:
 ## Structure
 
 ```
-appin-search.php                ← Bootstrap: constants, WC check, Plugin::boot()
+appinio-search.php                ← Bootstrap: constants, WC check, Plugin::boot()
 autoload.php                    ← Manual PSR-4 autoloader (no Composer in prod)
 src/
-  Plugin.php                    ← Singleton, boot: settings + widget + sync
-  Api/Client.php                ← HTTP client (wp_remote_request)
+  Plugin.php                    ← Singleton, boot: settings + widget + sync + results page
+  Api/Client.php                ← HTTP client (wp_remote_request); index/delete + searchProducts()
   Mapper/ProductMapper.php      ← WC_Product → API payload (17+ fields)
   Sync/ProductSync.php          ← Real-time hooks + Action Scheduler debounce (5s)
   Sync/BulkSync.php             ← Background batch sync/delete (20/batch)
   Admin/SettingsPage.php        ← WP admin settings + sync dashboard
   Frontend/SearchWidget.php     ← Enqueues search.js from CDN, renders <semantic-search>
+  Frontend/SearchResults.php    ← Powers /?s= results page with AI (pre_get_posts + post__in merge)
 tests/
-  bootstrap.php                 ← Brain Monkey setup
-  Mapper/ProductMapperTest.php  ← 3 tests (category mapping)
-  Frontend/SearchWidgetTest.php ← 7 tests (hooks, assets, rendering)
+  bootstrap.php                 ← Brain Monkey setup + WC_Product / WP_Query stubs
+  Mapper/ProductMapperTest.php  ← category mapping
+  Frontend/SearchWidgetTest.php ← widget hooks, assets, rendering
+  Frontend/SearchResultsTest.php← results-page takeover guards + merge + nullify
 ```
 
 ## Running (Docker)
@@ -52,12 +54,12 @@ docker network create search-network       # once, shared with api
 docker compose up -d                       # wordpress + mariadb
 docker compose run --rm wp-cli wp theme install storefront --activate
 docker compose run --rm wp-cli wp plugin install woocommerce --activate
-docker compose run --rm wp-cli wp plugin activate appin-search
+docker compose run --rm wp-cli wp plugin activate appinio-search
 ```
 
 Or from the root repo: `make up-wp && make wp-setup`.
 
-WordPress available at `woo.app-in.local` (OrbStack). Plugin auto-mounted at `wp-content/plugins/appin-search`.
+WordPress available at `woo.app-in.local` (OrbStack). Plugin auto-mounted at `wp-content/plugins/appinio-search`.
 
 First start auto-loads `seed.sql` into MariaDB (WP tables + WooCommerce + plugin settings). To reset: `docker compose down -v && docker compose up -d && make wp-setup`.
 
@@ -76,19 +78,22 @@ vendor/bin/phpunit --filter=ClassName  # run specific test
 
 ## Key Decisions
 
-- **No Composer autoload in production**: manual `autoload.php` maps `AppIn\WooCommerce\` → `src/`
+- **No Composer autoload in production**: manual `autoload.php` maps `AppInIo\` → `src/`
 - **Singleton pattern** for `Plugin` (WordPress convention)
+- **Unique prefix** (WordPress.org requirement): namespace `AppInIo`, constants `APPINIO_*`, options/hooks `appinio_*`. Slug + text domain stay `appinio-search`.
 - **Action Scheduler** for debounced sync (5-second coalesce) — WooCommerce saves products multiple times per edit
 - **Variable products**: index parent only with min/max variation prices + aggregated attributes
 - **Status guard**: only `publish` products indexed; draft/private/trash auto-removed from index
-- `APPIN_API_URL` and `APPIN_CDN_URL` constants overridable in `wp-config.php` for dev/staging
+- **Results-page takeover**: standard `pre_get_posts` + `post__in` + `posts_search`-nullify; AI products merged with native non-product matches; graceful native fallback on API failure; gated by `appinio_results_page` (on by default)
+- `APPINIO_API_URL` and `APPINIO_CDN_URL` constants overridable in `wp-config.php` for dev/staging (legacy `APPIN_API_URL` / `APPIN_CDN_URL` still honored)
 
 ## API Contract
 
 This plugin is an API client for the AppIn API:
 - `POST /v1/index/products` — index a product (with `X-Platform: woocommerce`)
 - `DELETE /v1/index/products` — remove a product
-- API Key: `sk_live_...` format, stored in `wp_options` as `appin_api_key`
+- `POST /v1/search/products` — results-page takeover (`searchProducts()`, short timeout, no retries)
+- API Key: `sk_live_...` format, stored in `wp_options` as `appinio_api_key`
 - Platform: `woocommerce` (selects `WooCommerceProductData` DTO on the API side)
 
 Field mapping is defined in `Mapper/ProductMapper.php` and must match the WooCommerce platform's expected fields in the API.
@@ -98,6 +103,6 @@ Field mapping is defined in `Mapper/ProductMapper.php` and must match the WooCom
 - PHP 8.1+ features: constructor promotion, named arguments, match, readonly
 - `declare(strict_types=1)` in every file
 - WordPress coding standards for hooks/filters (snake_case function names in callbacks)
-- Namespace: `AppIn\WooCommerce`
+- Namespace: `AppInIo`
 - Brain Monkey for mocking WordPress functions in tests
 - Requires: WordPress 6.0+, WooCommerce 8.0+

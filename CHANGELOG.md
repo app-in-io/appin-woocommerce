@@ -6,7 +6,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **AI search on the results page**: the WordPress/WooCommerce search results page (`/?s=`) is now
+  powered by AppIn instead of native keyword search — fixing typos and semantic queries for every
+  entry path (sidebar form, bookmarks, back button, mobile), not just the dropdown widget. Products
+  are matched by AI; posts/pages keep native keyword matching and are merged into one result set, so
+  stores with a blog don't lose non-product search. Product searches and product-category archives
+  stay product-scoped so WooCommerce catalog visibility, price/attribute layered-nav filters and the
+  category tax query keep intersecting natively; a search within a product category also passes
+  `category_id` to the search API. Runs on a short timeout with graceful fallback to native search if
+  the API is unavailable. New **Search Results Page** setting (on by default) under Search Widget.
+
 ### Changed
+- **Unique prefix (WordPress.org requirement)**: renamed the plugin's namespace
+  (`AppIn\WooCommerce` → `AppInIo`), constants (`APPIN_*` → `APPINIO_*`), option keys and hooks
+  (`appin_*` → `appinio_*`) to a distinct 4+ character prefix. The plugin slug and text domain
+  (`appinio-search`) are unchanged.
 - readme.txt: WP.org listing SEO/GEO pass — keyworded title, optimized tags, multilingual
   differentiator surfaced, GEO fact block, comparison-intent FAQ.
 
@@ -30,7 +45,7 @@ First public beta — distributed to early stores for feedback; prepared for the
 - **WordPress.org readiness**: `readme.txt` (with an External Services disclosure), `uninstall.php`
   (option + Action Scheduler cleanup), `LICENSE` (GPL-2.0), `Text Domain` / `Domain Path` /
   `License URI` headers, and direct-file-access guards in every source file.
-- **Internationalization**: `languages/appin-search.pot` plus translations for German (de_DE),
+- **Internationalization**: `languages/appinio-search.pot` plus translations for German (de_DE),
   Dutch (nl_NL), Ukrainian (uk), and Estonian (et).
 - **Tests**: PHPUnit 11 + Brain Monkey — 54 tests across Client, ProductSync, BulkSync,
   ProductMapper, SearchWidget, and SettingsPage.

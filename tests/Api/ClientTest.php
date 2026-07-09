@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Tests\Api;
+namespace AppInIo\Tests\Api;
 
-use AppIn\WooCommerce\Api\Client;
+use AppInIo\Api\Client;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -120,7 +120,7 @@ class ClientTest extends TestCase
     public function test_retries_once_on_429_then_succeeds(): void
     {
         // sleep() is called on the 429 back-off — shim the namespaced call so the test is instant.
-        Functions\when('AppIn\WooCommerce\Api\sleep')->justReturn(0);
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
 
         Functions\expect('wp_remote_request')->twice()->andReturn('R429', 'R200');
         Functions\when('is_wp_error')->justReturn(false);
@@ -136,7 +136,7 @@ class ClientTest extends TestCase
 
     public function test_exhausts_max_retries_on_persistent_429(): void
     {
-        Functions\when('AppIn\WooCommerce\Api\sleep')->justReturn(0);
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
 
         // MAX_RETRIES = 3 → three attempts, all 429.
         Functions\expect('wp_remote_request')->times(3)->andReturn('R429');
@@ -155,7 +155,7 @@ class ClientTest extends TestCase
     public function test_retries_on_5xx_then_succeeds(): void
     {
         // Transient server errors are retryable, just like 429.
-        Functions\when('AppIn\WooCommerce\Api\sleep')->justReturn(0);
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
 
         Functions\expect('wp_remote_request')->twice()->andReturn('R503', 'R200');
         Functions\when('is_wp_error')->justReturn(false);
@@ -171,7 +171,7 @@ class ClientTest extends TestCase
 
     public function test_exhausts_max_retries_on_persistent_5xx(): void
     {
-        Functions\when('AppIn\WooCommerce\Api\sleep')->justReturn(0);
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
 
         Functions\expect('wp_remote_request')->times(3)->andReturn('R500');
         Functions\when('is_wp_error')->justReturn(false);
@@ -198,5 +198,71 @@ class ClientTest extends TestCase
         self::assertFalse($result['ok']);
         self::assertSame(422, $result['status']);
         self::assertSame('invalid payload', $result['body']['message']);
+    }
+
+    public function test_search_products_returns_ids_with_short_timeout(): void
+    {
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/search/products', Mockery::on(function (array $args): bool {
+                self::assertSame('POST', $args['method']);
+                self::assertSame(['query' => 'boots', 'limit' => 100], json_decode($args['body'], true));
+                // User-facing render path: short timeout, no retry loop.
+                self::assertSame(5, $args['timeout']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"results":[{"id":"5"},{"id":"3"},{"id":"9"}]}');
+
+        $ids = (new Client)->searchProducts('boots');
+
+        self::assertSame([5, 3, 9], $ids);
+    }
+
+    public function test_search_products_includes_lang_and_category(): void
+    {
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/search/products', Mockery::on(function (array $args): bool {
+                self::assertSame(
+                    ['query' => 'jacket', 'limit' => 20, 'lang' => 'de', 'category_id' => 7],
+                    json_decode($args['body'], true)
+                );
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"results":[]}');
+
+        (new Client)->searchProducts('jacket', 20, 'de', 7);
+    }
+
+    public function test_search_products_returns_empty_list_on_zero_results(): void
+    {
+        Functions\expect('wp_remote_request')->once()->andReturn('RESP');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"results":[]}');
+
+        // Success with no matches is [] (distinct from a failure).
+        self::assertSame([], (new Client)->searchProducts('zzz'));
+    }
+
+    public function test_search_products_returns_null_on_failure_without_retry(): void
+    {
+        // Single attempt only (maxRetries = 1) even on a normally-retryable 500.
+        Functions\expect('wp_remote_request')->once()->andReturn('R500');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(500);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+
+        self::assertNull((new Client)->searchProducts('boots'));
     }
 }

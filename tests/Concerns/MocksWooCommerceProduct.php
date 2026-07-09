@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Tests\Concerns;
+namespace AppInIo\Tests\Concerns;
 
 use Brain\Monkey\Functions;
 use Mockery;

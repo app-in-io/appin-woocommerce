@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: AppIn Search 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appin-search\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -11,21 +11,21 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-07-07T00:00:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Domain: appin-search\n"
+"X-Domain: appinio-search\n"
 
 #. Plugin Name of the plugin
-#: appin-search.php
+#: appinio-search.php
 #: src/Admin/SettingsPage.php:72
 #: src/Admin/SettingsPage.php:73
 msgid "AppIn Search"
 msgstr ""
 
 #. Description of the plugin
-#: appin-search.php
+#: appinio-search.php
 msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
 msgstr ""
 
-#: appin-search.php:54
+#: appinio-search.php:54
 msgid "AppIn Search requires WooCommerce to be installed and active."
 msgstr ""
 
