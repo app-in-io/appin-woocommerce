@@ -15,6 +15,8 @@ class BulkSync
 {
     private const BATCH_SIZE = 20;
 
+    public function __construct(private RetryPolicy $retryPolicy = new RetryPolicy) {}
+
     public function register(): void
     {
         add_action('admin_post_appinio_bulk_sync', [$this, 'handleBulkSync']);
@@ -127,15 +129,25 @@ class BulkSync
             $result = $client->indexProductBatch($items);
 
             if ($result['ok']) {
+                $this->retryPolicy->clear('appinio_bulk_sync_batch', [$page]);
                 $count = (int) get_option('appinio_synced_count', 0);
                 update_option('appinio_synced_count', $count + \count($items), false);
-            } elseif (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log(\sprintf(
-                    '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
-                    $page,
-                    $result['status'],
-                    $result['body']['error'] ?? $result['body']['message'] ?? 'unknown'
-                ));
+            } else {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log(\sprintf(
+                        '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
+                        $page,
+                        $result['status'],
+                        $result['body']['error'] ?? $result['body']['message'] ?? 'unknown'
+                    ));
+                }
+
+                // Transient → reschedule this same page with backoff and stop; the retry
+                // re-runs processBatch($page). Permanent/Exhausted → fall through and
+                // advance the chain so bulk still completes (finishSync runs, no stuck flag).
+                if ($this->retryPolicy->attempt('appinio_bulk_sync_batch', [$page], $result['status']) === RetryOutcome::Rescheduled) {
+                    return;
+                }
             }
         }
 

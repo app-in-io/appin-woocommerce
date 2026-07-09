@@ -51,6 +51,7 @@ trait MocksWooCommerceProduct
             'get_review_count' => 10,
             'get_attributes' => [],
             'get_catalog_visibility' => 'visible',
+            'get_status' => 'publish',
         ], $overrides);
 
         foreach ($values as $method => $return) {

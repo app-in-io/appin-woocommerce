@@ -23,6 +23,11 @@ class BulkSyncTest extends TestCase
         parent::setUp();
         Monkey\setUp();
         $this->options = [];
+
+        // RetryPolicy transient helpers — default no-op so success paths don't fatal.
+        Functions\when('delete_transient')->justReturn(true);
+        Functions\when('get_transient')->justReturn(false);
+        Functions\when('set_transient')->justReturn(true);
     }
 
     protected function tearDown(): void
@@ -172,6 +177,50 @@ class BulkSyncTest extends TestCase
 
         // Only the 2 searchable products count toward synced.
         self::assertSame(2, $this->options['appinio_synced_count']);
+    }
+
+    public function test_process_batch_reschedules_same_page_on_transient_failure(): void
+    {
+        $this->stubClientHttp(503); // transient server error
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('get_transient')->justReturn(false); // first failure
+
+        $products = array_map(fn (int $i) => $this->makeWcProduct(['get_id' => $i]), range(1, 20));
+        Functions\when('wc_get_products')->justReturn($products);
+
+        // Retry THIS page (5) with backoff, do NOT advance to page 6.
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appinio_bulk_sync_batch', [5], 'appinio-search');
+
+        (new BulkSync)->processBatch(5);
+
+        // Batch failed → counter not bumped, running flag not cleared (no finishSync).
+        self::assertArrayNotHasKey('appinio_synced_count', $this->options);
+        self::assertArrayNotHasKey('appinio_bulk_sync_running', $this->options);
+    }
+
+    public function test_process_batch_advances_chain_when_retries_exhausted(): void
+    {
+        $this->stubClientHttp(503);
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('get_transient')->justReturn(4); // next = 5 = cap → Exhausted
+
+        $products = array_map(fn (int $i) => $this->makeWcProduct(['get_id' => $i]), range(1, 20));
+        Functions\when('wc_get_products')->justReturn($products);
+
+        // Give up on this page but advance the chain (page 4) so bulk still completes.
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appinio_bulk_sync_batch', [4], 'appinio-search');
+
+        (new BulkSync)->processBatch(3);
+
+        self::assertArrayNotHasKey('appinio_synced_count', $this->options);
     }
 
     public function test_process_batch_finishes_immediately_when_empty(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppInIo\Tests\Sync;
 
 use AppInIo\Sync\ProductSync;
+use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -12,6 +13,8 @@ use PHPUnit\Framework\TestCase;
 
 class ProductSyncTest extends TestCase
 {
+    use MocksWooCommerceProduct;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -21,6 +24,11 @@ class ProductSyncTest extends TestCase
         // syncProduct() tests are hermetic and order-independent (no reliance on unique ids).
         $processed = new \ReflectionProperty(ProductSync::class, 'processed');
         $processed->setValue(null, []);
+
+        // RetryPolicy transient helpers — default no-op so success paths don't fatal.
+        Functions\when('delete_transient')->justReturn(true);
+        Functions\when('get_transient')->justReturn(false);
+        Functions\when('set_transient')->justReturn(true);
     }
 
     protected function tearDown(): void
@@ -40,6 +48,7 @@ class ProductSyncTest extends TestCase
         self::assertNotFalse(has_action('woocommerce_update_product', [$sync, 'scheduleSync']));
         self::assertNotFalse(has_action('woocommerce_product_set_stock', [$sync, 'scheduleSync']));
         self::assertNotFalse(has_action('wp_trash_post', [$sync, 'scheduleDelete']));
+        self::assertNotFalse(has_action('before_delete_post', [$sync, 'scheduleDelete'])); // hard delete
         self::assertNotFalse(has_action('untrashed_post', [$sync, 'scheduleSync']));
         self::assertNotFalse(has_action('appinio_sync_product', [$sync, 'syncProduct']));
         self::assertNotFalse(has_action('appinio_delete_product', [$sync, 'deleteProduct']));
@@ -205,5 +214,103 @@ class ProductSyncTest extends TestCase
         (new ProductSync)->syncProduct(9003); // unique id
 
         self::assertTrue(true);
+    }
+
+    public function test_sync_product_reschedules_on_transient_failure(): void
+    {
+        $product = $this->makeWcProduct(['get_id' => 42]);
+        Functions\when('wc_get_product')->justReturn($product);
+        $this->stubIndexHttp(503); // transient server error
+        Functions\when('get_transient')->justReturn(false); // first failure
+
+        // RetryPolicy reschedules the same action with backoff; no exception.
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appinio_sync_product', [42], 'appinio-search');
+
+        (new ProductSync)->syncProduct(42);
+
+        self::assertTrue(true);
+    }
+
+    public function test_sync_product_throws_when_retries_exhausted(): void
+    {
+        $product = $this->makeWcProduct(['get_id' => 42]);
+        Functions\when('wc_get_product')->justReturn($product);
+        $this->stubIndexHttp(503);
+        Functions\when('get_transient')->justReturn(4); // next attempt = 5 = cap → Exhausted
+        Functions\expect('as_schedule_single_action')->never();
+
+        // Exhausted → throw so Action Scheduler marks the action failed (visible).
+        $this->expectException(\RuntimeException::class);
+
+        (new ProductSync)->syncProduct(42);
+    }
+
+    public function test_sync_product_does_not_throw_on_permanent_failure(): void
+    {
+        $product = $this->makeWcProduct(['get_id' => 42]);
+        Functions\when('wc_get_product')->justReturn($product);
+        $this->stubIndexHttp(422); // client validation error → permanent
+        Functions\expect('as_schedule_single_action')->never();
+
+        (new ProductSync)->syncProduct(42); // no exception, no reschedule
+
+        self::assertTrue(true);
+    }
+
+    public function test_delete_product_treats_404_as_success(): void
+    {
+        $this->stubDeleteHttp(404); // already gone from the index
+        Functions\expect('as_schedule_single_action')->never();
+
+        (new ProductSync)->deleteProduct(55); // no throw, no reschedule
+
+        self::assertTrue(true);
+    }
+
+    public function test_delete_product_reschedules_on_transient_failure(): void
+    {
+        $this->stubDeleteHttp(500);
+        Functions\when('get_transient')->justReturn(false);
+
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appinio_delete_product', [55], 'appinio-search');
+
+        (new ProductSync)->deleteProduct(55);
+
+        self::assertTrue(true);
+    }
+
+    /**
+     * Drive the full index path (mapper + Client) to a given HTTP status.
+     */
+    private function stubIndexHttp(int $status): void
+    {
+        Functions\when('get_option')->justReturn('sk_test_key');
+        Functions\when('wp_json_encode')->alias(static fn ($d) => json_encode($d));
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('wp_remote_retrieve_response_code')->justReturn($status);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+    }
+
+    /**
+     * Drive the delete path (Client only, no mapper) to a given HTTP status.
+     */
+    private function stubDeleteHttp(int $status): void
+    {
+        Functions\when('get_option')->justReturn('sk_test_key');
+        Functions\when('wp_json_encode')->alias(static fn ($d) => json_encode($d));
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('wp_remote_retrieve_response_code')->justReturn($status);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
     }
 }

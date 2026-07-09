@@ -33,6 +33,10 @@ if (! defined('APPINIO_VERSION')) {
     \define('APPINIO_VERSION', '1.0.0-test');
 }
 
+if (! defined('DAY_IN_SECONDS')) {
+    \define('DAY_IN_SECONDS', 86400);
+}
+
 // Minimal WooCommerce type hierarchy so Mockery mocks satisfy the mapper's
 // `WC_Product` type-hint and its `instanceof WC_Product_Variable` branch.
 // Empty interfaces — Mockery still stubs any method dynamically.

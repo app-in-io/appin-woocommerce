@@ -16,6 +16,8 @@ final class ProductSync
     /** @var array<int, true> Prevent duplicate processing within same request */
     private static array $processed = [];
 
+    public function __construct(private RetryPolicy $retryPolicy = new RetryPolicy) {}
+
     public function register(): void
     {
         if (! get_option('appinio_auto_sync', true)) {
@@ -27,8 +29,9 @@ final class ProductSync
         add_action('woocommerce_update_product', [$this, 'scheduleSync']);
         add_action('woocommerce_product_set_stock', [$this, 'scheduleSync']);
 
-        // Product delete
+        // Product delete — trash, and hard delete (EMPTY_TRASH_DAYS=0, REST, WP-CLI)
         add_action('wp_trash_post', [$this, 'scheduleDelete']);
+        add_action('before_delete_post', [$this, 'scheduleDelete']);
 
         // Product restore from trash
         add_action('untrashed_post', [$this, 'scheduleSync']);
@@ -132,10 +135,14 @@ final class ProductSync
         $result = $client->indexProduct($data);
 
         if ($result['ok']) {
+            $this->retryPolicy->clear('appinio_sync_product', [$productId]);
             $this->updateSyncedCount();
-        } else {
-            $this->logError($productId, 'index', $result);
+
+            return;
         }
+
+        $this->logError($productId, 'index', $result);
+        $this->handleFailure('appinio_sync_product', $productId, 'index', $result['status']);
     }
 
     /**
@@ -146,8 +153,31 @@ final class ProductSync
         $client = new Client;
         $result = $client->deleteProduct((string) $productId);
 
-        if (! $result['ok'] && $result['status'] !== 404) {
-            $this->logError($productId, 'delete', $result);
+        // A 404 means it's already gone from the index — treat as success.
+        if ($result['ok'] || $result['status'] === 404) {
+            $this->retryPolicy->clear('appinio_delete_product', [$productId]);
+
+            return;
+        }
+
+        $this->logError($productId, 'delete', $result);
+        $this->handleFailure('appinio_delete_product', $productId, 'delete', $result['status']);
+    }
+
+    /**
+     * Self-heal a failed sync: transient failures reschedule with backoff; when the
+     * retry cap is hit, throw so Action Scheduler marks the action failed (visible in
+     * Tools → Scheduled Actions). Permanent (4xx) failures are already logged — drop.
+     */
+    private function handleFailure(string $hook, int $productId, string $action, int $status): void
+    {
+        if ($this->retryPolicy->attempt($hook, [$productId], $status) === RetryOutcome::Exhausted) {
+            throw new \RuntimeException(\sprintf(
+                'AppIn %s failed for product #%d after retries (HTTP %d)',
+                $action,
+                $productId,
+                $status
+            ));
         }
     }
 
@@ -157,6 +187,10 @@ final class ProductSync
             as_unschedule_all_actions('appinio_sync_product', [$productId], 'appinio-search');
             as_unschedule_all_actions('appinio_delete_product', [$productId], 'appinio-search');
         }
+
+        // A fresh edit/delete resets the retry budget for this product.
+        $this->retryPolicy->clear('appinio_sync_product', [$productId]);
+        $this->retryPolicy->clear('appinio_delete_product', [$productId]);
     }
 
     private function updateSyncedCount(): void

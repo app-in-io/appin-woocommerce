@@ -101,13 +101,16 @@ class ClientTest extends TestCase
         self::assertSame(200, $result['status']);
     }
 
-    public function test_wp_error_returns_status_zero_and_does_not_retry(): void
+    public function test_network_error_retries_then_returns_status_zero(): void
     {
-        // A transport-level WP_Error must short-circuit immediately — no retry loop.
+        // A transport-level WP_Error is transient — retry up to MAX_RETRIES, then give up
+        // with status 0. (sleep() is shimmed so the back-off doesn't block the test.)
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+
         $wpError = Mockery::mock('WP_Error');
         $wpError->allows('get_error_message')->andReturn('Connection refused');
 
-        Functions\expect('wp_remote_request')->once()->andReturn($wpError);
+        Functions\expect('wp_remote_request')->times(3)->andReturn($wpError);
         Functions\when('is_wp_error')->justReturn(true);
 
         $result = (new Client)->indexProduct(['id' => '1']);
@@ -115,6 +118,18 @@ class ClientTest extends TestCase
         self::assertFalse($result['ok']);
         self::assertSame(0, $result['status']);
         self::assertSame('Connection refused', $result['body']['error']);
+    }
+
+    public function test_is_retryable_classifies_transient_vs_permanent(): void
+    {
+        // Transient: network (0), rate limit (429), server errors (5xx).
+        self::assertTrue(Client::isRetryable(0));
+        self::assertTrue(Client::isRetryable(429));
+        self::assertTrue(Client::isRetryable(503));
+        // Permanent: success + 4xx client errors.
+        self::assertFalse(Client::isRetryable(200));
+        self::assertFalse(Client::isRetryable(422));
+        self::assertFalse(Client::isRetryable(404));
     }
 
     public function test_retries_once_on_429_then_succeeds(): void
