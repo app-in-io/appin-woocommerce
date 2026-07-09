@@ -4,103 +4,103 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: AppIn Search 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appin-search\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
 "Last-Translator: AppIn <hello@app-in.io>\n"
-"Language-Team: English\n"
-"Language: en_US\n"
+"Language-Team: Nederlands\n"
+"Language: nl_NL\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Domain: appin-search\n"
+"X-Domain: appinio-search\n"
 
 msgid "AppIn Search"
 msgstr "AppIn Search"
 
 msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
-msgstr "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
+msgstr "Synchroniseer WooCommerce-producten met AppIn AI-zoeken. Realtime hooks + bulksynchronisatie."
 
 msgid "AppIn Search requires WooCommerce to be installed and active."
-msgstr "AppIn Search requires WooCommerce to be installed and active."
+msgstr "AppIn Search vereist dat WooCommerce is geïnstalleerd en geactiveerd."
 
 msgid "Connection"
-msgstr "Connection"
+msgstr "Verbinding"
 
 msgid "Connect your WooCommerce store to AppIn AI Search."
-msgstr "Connect your WooCommerce store to AppIn AI Search."
+msgstr "Verbind je WooCommerce-winkel met AppIn AI-zoeken."
 
 msgid "API Key"
-msgstr "API Key"
+msgstr "API-sleutel"
 
 msgid "Auto Sync"
-msgstr "Auto Sync"
+msgstr "Automatisch synchroniseren"
 
 msgid "Search Widget"
-msgstr "Search Widget"
+msgstr "Zoekwidget"
 
 msgid "Configure the live search widget that appears on your store."
-msgstr "Configure the live search widget that appears on your store."
+msgstr "Configureer de live zoekwidget die op je winkel verschijnt."
 
 msgid "Public Key"
-msgstr "Public Key"
+msgstr "Publieke sleutel"
 
 msgid "Search Input Selector"
-msgstr "Search Input Selector"
+msgstr "Selector voor zoekveld"
 
 msgid "Your AppIn API key. Found in the %s under Sites > API Keys."
-msgstr "Your AppIn API key. Found in the %s under Sites > API Keys."
+msgstr "Je AppIn API-sleutel. Te vinden in het %s onder Sites > API Keys."
 
 msgid "Automatically sync products when created, updated, or deleted."
-msgstr "Automatically sync products when created, updated, or deleted."
+msgstr "Producten automatisch synchroniseren bij aanmaken, bijwerken of verwijderen."
 
 msgid "Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys."
-msgstr "Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys."
+msgstr "Publieke sleutel voor de zoekwidget. Veilig om in de browser te tonen. Te vinden in het %s onder Sites > API Keys."
 
 msgid "Custom CSS selector for the search input. Leave empty to use automatic detection."
-msgstr "Custom CSS selector for the search input. Leave empty to use automatic detection."
+msgstr "Aangepaste CSS-selector voor het zoekveld. Laat leeg voor automatische detectie."
 
 msgid "AppIn dashboard"
-msgstr "AppIn dashboard"
+msgstr "AppIn-dashboard"
 
 msgid "Getting started"
-msgstr "Getting started"
+msgstr "Aan de slag"
 
 msgid "Create a free account at %s."
-msgstr "Create a free account at %s."
+msgstr "Maak een gratis account aan op %s."
 
 msgid "Copy your API key from the %s under Sites > API Keys."
-msgstr "Copy your API key from the %s under Sites > API Keys."
+msgstr "Kopieer je API-sleutel uit het %s onder Sites > API Keys."
 
 msgid "Paste it below, save, then run Sync All Products."
-msgstr "Paste it below, save, then run Sync All Products."
+msgstr "Plak deze hieronder, sla op en voer daarna Alle producten synchroniseren uit."
 
 msgid "Create a free AppIn account"
-msgstr "Create a free AppIn account"
+msgstr "Gratis AppIn-account aanmaken"
 
 msgid "Sync Status"
-msgstr "Sync Status"
+msgstr "Synchronisatiestatus"
 
 msgid "Published products"
-msgstr "Published products"
+msgstr "Gepubliceerde producten"
 
 msgid "Synced"
-msgstr "Synced"
+msgstr "Gesynchroniseerd"
 
 msgid "Last sync"
-msgstr "Last sync"
+msgstr "Laatste synchronisatie"
 
 msgid "Sync in progress..."
-msgstr "Sync in progress..."
+msgstr "Synchronisatie bezig…"
 
 msgid "Sync All Products"
-msgstr "Sync All Products"
+msgstr "Alle producten synchroniseren"
 
 msgid "This will remove all products from AppIn index. Continue?"
-msgstr "This will remove all products from AppIn index. Continue?"
+msgstr "Hiermee worden alle producten uit de AppIn-index verwijderd. Doorgaan?"
 
 msgid "Delete All from Index"
-msgstr "Delete All from Index"
+msgstr "Alles uit index verwijderen"
 
 msgid "Unauthorized."
-msgstr "Unauthorized."
+msgstr "Niet geautoriseerd."
 

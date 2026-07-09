@@ -16,8 +16,8 @@ jobs:
       - name: Set version from tag
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          sed -i -E "s/(\* Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
-          sed -i -E "s/(APPIN_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
+          sed -i -E "s/(\* Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
+          sed -i -E "s/(APPINIO_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
           sed -i -E "s/(Stable tag:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" readme.txt
           if ! git diff --quiet; then
             git config user.email "ci@app-in.io"
@@ -28,20 +28,20 @@ jobs:
       - name: Build zip
         id: build_zip
         run: |
-          git archive --format=zip --prefix=appin-search/ -o appin-search.zip HEAD
+          git archive --format=zip --prefix=appinio-search/ -o appinio-search.zip HEAD
 
       - name: Upload to release
         id: upload_release
-        run: gh release upload "$GITHUB_REF_NAME" appin-search.zip --clobber
+        run: gh release upload "$GITHUB_REF_NAME" appinio-search.zip --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to R2
         id: upload_r2
-        # Served publicly at https://cdn.app-in.io/plugins/appin-search.zip (stable "latest" path).
+        # Served publicly at https://cdn.app-in.io/plugins/appinio-search.zip (stable "latest" path).
         # Short max-age so the stable URL refreshes within minutes of a release — no CDN purge needed.
         run: |
-          aws s3 cp appin-search.zip "s3://${R2_BUCKET}/plugins/appin-search.zip" \
+          aws s3 cp appinio-search.zip "s3://${R2_BUCKET}/plugins/appinio-search.zip" \
             --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
             --content-type application/zip \
             --cache-control "public, max-age=300"

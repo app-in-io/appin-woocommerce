@@ -24,8 +24,8 @@ jobs:
             echo "::error::Run this workflow from a version tag (e.g. v1.0.0), not '${GITHUB_REF_NAME}'."
             exit 1
           fi
-          sed -i -E "s/(Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
-          sed -i -E "s/(APPIN_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appin-search.php
+          sed -i -E "s/(Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
+          sed -i -E "s/(APPINIO_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
           sed -i -E "s/(Stable tag:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" readme.txt
 
       - name: Deploy to WordPress.org
@@ -33,5 +33,5 @@ jobs:
         env:
           SVN_USERNAME: ${{ secrets.WP_ORG_USERNAME }}
           SVN_PASSWORD: ${{ secrets.WP_ORG_PASSWORD }}
-          SLUG: appin-search
+          SLUG: appinio-search
           ASSETS_DIR: .wordpress-org

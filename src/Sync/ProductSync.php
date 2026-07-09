@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Sync;
+namespace AppInIo\Sync;
 
-use AppIn\WooCommerce\Api\Client;
-use AppIn\WooCommerce\Mapper\ProductMapper;
+use AppInIo\Api\Client;
+use AppInIo\Mapper\ProductMapper;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -18,7 +18,7 @@ final class ProductSync
 
     public function register(): void
     {
-        if (! get_option('appin_auto_sync', true)) {
+        if (! get_option('appinio_auto_sync', true)) {
             return;
         }
 
@@ -34,8 +34,8 @@ final class ProductSync
         add_action('untrashed_post', [$this, 'scheduleSync']);
 
         // Deferred execution via Action Scheduler
-        add_action('appin_sync_product', [$this, 'syncProduct']);
-        add_action('appin_delete_product', [$this, 'deleteProduct']);
+        add_action('appinio_sync_product', [$this, 'syncProduct']);
+        add_action('appinio_delete_product', [$this, 'deleteProduct']);
     }
 
     /**
@@ -62,9 +62,9 @@ final class ProductSync
         if (\function_exists('as_schedule_single_action')) {
             as_schedule_single_action(
                 time() + 5,
-                'appin_sync_product',
+                'appinio_sync_product',
                 [$productId],
-                'appin-search'
+                'appinio-search'
             );
         } else {
             // Fallback if Action Scheduler not available
@@ -86,9 +86,9 @@ final class ProductSync
         if (\function_exists('as_schedule_single_action')) {
             as_schedule_single_action(
                 time() + 2,
-                'appin_delete_product',
+                'appinio_delete_product',
                 [$postId],
-                'appin-search'
+                'appinio-search'
             );
         } else {
             $this->deleteProduct($postId);
@@ -146,15 +146,15 @@ final class ProductSync
     private function cancelPending(int $productId): void
     {
         if (\function_exists('as_unschedule_all_actions')) {
-            as_unschedule_all_actions('appin_sync_product', [$productId], 'appin-search');
-            as_unschedule_all_actions('appin_delete_product', [$productId], 'appin-search');
+            as_unschedule_all_actions('appinio_sync_product', [$productId], 'appinio-search');
+            as_unschedule_all_actions('appinio_delete_product', [$productId], 'appinio-search');
         }
     }
 
     private function updateSyncedCount(): void
     {
-        $count = (int) get_option('appin_synced_count', 0);
-        update_option('appin_synced_count', $count + 1, false);
+        $count = (int) get_option('appinio_synced_count', 0);
+        update_option('appinio_synced_count', $count + 1, false);
     }
 
     /**

@@ -6,37 +6,44 @@ if (! defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
-$appin_search_options = [
-    'appin_api_key',
-    'appin_auto_sync',
-    'appin_public_key',
-    'appin_search_selector',
-    'appin_last_sync',
-    'appin_synced_count',
-    'appin_bulk_sync_running',
+$appinio_search_options = [
+    'appinio_api_key',
+    'appinio_auto_sync',
+    'appinio_public_key',
+    'appinio_search_selector',
+    'appinio_results_page',
+    'appinio_last_sync',
+    'appinio_synced_count',
+    'appinio_bulk_sync_running',
+];
+
+$appinio_search_hooks = [
+    'appinio_sync_product',
+    'appinio_delete_product',
+    'appinio_bulk_sync_batch',
+    'appinio_bulk_delete_batch',
 ];
 
 // Options are stored per-site via update_option and Action Scheduler jobs live in
 // per-site tables, so on multisite we must purge each blog individually.
-$appin_search_purge = static function () use ($appin_search_options): void {
-    foreach ($appin_search_options as $appin_search_option) {
-        delete_option($appin_search_option);
+$appinio_search_purge = static function () use ($appinio_search_options, $appinio_search_hooks): void {
+    foreach ($appinio_search_options as $appinio_search_option) {
+        delete_option($appinio_search_option);
     }
 
     if (\function_exists('as_unschedule_all_actions')) {
-        as_unschedule_all_actions('appin_sync_product', [], 'appin-search');
-        as_unschedule_all_actions('appin_delete_product', [], 'appin-search');
-        as_unschedule_all_actions('appin_bulk_sync_batch', [], 'appin-search');
-        as_unschedule_all_actions('appin_bulk_delete_batch', [], 'appin-search');
+        foreach ($appinio_search_hooks as $appinio_search_hook) {
+            as_unschedule_all_actions($appinio_search_hook, [], 'appinio-search');
+        }
     }
 };
 
 if (is_multisite()) {
-    foreach (get_sites(['fields' => 'ids', 'number' => 0]) as $appin_search_site_id) {
-        switch_to_blog((int) $appin_search_site_id);
-        $appin_search_purge();
+    foreach (get_sites(['fields' => 'ids', 'number' => 0]) as $appinio_search_site_id) {
+        switch_to_blog((int) $appinio_search_site_id);
+        $appinio_search_purge();
         restore_current_blog();
     }
 } else {
-    $appin_search_purge();
+    $appinio_search_purge();
 }

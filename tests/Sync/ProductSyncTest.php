@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Tests\Sync;
+namespace AppInIo\Tests\Sync;
 
-use AppIn\WooCommerce\Sync\ProductSync;
+use AppInIo\Sync\ProductSync;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -31,7 +31,7 @@ class ProductSyncTest extends TestCase
 
     public function test_register_wires_all_hooks_when_auto_sync_enabled(): void
     {
-        Functions\when('get_option')->justReturn(true); // appin_auto_sync
+        Functions\when('get_option')->justReturn(true); // appinio_auto_sync
 
         $sync = new ProductSync;
         $sync->register();
@@ -41,8 +41,8 @@ class ProductSyncTest extends TestCase
         self::assertNotFalse(has_action('woocommerce_product_set_stock', [$sync, 'scheduleSync']));
         self::assertNotFalse(has_action('wp_trash_post', [$sync, 'scheduleDelete']));
         self::assertNotFalse(has_action('untrashed_post', [$sync, 'scheduleSync']));
-        self::assertNotFalse(has_action('appin_sync_product', [$sync, 'syncProduct']));
-        self::assertNotFalse(has_action('appin_delete_product', [$sync, 'deleteProduct']));
+        self::assertNotFalse(has_action('appinio_sync_product', [$sync, 'syncProduct']));
+        self::assertNotFalse(has_action('appinio_delete_product', [$sync, 'deleteProduct']));
     }
 
     public function test_register_skips_hooks_when_auto_sync_disabled(): void
@@ -53,7 +53,7 @@ class ProductSyncTest extends TestCase
         $sync->register();
 
         self::assertFalse(has_action('woocommerce_new_product', [$sync, 'scheduleSync']));
-        self::assertFalse(has_action('appin_sync_product', [$sync, 'syncProduct']));
+        self::assertFalse(has_action('appinio_sync_product', [$sync, 'syncProduct']));
     }
 
     public function test_schedule_sync_schedules_debounced_action_for_plain_id(): void
@@ -63,7 +63,7 @@ class ProductSyncTest extends TestCase
 
         Functions\expect('as_schedule_single_action')
             ->once()
-            ->with(Mockery::type('int'), 'appin_sync_product', [123], 'appin-search');
+            ->with(Mockery::type('int'), 'appinio_sync_product', [123], 'appinio-search');
 
         (new ProductSync)->scheduleSync(123);
 
@@ -80,7 +80,7 @@ class ProductSyncTest extends TestCase
 
         Functions\expect('as_schedule_single_action')
             ->once()
-            ->with(Mockery::type('int'), 'appin_sync_product', [321], 'appin-search');
+            ->with(Mockery::type('int'), 'appinio_sync_product', [321], 'appinio-search');
 
         (new ProductSync)->scheduleSync($product);
 
@@ -96,7 +96,7 @@ class ProductSyncTest extends TestCase
 
         Functions\expect('as_schedule_single_action')
             ->once()
-            ->with(Mockery::type('int'), 'appin_sync_product', [500], 'appin-search');
+            ->with(Mockery::type('int'), 'appinio_sync_product', [500], 'appinio-search');
 
         (new ProductSync)->scheduleSync(777); // a variation id
 
@@ -132,7 +132,7 @@ class ProductSyncTest extends TestCase
 
         Functions\expect('as_schedule_single_action')
             ->once()
-            ->with(Mockery::type('int'), 'appin_delete_product', [55], 'appin-search');
+            ->with(Mockery::type('int'), 'appinio_delete_product', [55], 'appinio-search');
 
         (new ProductSync)->scheduleDelete(55);
 

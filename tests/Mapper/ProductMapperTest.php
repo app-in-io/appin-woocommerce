@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Tests\Mapper;
+namespace AppInIo\Tests\Mapper;
 
-use AppIn\WooCommerce\Mapper\ProductMapper;
-use AppIn\WooCommerce\Tests\Concerns\MocksWooCommerceProduct;
+use AppInIo\Mapper\ProductMapper;
+use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;

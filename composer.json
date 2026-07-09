@@ -1,5 +1,5 @@
 {
-    "name": "appin/appin-search",
+    "name": "appin/appinio-search",
     "description": "WooCommerce integration for AppIn AI Search",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -17,12 +17,12 @@
     },
     "autoload": {
         "psr-4": {
-            "AppIn\\WooCommerce\\": "src/"
+            "AppInIo\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "AppIn\\WooCommerce\\Tests\\": "tests/"
+            "AppInIo\\Tests\\": "tests/"
         }
     },
     "config": {

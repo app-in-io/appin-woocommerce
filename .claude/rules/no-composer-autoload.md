@@ -2,12 +2,12 @@
 
 > Applies to: `**/*.php`
 
-Production does NOT use Composer autoload. The manual `autoload.php` maps `AppIn\WooCommerce\` → `src/`.
+Production does NOT use Composer autoload. The manual `autoload.php` maps `AppInIo\` → `src/`.
 
 ## Rules
 
 - All new classes **MUST** follow PSR-4 naming: class name = file name, namespace = directory path
-- Example: `AppIn\WooCommerce\Sync\ProductSync` → `src/Sync/ProductSync.php`
+- Example: `AppInIo\Sync\ProductSync` → `src/Sync/ProductSync.php`
 - **Never add runtime dependencies via Composer** — only dev dependencies (PHPUnit, Brain Monkey, Mockery)
 - If you need a library at runtime, either vendor it manually or implement the functionality directly
 - The `autoload.php` handles a simple namespace-to-directory mapping — no Composer classmap, no files autoload

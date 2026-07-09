@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Admin;
+namespace AppInIo\Admin;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -19,7 +19,7 @@ final class SettingsPage
 
     public function enqueueScripts(string $hook): void
     {
-        if ($hook !== 'woocommerce_page_appin-search') {
+        if ($hook !== 'woocommerce_page_appinio-search') {
             return;
         }
 
@@ -28,25 +28,25 @@ final class SettingsPage
 
     private function syncPollingScript(): string
     {
-        $nonce = wp_create_nonce('appin_sync_status');
+        $nonce = wp_create_nonce('appinio_sync_status');
         $ajaxUrl = admin_url('admin-ajax.php');
 
         return "
         (function(\$) {
-            var container = document.getElementById('appin-sync-section');
+            var container = document.getElementById('appinio-sync-section');
             if (!container || !container.dataset.running) return;
 
             var poll = setInterval(function() {
                 \$.post('{$ajaxUrl}', {
-                    action: 'appin_sync_status',
+                    action: 'appinio_sync_status',
                     _ajax_nonce: '{$nonce}'
                 }, function(resp) {
                     if (!resp.running) {
                         clearInterval(poll);
-                        var synced = container.querySelector('.appin-synced-count');
-                        var lastSync = container.querySelector('.appin-last-sync');
-                        var actions = container.querySelector('.appin-actions');
-                        var progress = container.querySelector('.appin-progress');
+                        var synced = container.querySelector('.appinio-synced-count');
+                        var lastSync = container.querySelector('.appinio-last-sync');
+                        var actions = container.querySelector('.appinio-actions');
+                        var progress = container.querySelector('.appinio-progress');
 
                         if (synced) synced.textContent = resp.synced;
                         if (lastSync) {
@@ -56,7 +56,7 @@ final class SettingsPage
                         if (progress) progress.style.display = 'none';
                         if (actions) actions.style.display = '';
                     } else {
-                        var synced = container.querySelector('.appin-synced-count');
+                        var synced = container.querySelector('.appinio-synced-count');
                         if (synced) synced.textContent = resp.synced;
                     }
                 });
@@ -69,105 +69,119 @@ final class SettingsPage
     {
         add_submenu_page(
             'woocommerce',
-            __('AppIn Search', 'appin-search'),
-            __('AppIn Search', 'appin-search'),
+            __('AppIn Search', 'appinio-search'),
+            __('AppIn Search', 'appinio-search'),
             'manage_woocommerce',
-            'appin-search',
+            'appinio-search',
             [$this, 'render'],
         );
     }
 
     public function registerSettings(): void
     {
-        register_setting('appin_search', 'appin_api_key', [
+        register_setting('appinio_search', 'appinio_api_key', [
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default' => '',
         ]);
 
-        register_setting('appin_search', 'appin_auto_sync', [
+        register_setting('appinio_search', 'appinio_auto_sync', [
             'type' => 'boolean',
             'sanitize_callback' => 'rest_sanitize_boolean',
             'default' => true,
         ]);
 
-        register_setting('appin_search', 'appin_public_key', [
+        register_setting('appinio_search', 'appinio_public_key', [
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default' => '',
         ]);
 
-        register_setting('appin_search', 'appin_search_selector', [
+        register_setting('appinio_search', 'appinio_search_selector', [
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'default' => '',
+        ]);
+
+        register_setting('appinio_search', 'appinio_results_page', [
+            'type' => 'boolean',
+            'sanitize_callback' => 'rest_sanitize_boolean',
+            'default' => true,
         ]);
 
         add_settings_section(
-            'appin_main',
-            __('Connection', 'appin-search'),
+            'appinio_main',
+            __('Connection', 'appinio-search'),
             fn () => printf(
                 '<p>%s</p>',
-                esc_html__('Connect your WooCommerce store to AppIn AI Search.', 'appin-search')
+                esc_html__('Connect your WooCommerce store to AppIn AI Search.', 'appinio-search')
             ),
-            'appin-search',
+            'appinio-search',
         );
 
         add_settings_field(
-            'appin_api_key',
-            __('API Key', 'appin-search'),
+            'appinio_api_key',
+            __('API Key', 'appinio-search'),
             [$this, 'renderApiKeyField'],
-            'appin-search',
-            'appin_main',
+            'appinio-search',
+            'appinio_main',
         );
 
         add_settings_field(
-            'appin_auto_sync',
-            __('Auto Sync', 'appin-search'),
+            'appinio_auto_sync',
+            __('Auto Sync', 'appinio-search'),
             [$this, 'renderAutoSyncField'],
-            'appin-search',
-            'appin_main',
+            'appinio-search',
+            'appinio_main',
         );
 
         add_settings_section(
-            'appin_widget',
-            __('Search Widget', 'appin-search'),
+            'appinio_widget',
+            __('Search Widget', 'appinio-search'),
             fn () => printf(
                 '<p>%s</p>',
-                esc_html__('Configure the live search widget that appears on your store.', 'appin-search')
+                esc_html__('Configure the live search widget that appears on your store.', 'appinio-search')
             ),
-            'appin-search',
+            'appinio-search',
         );
 
         add_settings_field(
-            'appin_public_key',
-            __('Public Key', 'appin-search'),
+            'appinio_public_key',
+            __('Public Key', 'appinio-search'),
             [$this, 'renderPublicKeyField'],
-            'appin-search',
-            'appin_widget',
+            'appinio-search',
+            'appinio_widget',
         );
 
         add_settings_field(
-            'appin_search_selector',
-            __('Search Input Selector', 'appin-search'),
+            'appinio_search_selector',
+            __('Search Input Selector', 'appinio-search'),
             [$this, 'renderSearchSelectorField'],
-            'appin-search',
-            'appin_widget',
+            'appinio-search',
+            'appinio_widget',
+        );
+
+        add_settings_field(
+            'appinio_results_page',
+            __('Search Results Page', 'appinio-search'),
+            [$this, 'renderResultsPageField'],
+            'appinio-search',
+            'appinio_widget',
         );
     }
 
     public function renderApiKeyField(): void
     {
-        $value = get_option('appin_api_key', '');
+        $value = get_option('appinio_api_key', '');
         printf(
-            '<input type="password" name="appin_api_key" value="%s" class="regular-text" placeholder="sk_live_..." />',
+            '<input type="password" name="appinio_api_key" value="%s" class="regular-text" placeholder="sk_live_..." />',
             esc_attr($value)
         );
         printf(
             '<p class="description">%s</p>',
             wp_kses_post(\sprintf(
                 /* translators: %s: link to the AppIn dashboard */
-                esc_html__('Your AppIn API key. Found in the %s under Sites > API Keys.', 'appin-search'),
+                esc_html__('Your AppIn API key. Found in the %s under Sites > API Keys.', 'appinio-search'),
                 $this->dashboardLink()
             ))
         );
@@ -175,26 +189,26 @@ final class SettingsPage
 
     public function renderAutoSyncField(): void
     {
-        $checked = get_option('appin_auto_sync', true);
+        $checked = get_option('appinio_auto_sync', true);
         printf(
-            '<label><input type="checkbox" name="appin_auto_sync" value="1" %s /> %s</label>',
+            '<label><input type="checkbox" name="appinio_auto_sync" value="1" %s /> %s</label>',
             checked($checked, true, false),
-            esc_html__('Automatically sync products when created, updated, or deleted.', 'appin-search')
+            esc_html__('Automatically sync products when created, updated, or deleted.', 'appinio-search')
         );
     }
 
     public function renderPublicKeyField(): void
     {
-        $value = get_option('appin_public_key', '');
+        $value = get_option('appinio_public_key', '');
         printf(
-            '<input type="text" name="appin_public_key" value="%s" class="regular-text" placeholder="pk_live_..." />',
+            '<input type="text" name="appinio_public_key" value="%s" class="regular-text" placeholder="pk_live_..." />',
             esc_attr($value)
         );
         printf(
             '<p class="description">%s</p>',
             wp_kses_post(\sprintf(
                 /* translators: %s: link to the AppIn dashboard */
-                esc_html__('Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys.', 'appin-search'),
+                esc_html__('Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys.', 'appinio-search'),
                 $this->dashboardLink()
             ))
         );
@@ -202,14 +216,24 @@ final class SettingsPage
 
     public function renderSearchSelectorField(): void
     {
-        $value = get_option('appin_search_selector', '');
+        $value = get_option('appinio_search_selector', '');
         printf(
-            '<input type="text" name="appin_search_selector" value="%s" class="regular-text" placeholder="input[name=&quot;s&quot;]" />',
+            '<input type="text" name="appinio_search_selector" value="%s" class="regular-text" placeholder="input[name=&quot;s&quot;]" />',
             esc_attr($value)
         );
         printf(
             '<p class="description">%s</p>',
-            esc_html__('Custom CSS selector for the search input. Leave empty to use automatic detection.', 'appin-search')
+            esc_html__('Custom CSS selector for the search input. Leave empty to use automatic detection.', 'appinio-search')
+        );
+    }
+
+    public function renderResultsPageField(): void
+    {
+        $checked = get_option('appinio_results_page', true);
+        printf(
+            '<label><input type="checkbox" name="appinio_results_page" value="1" %s /> %s</label>',
+            checked($checked, true, false),
+            esc_html__('Power the WordPress search results page (/?s=) with AI. Products use AI search; other content stays native. Falls back to native search if AppIn is unavailable.', 'appinio-search')
         );
     }
 
@@ -227,8 +251,8 @@ final class SettingsPage
 
         // Settings form
         echo '<form method="post" action="options.php">';
-        settings_fields('appin_search');
-        do_settings_sections('appin-search');
+        settings_fields('appinio_search');
+        do_settings_sections('appinio-search');
         submit_button();
         echo '</form>';
 
@@ -241,7 +265,7 @@ final class SettingsPage
     private function dashboardLink(): string
     {
         return '<a href="' . esc_url('https://my.app-in.io') . '" target="_blank" rel="noopener">'
-            . esc_html__('AppIn dashboard', 'appin-search') . '</a>';
+            . esc_html__('AppIn dashboard', 'appinio-search') . '</a>';
     }
 
     /**
@@ -251,13 +275,13 @@ final class SettingsPage
     private function renderOnboarding(): void
     {
         echo '<div class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;">';
-        echo '<h2 style="margin-top:0;">' . esc_html__('Getting started', 'appin-search') . '</h2>';
+        echo '<h2 style="margin-top:0;">' . esc_html__('Getting started', 'appinio-search') . '</h2>';
         echo '<ol style="margin-left:18px;">';
         printf(
             '<li>%s</li>',
             wp_kses_post(\sprintf(
                 /* translators: %s: link to the AppIn website */
-                esc_html__('Create a free account at %s.', 'appin-search'),
+                esc_html__('Create a free account at %s.', 'appinio-search'),
                 '<a href="' . esc_url('https://app-in.io') . '" target="_blank" rel="noopener">app-in.io</a>'
             ))
         );
@@ -265,73 +289,73 @@ final class SettingsPage
             '<li>%s</li>',
             wp_kses_post(\sprintf(
                 /* translators: %s: link to the AppIn dashboard */
-                esc_html__('Copy your API key from the %s under Sites > API Keys.', 'appin-search'),
+                esc_html__('Copy your API key from the %s under Sites > API Keys.', 'appinio-search'),
                 $this->dashboardLink()
             ))
         );
         printf(
             '<li>%s</li>',
-            esc_html__('Paste it below, save, then run Sync All Products.', 'appin-search')
+            esc_html__('Paste it below, save, then run Sync All Products.', 'appinio-search')
         );
         echo '</ol>';
         printf(
             '<p><a href="%s" class="button button-primary" target="_blank" rel="noopener">%s</a></p>',
             esc_url('https://app-in.io'),
-            esc_html__('Create a free AppIn account', 'appin-search')
+            esc_html__('Create a free AppIn account', 'appinio-search')
         );
         echo '</div>';
     }
 
     private function renderSyncSection(): void
     {
-        $apiKey = get_option('appin_api_key', '');
+        $apiKey = get_option('appinio_api_key', '');
         if ($apiKey === '') {
             $this->renderOnboarding();
 
             return;
         }
 
-        $lastSync = get_option('appin_last_sync', '');
-        $synced = (int) get_option('appin_synced_count', 0);
+        $lastSync = get_option('appinio_last_sync', '');
+        $synced = (int) get_option('appinio_synced_count', 0);
         $total = (int) wp_count_posts('product')->publish;
-        $isSyncing = (bool) get_option('appin_bulk_sync_running', false);
+        $isSyncing = (bool) get_option('appinio_bulk_sync_running', false);
 
-        echo '<div id="appin-sync-section" class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;"';
+        echo '<div id="appinio-sync-section" class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;"';
         if ($isSyncing) {
             echo ' data-running="1"';
         }
         echo '>';
-        echo '<h2 style="margin-top:0;">' . esc_html__('Sync Status', 'appin-search') . '</h2>';
+        echo '<h2 style="margin-top:0;">' . esc_html__('Sync Status', 'appinio-search') . '</h2>';
         echo '<table class="form-table" role="presentation"><tbody>';
 
-        echo '<tr><th>' . esc_html__('Published products', 'appin-search') . '</th>';
+        echo '<tr><th>' . esc_html__('Published products', 'appinio-search') . '</th>';
         echo '<td><strong>' . esc_html((string) $total) . '</strong></td></tr>';
 
-        echo '<tr><th>' . esc_html__('Synced', 'appin-search') . '</th>';
-        echo '<td><strong class="appin-synced-count">' . esc_html((string) $synced) . '</strong></td></tr>';
+        echo '<tr><th>' . esc_html__('Synced', 'appinio-search') . '</th>';
+        echo '<td><strong class="appinio-synced-count">' . esc_html((string) $synced) . '</strong></td></tr>';
 
         echo '<tr' . ($lastSync ? '' : ' style="display:none"') . '>';
-        echo '<th>' . esc_html__('Last sync', 'appin-search') . '</th>';
-        echo '<td class="appin-last-sync">' . esc_html($lastSync) . '</td></tr>';
+        echo '<th>' . esc_html__('Last sync', 'appinio-search') . '</th>';
+        echo '<td class="appinio-last-sync">' . esc_html($lastSync) . '</td></tr>';
 
         echo '</tbody></table>';
 
-        echo '<p class="appin-progress"' . ($isSyncing ? '' : ' style="display:none"') . '>';
+        echo '<p class="appinio-progress"' . ($isSyncing ? '' : ' style="display:none"') . '>';
         echo '<span class="spinner is-active" style="float:none;margin:0 5px 0 0;"></span>';
-        echo esc_html__('Sync in progress...', 'appin-search') . '</p>';
+        echo esc_html__('Sync in progress...', 'appinio-search') . '</p>';
 
-        echo '<p class="appin-actions"' . ($isSyncing ? ' style="display:none"' : '') . '>';
+        echo '<p class="appinio-actions"' . ($isSyncing ? ' style="display:none"' : '') . '>';
         printf(
             '<a href="%s" class="button button-primary">%s</a>',
-            esc_url(wp_nonce_url(admin_url('admin-post.php?action=appin_bulk_sync'), 'appin_bulk_sync')),
-            esc_html__('Sync All Products', 'appin-search')
+            esc_url(wp_nonce_url(admin_url('admin-post.php?action=appinio_bulk_sync'), 'appinio_bulk_sync')),
+            esc_html__('Sync All Products', 'appinio-search')
         );
         echo ' ';
         printf(
             '<a href="%s" class="button" onclick="return confirm(\'%s\');">%s</a>',
-            esc_url(wp_nonce_url(admin_url('admin-post.php?action=appin_bulk_delete'), 'appin_bulk_delete')),
-            esc_attr__('This will remove all products from AppIn index. Continue?', 'appin-search'),
-            esc_html__('Delete All from Index', 'appin-search')
+            esc_url(wp_nonce_url(admin_url('admin-post.php?action=appinio_bulk_delete'), 'appinio_bulk_delete')),
+            esc_attr__('This will remove all products from AppIn index. Continue?', 'appinio-search'),
+            esc_html__('Delete All from Index', 'appinio-search')
         );
         echo '</p>';
 

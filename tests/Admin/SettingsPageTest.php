@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppIn\WooCommerce\Tests\Admin;
+namespace AppInIo\Tests\Admin;
 
-use AppIn\WooCommerce\Admin\SettingsPage;
+use AppInIo\Admin\SettingsPage;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
@@ -77,10 +77,10 @@ class SettingsPageTest extends TestCase
     public function test_sync_status_shown_when_api_key_set(): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
-            'appin_api_key' => 'sk_live_x',
-            'appin_synced_count' => 5,
-            'appin_bulk_sync_running' => false,
-            'appin_last_sync' => '',
+            'appinio_api_key' => 'sk_live_x',
+            'appinio_synced_count' => 5,
+            'appinio_bulk_sync_running' => false,
+            'appinio_last_sync' => '',
             default => $default,
         });
         Functions\when('current_user_can')->justReturn(true);
