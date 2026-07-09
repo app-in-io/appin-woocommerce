@@ -25,6 +25,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - readme.txt: WP.org listing SEO/GEO pass — keyworded title, optimized tags, multilingual
   differentiator surfaced, GEO fact block, comparison-intent FAQ.
 
+### Fixed
+- **Search-excluded products no longer indexed**: products with catalog visibility "Catalog only" or
+  "Hidden" are skipped on sync (and deindexed on their next update), so they don't surface in AppIn
+  search — on the results page or the dropdown widget. Only `visible`/`search`-visibility products are
+  indexed. (#13)
+
 ## [0.9.0] - 2026-07-07
 
 First public beta — distributed to early stores for feedback; prepared for the WordPress.org plugin directory.

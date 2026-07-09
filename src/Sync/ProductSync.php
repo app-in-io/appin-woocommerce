@@ -117,6 +117,14 @@ final class ProductSync
             return;
         }
 
+        // Only sync searchable products. Catalog-visibility "catalog"/"hidden" is
+        // excluded from search, so it must not live in the search index — deindex.
+        if (! \in_array($product->get_catalog_visibility(), ['visible', 'search'], true)) {
+            $this->deleteProduct($productId);
+
+            return;
+        }
+
         $mapper = new ProductMapper;
         $data = $mapper->toApiData($product);
 
