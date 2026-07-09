@@ -29,6 +29,9 @@ class ProductSyncTest extends TestCase
         Functions\when('delete_transient')->justReturn(true);
         Functions\when('get_transient')->justReturn(false);
         Functions\when('set_transient')->justReturn(true);
+        // IndexState deindex helper — default no-op (the index success test sets its own
+        // expectation on update_post_meta, so that one is deliberately not stubbed here).
+        Functions\when('delete_post_meta')->justReturn(true);
     }
 
     protected function tearDown(): void
@@ -212,6 +215,19 @@ class ProductSyncTest extends TestCase
             ->andReturn('RESP');
 
         (new ProductSync)->syncProduct(9003); // unique id
+
+        self::assertTrue(true);
+    }
+
+    public function test_sync_product_marks_indexed_on_success(): void
+    {
+        $product = $this->makeWcProduct(['get_id' => 42]);
+        Functions\when('wc_get_product')->justReturn($product);
+        $this->stubIndexHttp(200); // success
+
+        Functions\expect('update_post_meta')->once()->with(42, '_appinio_indexed', 1);
+
+        (new ProductSync)->syncProduct(42);
 
         self::assertTrue(true);
     }

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace AppInIo\Admin;
 
+use AppInIo\Sync\IndexState;
+
 if (! defined('ABSPATH')) {
     exit;
 }
 
 final class SettingsPage
 {
+    public function __construct(private IndexState $indexState = new IndexState) {}
+
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenu']);
@@ -49,12 +53,14 @@ final class SettingsPage
                         var progress = container.querySelector('.appinio-progress');
 
                         if (synced) synced.textContent = resp.synced;
-                        if (lastSync) {
+                        // Only a sync writes a 'Last sync' timestamp — never after a delete.
+                        if (lastSync && resp.operation === 'sync' && resp.last_sync) {
                             lastSync.closest('tr').style.display = '';
                             lastSync.textContent = resp.last_sync;
                         }
                         if (progress) progress.style.display = 'none';
                         if (actions) actions.style.display = '';
+                        if (resp.delete_failed > 0) { location.reload(); }
                     } else {
                         var synced = container.querySelector('.appinio-synced-count');
                         if (synced) synced.textContent = resp.synced;
@@ -246,6 +252,13 @@ final class SettingsPage
         echo '<div class="wrap">';
         echo '<h1>' . esc_html(get_admin_page_title()) . '</h1>';
 
+        // Display-only feedback flag from the bulk re-entrancy guard (no state change).
+        if (isset($_GET['appinio_busy'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            echo '<div class="notice notice-warning"><p>'
+                . esc_html__('A bulk operation is already running — please wait for it to finish.', 'appinio-search')
+                . '</p></div>';
+        }
+
         // Sync section
         $this->renderSyncSection();
 
@@ -316,9 +329,11 @@ final class SettingsPage
         }
 
         $lastSync = get_option('appinio_last_sync', '');
-        $synced = (int) get_option('appinio_synced_count', 0);
+        $synced = $this->indexState->count();
         $total = (int) wp_count_posts('product')->publish;
         $isSyncing = (bool) get_option('appinio_bulk_sync_running', false);
+        $isDeleting = $isSyncing && get_option('appinio_bulk_operation', 'sync') === 'delete';
+        $deleteFailed = (int) get_option('appinio_last_delete_failed', 0);
 
         echo '<div id="appinio-sync-section" class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;"';
         if ($isSyncing) {
@@ -340,9 +355,24 @@ final class SettingsPage
 
         echo '</tbody></table>';
 
+        if ($deleteFailed > 0) {
+            echo '<p class="appinio-delete-failed" style="color:#b32d2e;">' . esc_html(\sprintf(
+                /* translators: %d: number of products */
+                _n(
+                    '%d product could not be removed from the index — check the debug log or retry.',
+                    '%d products could not be removed from the index — check the debug log or retry.',
+                    $deleteFailed,
+                    'appinio-search'
+                ),
+                $deleteFailed
+            )) . '</p>';
+        }
+
         echo '<p class="appinio-progress"' . ($isSyncing ? '' : ' style="display:none"') . '>';
         echo '<span class="spinner is-active" style="float:none;margin:0 5px 0 0;"></span>';
-        echo esc_html__('Sync in progress...', 'appinio-search') . '</p>';
+        echo '<span class="appinio-progress-label">'
+            . esc_html($isDeleting ? __('Delete in progress...', 'appinio-search') : __('Sync in progress...', 'appinio-search'))
+            . '</span></p>';
 
         echo '<p class="appinio-actions"' . ($isSyncing ? ' style="display:none"' : '') . '>';
         printf(

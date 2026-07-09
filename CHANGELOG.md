@@ -35,6 +35,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   exponential backoff (5 attempts), then throws so the action is marked **failed** (visible in
   Tools → Scheduled Actions) instead of silently completing; **hard-deleted** products
   (`before_delete_post` — `EMPTY_TRASH_DAYS=0`, REST, WP-CLI) are now removed from the index.
+- **Sync Status accuracy** (#9, #10, #11): the "Synced" count is now derived from a per-product
+  `_appinio_indexed` meta flag (idempotent set/remove) instead of a hand-maintained tally, so it no
+  longer goes stale on draft/trash/delete deindex or over-counts on re-index. Double-clicking "Sync All
+  Products" no longer spawns a second concurrent batch chain (a heartbeated re-entrancy guard, so a
+  crashed run can't wedge future runs). The Delete flow now
+  shows a distinct "Delete in progress" label, no longer displays a stale "Last sync" timestamp after a
+  delete-only run, and surfaces per-item delete failures.
 
 ## [0.9.0] - 2026-07-07
 
