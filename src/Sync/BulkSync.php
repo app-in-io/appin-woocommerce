@@ -15,7 +15,13 @@ class BulkSync
 {
     private const BATCH_SIZE = 20;
 
-    public function __construct(private RetryPolicy $retryPolicy = new RetryPolicy) {}
+    // A run whose heartbeat is older than this is treated as crashed, not in-progress.
+    private const STALE_AFTER = 300;
+
+    public function __construct(
+        private RetryPolicy $retryPolicy = new RetryPolicy,
+        private IndexState $indexState = new IndexState,
+    ) {}
 
     public function register(): void
     {
@@ -39,8 +45,10 @@ class BulkSync
 
         wp_send_json([
             'running' => (bool) get_option('appinio_bulk_sync_running', false),
-            'synced' => (int) get_option('appinio_synced_count', 0),
+            'operation' => (string) get_option('appinio_bulk_operation', 'sync'),
+            'synced' => $this->indexState->count(),
             'last_sync' => get_option('appinio_last_sync', ''),
+            'delete_failed' => (int) get_option('appinio_last_delete_failed', 0),
         ]);
     }
 
@@ -55,13 +63,15 @@ class BulkSync
             wp_die(esc_html__('Unauthorized.', 'appinio-search'));
         }
 
-        update_option('appinio_bulk_sync_running', true, false);
-        update_option('appinio_synced_count', 0, false);
+        // Re-entrancy guard: a run already in progress must not spawn a second chain.
+        if ($this->isBulkRunning()) {
+            $this->redirect(admin_url('admin.php?page=appinio-search&appinio_busy=1'));
 
-        // Schedule first batch
-        as_schedule_single_action(time(), 'appinio_bulk_sync_batch', [1], 'appinio-search');
+            return;
+        }
 
-        $this->redirect(admin_url('admin.php?page=appinio-search&syncing=1'));
+        $this->startBulk('sync', 'appinio_bulk_sync_batch');
+        $this->redirect(admin_url('admin.php?page=appinio-search'));
     }
 
     /**
@@ -75,11 +85,46 @@ class BulkSync
             wp_die(esc_html__('Unauthorized.', 'appinio-search'));
         }
 
+        if ($this->isBulkRunning()) {
+            $this->redirect(admin_url('admin.php?page=appinio-search&appinio_busy=1'));
+
+            return;
+        }
+
+        $this->startBulk('delete', 'appinio_bulk_delete_batch');
+        $this->redirect(admin_url('admin.php?page=appinio-search'));
+    }
+
+    /**
+     * Whether a bulk run is genuinely in progress. The running flag is heartbeated on
+     * every batch, so a flag left set by a crashed worker (PHP fatal, OOM, timeout, or a
+     * dropped Action Scheduler job) goes stale and no longer wedges future runs.
+     */
+    private function isBulkRunning(): bool
+    {
+        if (! get_option('appinio_bulk_sync_running', false)) {
+            return false;
+        }
+
+        return (time() - (int) get_option('appinio_bulk_heartbeat', 0)) < self::STALE_AFTER;
+    }
+
+    /**
+     * Mark a bulk run in progress and schedule its first batch, cancelling any stray
+     * pending batches from a previous run first (defensive against orphans).
+     */
+    private function startBulk(string $operation, string $hook): void
+    {
+        if (\function_exists('as_unschedule_all_actions')) {
+            as_unschedule_all_actions($hook, [], 'appinio-search');
+        }
+
         update_option('appinio_bulk_sync_running', true, false);
+        update_option('appinio_bulk_operation', $operation, false);
+        update_option('appinio_bulk_heartbeat', time(), false);
+        update_option('appinio_last_delete_failed', 0, false); // clear any stale delete-failure notice
 
-        as_schedule_single_action(time(), 'appinio_bulk_delete_batch', [1], 'appinio-search');
-
-        $this->redirect(admin_url('admin.php?page=appinio-search&deleting=1'));
+        as_schedule_single_action(time(), $hook, [1], 'appinio-search');
     }
 
     /**
@@ -97,6 +142,8 @@ class BulkSync
      */
     public function processBatch(int $page): void
     {
+        update_option('appinio_bulk_heartbeat', time(), false);
+
         $products = wc_get_products([
             'status' => 'publish',
             'limit' => self::BATCH_SIZE,
@@ -115,6 +162,7 @@ class BulkSync
         $client = new Client;
 
         $items = [];
+        $syncedIds = [];
         foreach ($products as $product) {
             // Skip search-excluded products (catalog-visibility "catalog"/"hidden").
             if (! \in_array($product->get_catalog_visibility(), ['visible', 'search'], true)) {
@@ -122,6 +170,7 @@ class BulkSync
             }
 
             $items[] = $mapper->toApiData($product);
+            $syncedIds[] = (int) $product->get_id();
         }
 
         // A batch may contain only non-searchable products — nothing to send.
@@ -130,8 +179,9 @@ class BulkSync
 
             if ($result['ok']) {
                 $this->retryPolicy->clear('appinio_bulk_sync_batch', [$page]);
-                $count = (int) get_option('appinio_synced_count', 0);
-                update_option('appinio_synced_count', $count + \count($items), false);
+                foreach ($syncedIds as $syncedId) {
+                    $this->indexState->markIndexed($syncedId);
+                }
             } else {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log(\sprintf(
@@ -164,6 +214,8 @@ class BulkSync
      */
     public function processDeleteBatch(int $page): void
     {
+        update_option('appinio_bulk_heartbeat', time(), false);
+
         $products = wc_get_products([
             'limit' => self::BATCH_SIZE,
             'page' => $page,
@@ -177,9 +229,28 @@ class BulkSync
         }
 
         $client = new Client;
+        $failed = 0;
 
         foreach ($products as $productId) {
-            $client->deleteProduct((string) $productId);
+            $result = $client->deleteProduct((string) $productId);
+
+            if ($result['ok'] || $result['status'] === 404) {
+                $this->indexState->markDeindexed((int) $productId);
+            } else {
+                $failed++;
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log(\sprintf(
+                        '[AppIn Search] Bulk delete failed for #%d: HTTP %d',
+                        $productId,
+                        $result['status']
+                    ));
+                }
+            }
+        }
+
+        if ($failed > 0) {
+            $prior = (int) get_option('appinio_last_delete_failed', 0);
+            update_option('appinio_last_delete_failed', $prior + $failed, false);
         }
 
         if (\count($products) === self::BATCH_SIZE) {
@@ -192,12 +263,17 @@ class BulkSync
     private function finishSync(): void
     {
         update_option('appinio_bulk_sync_running', false, false);
+        delete_option('appinio_bulk_heartbeat');
         update_option('appinio_last_sync', current_time('mysql'), false);
+        // Keep appinio_bulk_operation as the last op so the widget's terminal poll (which
+        // fires after this) still labels the run correctly; startBulk overwrites it next.
     }
 
     private function finishDelete(): void
     {
         update_option('appinio_bulk_sync_running', false, false);
-        update_option('appinio_synced_count', 0, false);
+        delete_option('appinio_bulk_heartbeat');
+        // The "Synced" count derives from the per-product flag (removed per item above),
+        // so there is nothing to reset here — and "Last sync" is a sync-only timestamp.
     }
 }

@@ -13,8 +13,11 @@ $appinio_search_options = [
     'appinio_search_selector',
     'appinio_results_page',
     'appinio_last_sync',
-    'appinio_synced_count',
+    'appinio_synced_count', // legacy — count now derives from the _appinio_indexed meta
     'appinio_bulk_sync_running',
+    'appinio_bulk_operation',
+    'appinio_bulk_heartbeat',
+    'appinio_last_delete_failed',
 ];
 
 $appinio_search_hooks = [
@@ -30,6 +33,9 @@ $appinio_search_purge = static function () use ($appinio_search_options, $appini
     foreach ($appinio_search_options as $appinio_search_option) {
         delete_option($appinio_search_option);
     }
+
+    delete_transient('appinio_indexed_count');
+    delete_post_meta_by_key('_appinio_indexed');
 
     if (\function_exists('as_unschedule_all_actions')) {
         foreach ($appinio_search_hooks as $appinio_search_hook) {

@@ -16,7 +16,10 @@ final class ProductSync
     /** @var array<int, true> Prevent duplicate processing within same request */
     private static array $processed = [];
 
-    public function __construct(private RetryPolicy $retryPolicy = new RetryPolicy) {}
+    public function __construct(
+        private RetryPolicy $retryPolicy = new RetryPolicy,
+        private IndexState $indexState = new IndexState,
+    ) {}
 
     public function register(): void
     {
@@ -136,7 +139,7 @@ final class ProductSync
 
         if ($result['ok']) {
             $this->retryPolicy->clear('appinio_sync_product', [$productId]);
-            $this->updateSyncedCount();
+            $this->indexState->markIndexed($productId);
 
             return;
         }
@@ -156,6 +159,7 @@ final class ProductSync
         // A 404 means it's already gone from the index — treat as success.
         if ($result['ok'] || $result['status'] === 404) {
             $this->retryPolicy->clear('appinio_delete_product', [$productId]);
+            $this->indexState->markDeindexed($productId);
 
             return;
         }
@@ -191,12 +195,6 @@ final class ProductSync
         // A fresh edit/delete resets the retry budget for this product.
         $this->retryPolicy->clear('appinio_sync_product', [$productId]);
         $this->retryPolicy->clear('appinio_delete_product', [$productId]);
-    }
-
-    private function updateSyncedCount(): void
-    {
-        $count = (int) get_option('appinio_synced_count', 0);
-        update_option('appinio_synced_count', $count + 1, false);
     }
 
     /**

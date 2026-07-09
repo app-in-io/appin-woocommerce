@@ -28,6 +28,9 @@ class BulkSyncTest extends TestCase
         Functions\when('delete_transient')->justReturn(true);
         Functions\when('get_transient')->justReturn(false);
         Functions\when('set_transient')->justReturn(true);
+        // IndexState deindex helper — default no-op (index tests set their own
+        // update_post_meta expectations, so that one is not stubbed here).
+        Functions\when('delete_post_meta')->justReturn(true);
     }
 
     protected function tearDown(): void
@@ -53,6 +56,7 @@ class BulkSyncTest extends TestCase
         Functions\when('check_admin_referer')->justReturn(true);
         Functions\when('current_user_can')->justReturn(true);
         Functions\when('admin_url')->alias(static fn ($p) => "https://wp.test/wp-admin/$p");
+        Functions\when('as_unschedule_all_actions')->justReturn(0);
         $this->captureOptions();
 
         Functions\expect('as_schedule_single_action')
@@ -61,12 +65,55 @@ class BulkSyncTest extends TestCase
 
         // Partial mock so the real handler runs but redirect() does not exit().
         $bulk = Mockery::mock(BulkSync::class)->makePartial()->shouldAllowMockingProtectedMethods();
-        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appinio-search&syncing=1');
+        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appinio-search');
 
         $bulk->handleBulkSync();
 
         self::assertTrue($this->options['appinio_bulk_sync_running']);
-        self::assertSame(0, $this->options['appinio_synced_count']);
+        self::assertSame('sync', $this->options['appinio_bulk_operation']);
+    }
+
+    public function test_handle_bulk_sync_is_blocked_while_a_run_is_in_progress(): void
+    {
+        Functions\when('check_admin_referer')->justReturn(true);
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('admin_url')->alias(static fn ($p) => "https://wp.test/wp-admin/$p");
+        $this->captureOptions();
+        $this->options['appinio_bulk_sync_running'] = true; // already running
+        $this->options['appinio_bulk_heartbeat'] = time(); // fresh heartbeat → genuinely running
+
+        // Re-entrancy guard: no second chain scheduled.
+        Functions\expect('as_schedule_single_action')->never();
+
+        $bulk = Mockery::mock(BulkSync::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appinio-search&appinio_busy=1');
+
+        $bulk->handleBulkSync();
+
+        self::assertTrue(true);
+    }
+
+    public function test_handle_bulk_sync_recovers_from_a_stale_run(): void
+    {
+        Functions\when('check_admin_referer')->justReturn(true);
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('admin_url')->alias(static fn ($p) => "https://wp.test/wp-admin/$p");
+        Functions\when('as_unschedule_all_actions')->justReturn(0);
+        $this->captureOptions();
+        $this->options['appinio_bulk_sync_running'] = true;
+        $this->options['appinio_bulk_heartbeat'] = time() - 3600; // stale → crashed run
+
+        // A stale run must not wedge future syncs — a fresh chain starts.
+        Functions\expect('as_schedule_single_action')
+            ->once()
+            ->with(Mockery::type('int'), 'appinio_bulk_sync_batch', [1], 'appinio-search');
+
+        $bulk = Mockery::mock(BulkSync::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appinio-search');
+
+        $bulk->handleBulkSync();
+
+        self::assertTrue($this->options['appinio_bulk_sync_running']);
     }
 
     public function test_handle_bulk_delete_starts_first_batch_and_redirects(): void
@@ -74,6 +121,7 @@ class BulkSyncTest extends TestCase
         Functions\when('check_admin_referer')->justReturn(true);
         Functions\when('current_user_can')->justReturn(true);
         Functions\when('admin_url')->alias(static fn ($p) => "https://wp.test/wp-admin/$p");
+        Functions\when('as_unschedule_all_actions')->justReturn(0);
         $this->captureOptions();
 
         Functions\expect('as_schedule_single_action')
@@ -81,17 +129,22 @@ class BulkSyncTest extends TestCase
             ->with(Mockery::type('int'), 'appinio_bulk_delete_batch', [1], 'appinio-search');
 
         $bulk = Mockery::mock(BulkSync::class)->makePartial()->shouldAllowMockingProtectedMethods();
-        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appinio-search&deleting=1');
+        $bulk->expects('redirect')->once()->with('https://wp.test/wp-admin/admin.php?page=appinio-search');
 
         $bulk->handleBulkDelete();
 
         self::assertTrue($this->options['appinio_bulk_sync_running']);
+        self::assertSame('delete', $this->options['appinio_bulk_operation']);
+        self::assertSame(0, $this->options['appinio_last_delete_failed']); // reset at start
     }
 
     public function test_process_batch_indexes_and_finishes_when_page_not_full(): void
     {
         $this->stubClientHttp(202);
         Functions\when('current_time')->justReturn('2026-07-06 10:00:00');
+
+        // Each synced product is flagged indexed.
+        Functions\expect('update_post_meta')->twice()->with(Mockery::type('int'), '_appinio_indexed', 1);
 
         // 2 products (< BATCH_SIZE) → last page.
         Functions\when('wc_get_products')->justReturn([
@@ -114,15 +167,15 @@ class BulkSyncTest extends TestCase
 
         (new BulkSync)->processBatch(1);
 
-        // finishSync() ran: running flag cleared, last_sync stamped, count incremented by the 2 items.
+        // finishSync() ran: running flag cleared, last_sync stamped.
         self::assertFalse($this->options['appinio_bulk_sync_running']);
         self::assertSame('2026-07-06 10:00:00', $this->options['appinio_last_sync']);
-        self::assertSame(2, $this->options['appinio_synced_count']);
     }
 
     public function test_process_batch_schedules_next_page_when_full(): void
     {
         $this->stubClientHttp(202);
+        Functions\when('update_post_meta')->justReturn(true); // markIndexed (not asserted here)
 
         // Exactly BATCH_SIZE (20) products → another page must follow, no finish.
         $products = array_map(fn (int $i) => $this->makeWcProduct(['get_id' => $i]), range(1, 20));
@@ -143,7 +196,6 @@ class BulkSyncTest extends TestCase
 
         (new BulkSync)->processBatch(1);
 
-        self::assertSame(20, $this->options['appinio_synced_count']);
         // Not the final page → finishSync() must NOT run.
         self::assertArrayNotHasKey('appinio_bulk_sync_running', $this->options);
     }
@@ -152,6 +204,8 @@ class BulkSyncTest extends TestCase
     {
         $this->stubClientHttp(202);
         Functions\when('current_time')->justReturn('2026-07-06 10:00:00');
+        // Only the 2 searchable products are flagged indexed (hidden/catalog are not).
+        Functions\expect('update_post_meta')->twice()->with(Mockery::type('int'), '_appinio_indexed', 1);
 
         // Searchable (visible/search) indexed; both non-searchable states (hidden AND
         // catalog-only) excluded.
@@ -175,8 +229,7 @@ class BulkSyncTest extends TestCase
 
         (new BulkSync)->processBatch(1);
 
-        // Only the 2 searchable products count toward synced.
-        self::assertSame(2, $this->options['appinio_synced_count']);
+        self::assertTrue(true); // batch body assertion above proves only searchable were sent
     }
 
     public function test_process_batch_reschedules_same_page_on_transient_failure(): void
@@ -197,8 +250,7 @@ class BulkSyncTest extends TestCase
 
         (new BulkSync)->processBatch(5);
 
-        // Batch failed → counter not bumped, running flag not cleared (no finishSync).
-        self::assertArrayNotHasKey('appinio_synced_count', $this->options);
+        // Batch failed → running flag not cleared (no finishSync), retry pending.
         self::assertArrayNotHasKey('appinio_bulk_sync_running', $this->options);
     }
 
@@ -220,7 +272,7 @@ class BulkSyncTest extends TestCase
 
         (new BulkSync)->processBatch(3);
 
-        self::assertArrayNotHasKey('appinio_synced_count', $this->options);
+        self::assertTrue(true); // as_schedule([4]) expectation above proves the chain advanced
     }
 
     public function test_process_batch_finishes_immediately_when_empty(): void
@@ -259,9 +311,8 @@ class BulkSyncTest extends TestCase
 
         (new BulkSync)->processDeleteBatch(1);
 
-        // finishDelete() ran: running flag cleared, synced count reset.
+        // finishDelete() ran: running flag cleared.
         self::assertFalse($this->options['appinio_bulk_sync_running']);
-        self::assertSame(0, $this->options['appinio_synced_count']);
     }
 
     public function test_process_delete_batch_schedules_next_page_when_full(): void
@@ -292,7 +343,22 @@ class BulkSyncTest extends TestCase
         (new BulkSync)->processDeleteBatch(1);
 
         self::assertFalse($this->options['appinio_bulk_sync_running']);
-        self::assertSame(0, $this->options['appinio_synced_count']);
+    }
+
+    public function test_process_delete_batch_records_a_failure(): void
+    {
+        $this->stubClientHttp(500); // persistent server error → delete fails
+        Functions\when('wc_get_products')->justReturn([10]);
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('wp_remote_retrieve_header')->justReturn('');
+        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+
+        Functions\expect('delete_post_meta')->never(); // a failed delete must not deindex locally
+        Functions\expect('as_schedule_single_action')->never();
+
+        (new BulkSync)->processDeleteBatch(1);
+
+        self::assertSame(1, $this->options['appinio_last_delete_failed']);
     }
 
     /**
@@ -304,8 +370,14 @@ class BulkSyncTest extends TestCase
      */
     private function captureOptions(): void
     {
+        Functions\when('get_option')->alias(fn ($key, $default = false) => $this->options[$key] ?? $default);
         Functions\when('update_option')->alias(function ($key, $value) {
             $this->options[$key] = $value;
+
+            return true;
+        });
+        Functions\when('delete_option')->alias(function ($key) {
+            unset($this->options[$key]);
 
             return true;
         });
@@ -313,11 +385,7 @@ class BulkSyncTest extends TestCase
 
     private function stubClientHttp(int $status): void
     {
-        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
-            'appinio_api_key' => 'sk_test_key',
-            'appinio_synced_count' => $this->options['appinio_synced_count'] ?? 0,
-            default => $default,
-        });
+        $this->options['appinio_api_key'] = 'sk_test_key'; // read by the inline new Client
         $this->captureOptions();
         Functions\when('wp_json_encode')->alias(static fn ($d) => json_encode($d));
         Functions\when('is_wp_error')->justReturn(false);
