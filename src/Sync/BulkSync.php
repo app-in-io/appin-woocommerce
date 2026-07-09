@@ -114,21 +114,29 @@ class BulkSync
 
         $items = [];
         foreach ($products as $product) {
+            // Skip search-excluded products (catalog-visibility "catalog"/"hidden").
+            if (! \in_array($product->get_catalog_visibility(), ['visible', 'search'], true)) {
+                continue;
+            }
+
             $items[] = $mapper->toApiData($product);
         }
 
-        $result = $client->indexProductBatch($items);
+        // A batch may contain only non-searchable products — nothing to send.
+        if ($items !== []) {
+            $result = $client->indexProductBatch($items);
 
-        if ($result['ok']) {
-            $count = (int) get_option('appinio_synced_count', 0);
-            update_option('appinio_synced_count', $count + \count($items), false);
-        } elseif (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log(\sprintf(
-                '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
-                $page,
-                $result['status'],
-                $result['body']['error'] ?? $result['body']['message'] ?? 'unknown'
-            ));
+            if ($result['ok']) {
+                $count = (int) get_option('appinio_synced_count', 0);
+                update_option('appinio_synced_count', $count + \count($items), false);
+            } elseif (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log(\sprintf(
+                    '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
+                    $page,
+                    $result['status'],
+                    $result['body']['error'] ?? $result['body']['message'] ?? 'unknown'
+                ));
+            }
         }
 
         // Schedule next batch

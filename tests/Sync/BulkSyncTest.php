@@ -143,6 +143,37 @@ class BulkSyncTest extends TestCase
         self::assertArrayNotHasKey('appinio_bulk_sync_running', $this->options);
     }
 
+    public function test_process_batch_skips_non_searchable_products(): void
+    {
+        $this->stubClientHttp(202);
+        Functions\when('current_time')->justReturn('2026-07-06 10:00:00');
+
+        // Searchable (visible/search) indexed; both non-searchable states (hidden AND
+        // catalog-only) excluded.
+        $products = [
+            $this->makeWcProduct(['get_id' => 1]), // visible (trait default)
+            $this->makeWcProduct(['get_id' => 2, 'get_catalog_visibility' => 'hidden']),
+            $this->makeWcProduct(['get_id' => 3, 'get_catalog_visibility' => 'search']),
+            $this->makeWcProduct(['get_id' => 4, 'get_catalog_visibility' => 'catalog']),
+        ];
+        Functions\when('wc_get_products')->justReturn($products);
+
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/index/products/batch', Mockery::on(function (array $args): bool {
+                $ids = array_column(json_decode($args['body'], true)['items'], 'id');
+                self::assertSame(['1', '3'], $ids); // hidden #2 and catalog #4 excluded, order preserved
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        (new BulkSync)->processBatch(1);
+
+        // Only the 2 searchable products count toward synced.
+        self::assertSame(2, $this->options['appinio_synced_count']);
+    }
+
     public function test_process_batch_finishes_immediately_when_empty(): void
     {
         $this->stubClientHttp(202);

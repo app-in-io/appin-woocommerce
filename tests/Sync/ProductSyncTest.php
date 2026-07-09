@@ -176,4 +176,34 @@ class ProductSyncTest extends TestCase
 
         self::assertTrue(true);
     }
+
+    public function test_sync_product_deletes_from_index_when_not_searchable(): void
+    {
+        // Published but catalog-visibility "hidden" (or "catalog") is excluded from
+        // search — it must be removed from the index, not indexed.
+        $product = Mockery::mock('WC_Product');
+        $product->allows('get_status')->andReturn('publish');
+        $product->allows('get_catalog_visibility')->andReturn('hidden');
+        Functions\when('wc_get_product')->justReturn($product);
+
+        Functions\when('get_option')->justReturn('sk_test_key');
+        Functions\when('wp_json_encode')->alias(static fn ($d) => json_encode($d));
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/index/products', Mockery::on(function (array $args): bool {
+                self::assertSame('DELETE', $args['method']);
+                self::assertSame(['id' => '9003'], json_decode($args['body'], true));
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        (new ProductSync)->syncProduct(9003); // unique id
+
+        self::assertTrue(true);
+    }
 }

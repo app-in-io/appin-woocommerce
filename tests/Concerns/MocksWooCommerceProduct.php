@@ -50,6 +50,7 @@ trait MocksWooCommerceProduct
             'get_average_rating' => '4.5',
             'get_review_count' => 10,
             'get_attributes' => [],
+            'get_catalog_visibility' => 'visible',
         ], $overrides);
 
         foreach ($values as $method => $return) {
