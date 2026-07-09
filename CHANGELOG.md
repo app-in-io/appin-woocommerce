@@ -30,6 +30,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   "Hidden" are skipped on sync (and deindexed on their next update), so they don't surface in AppIn
   search — on the results page or the dropdown widget. Only `visible`/`search`-visibility products are
   indexed. (#13)
+- **Sync reliability** (api#215, plugin side): network/transport errors are now retried (previously
+  only 429/5xx were); a persistently failing real-time sync self-heals via Action Scheduler with
+  exponential backoff (5 attempts), then throws so the action is marked **failed** (visible in
+  Tools → Scheduled Actions) instead of silently completing; **hard-deleted** products
+  (`before_delete_post` — `EMPTY_TRASH_DAYS=0`, REST, WP-CLI) are now removed from the index.
 
 ## [0.9.0] - 2026-07-07
 

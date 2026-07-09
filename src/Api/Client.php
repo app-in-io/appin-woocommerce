@@ -96,6 +96,15 @@ final class Client
     }
 
     /**
+     * Whether a failed request's status is worth retrying: network errors (status 0),
+     * rate limits (429) and server-side errors (5xx). A 4xx is a permanent client error.
+     */
+    public static function isRetryable(int $status): bool
+    {
+        return $status === 0 || $status === 429 || $status >= 500;
+    }
+
+    /**
      * @param  array<string, mixed>  $body
      * @return array{ok: bool, status: int, body: array<string, mixed>}
      */
@@ -116,33 +125,41 @@ final class Client
         ];
 
         // do/while guarantees at least one attempt regardless of $maxRetries.
+        // $status stays 0 until an HTTP response arrives (i.e. on network errors).
         $attempt = 0;
+        $status = 0;
 
         do {
             $attempt++;
             $response = wp_remote_request($url, $args);
+            $networkError = is_wp_error($response);
 
-            if (is_wp_error($response)) {
-                return [
-                    'ok' => false,
-                    'status' => 0,
-                    'body' => ['error' => $response->get_error_message()],
-                ];
+            if (! $networkError) {
+                $status = (int) wp_remote_retrieve_response_code($response);
+
+                // Stop on success or a permanent (non-429, non-5xx) response.
+                if ($status !== 429 && $status < 500) {
+                    break;
+                }
             }
 
-            $status = (int) wp_remote_retrieve_response_code($response);
-
-            // Retry transient failures: 429 (rate limit) and any 5xx (server-side).
-            if ($status !== 429 && $status < 500) {
-                break;
-            }
-
-            // No point blocking after the final attempt — the loop is about to exit.
+            // Transient failure — network error, 429 (rate limit) or 5xx — back off and
+            // retry while attempts remain. No point blocking after the final attempt.
             if ($attempt < $maxRetries) {
-                $retryAfter = (int) wp_remote_retrieve_header($response, 'retry-after') ?: $attempt * 2;
+                $retryAfter = $networkError
+                    ? $attempt * 2
+                    : ((int) wp_remote_retrieve_header($response, 'retry-after') ?: $attempt * 2);
                 sleep(min($retryAfter, 30));
             }
         } while ($attempt < $maxRetries);
+
+        if (is_wp_error($response)) {
+            return [
+                'ok' => false,
+                'status' => 0,
+                'body' => ['error' => $response->get_error_message()],
+            ];
+        }
 
         /** @var array<string, mixed> $decoded */
         $decoded = json_decode(wp_remote_retrieve_body($response), true) ?: [];
