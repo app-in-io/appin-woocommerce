@@ -144,14 +144,21 @@ final class Client
     {
         $url = $this->apiUrl . $endpoint;
 
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'X-Platform' => 'woocommerce',
+        ];
+
+        // Registration endpoints are keyless (a fresh install has no key yet). Omit the
+        // header entirely rather than sending an empty X-API-Key that a WAF might reject.
+        if ($this->apiKey !== '') {
+            $headers['X-API-Key'] = $this->apiKey;
+        }
+
         $args = [
             'method' => $method,
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-                'X-API-Key' => $this->apiKey,
-                'X-Platform' => 'woocommerce',
-            ],
+            'headers' => $headers,
             'body' => wp_json_encode($body),
             'timeout' => $timeout,
         ];

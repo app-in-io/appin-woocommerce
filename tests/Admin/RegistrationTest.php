@@ -18,9 +18,13 @@ class SpyRegistration extends Registration
 {
     public bool $redirected = false;
 
-    protected function redirectBack(): void
+    /** @var array<string, int|string> */
+    public array $redirectArgs = [];
+
+    protected function redirectBack(array $args = []): void
     {
         $this->redirected = true;
+        $this->redirectArgs = $args;
     }
 }
 
@@ -59,6 +63,7 @@ class RegistrationTest extends TestCase
         // Auth + request plumbing.
         Functions\when('current_user_can')->justReturn(true);
         Functions\when('check_admin_referer')->justReturn(true);
+        Functions\when('get_current_user_id')->justReturn(1); // step state is keyed per user
         Functions\when('home_url')->justReturn('https://shop.com');
         Functions\when('get_user_locale')->justReturn('en_US');
         Functions\when('wp_unslash')->returnArg();
@@ -76,14 +81,15 @@ class RegistrationTest extends TestCase
         parent::tearDown();
     }
 
+    // Transients are keyed per user (get_current_user_id() stubbed to 1).
     private function pending(): mixed
     {
-        return $this->transients['appinio_registration_pending'] ?? null;
+        return $this->transients['appinio_registration_pending_1'] ?? null;
     }
 
     private function notice(): mixed
     {
-        return $this->transients['appinio_registration_notice'] ?? null;
+        return $this->transients['appinio_registration_notice_1'] ?? null;
     }
 
     public function test_request_otp_202_sets_pending_and_success_notice(): void
@@ -116,7 +122,7 @@ class RegistrationTest extends TestCase
         self::assertSame('error', $this->notice()['type']);
     }
 
-    public function test_request_otp_429_without_prior_pending_stays_on_step_one(): void
+    public function test_request_otp_429_advances_to_otp_step_with_cooldown(): void
     {
         $_POST = ['appinio_reg_email' => 'o@shop.com', 'appinio_reg_name' => 'Shop'];
         Functions\when('wp_remote_request')->justReturn('RESP');
@@ -127,14 +133,15 @@ class RegistrationTest extends TestCase
         $reg = new SpyRegistration(new Client);
         $reg->handleRequestOtp();
 
-        // No code was in flight, so we do not advance to the OTP step.
-        self::assertNull($this->pending());
+        // A 429 means a code was already emailed — advance to the OTP step so a user
+        // holding a valid code can enter it, with the resend cooldown seeded from retry_after.
+        self::assertNotNull($this->pending());
         self::assertSame('error', $this->notice()['type']);
     }
 
     public function test_verify_201_stores_keys_and_clears_pending(): void
     {
-        $this->transients['appinio_registration_pending'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
+        $this->transients['appinio_registration_pending_1'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
         $_POST = ['appinio_reg_code' => '12 34 56'];
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('is_wp_error')->justReturn(false);
@@ -147,12 +154,51 @@ class RegistrationTest extends TestCase
         self::assertSame('sk_live_x', $this->options['appinio_api_key']);
         self::assertSame('pk_live_y', $this->options['appinio_public_key']);
         self::assertNull($this->pending());
-        self::assertSame('success', $this->notice()['type']);
+        // Success is signalled via a redirect query arg (the card no longer renders once
+        // the key is set, so a flash notice would never show).
+        self::assertSame(['appinio_connected' => 1], $reg->redirectArgs);
+    }
+
+    public function test_verify_201_without_api_key_is_treated_as_failure(): void
+    {
+        $this->transients['appinio_registration_pending_1'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
+        $_POST = ['appinio_reg_code' => '123456'];
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(201);
+        // 201 but no api_key in the body — must not save an empty key or claim success.
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"public_key":"pk_live_y"}');
+
+        $reg = new SpyRegistration(new Client);
+        $reg->handleVerify();
+
+        self::assertArrayNotHasKey('appinio_api_key', $this->options);
+        self::assertNotNull($this->pending()); // preserved for retry
+        self::assertSame('error', $this->notice()['type']);
+        self::assertSame([], $reg->redirectArgs); // not a success redirect
+    }
+
+    public function test_verify_transient_server_error_does_not_blame_the_code(): void
+    {
+        $this->transients['appinio_registration_pending_1'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
+        $_POST = ['appinio_reg_code' => '123456'];
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(500);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+
+        $reg = new SpyRegistration(new Client);
+        $reg->handleVerify();
+
+        // A correct code must survive a transient 5xx — pending kept, no "invalid code".
+        self::assertArrayNotHasKey('appinio_api_key', $this->options);
+        self::assertNotNull($this->pending());
+        self::assertSame('error', $this->notice()['type']);
     }
 
     public function test_verify_422_keeps_pending_and_errors(): void
     {
-        $this->transients['appinio_registration_pending'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
+        $this->transients['appinio_registration_pending_1'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
         $_POST = ['appinio_reg_code' => '000000'];
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('is_wp_error')->justReturn(false);
@@ -182,7 +228,7 @@ class RegistrationTest extends TestCase
 
     public function test_reset_clears_pending(): void
     {
-        $this->transients['appinio_registration_pending'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
+        $this->transients['appinio_registration_pending_1'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
 
         $reg = new SpyRegistration(new Client);
         $reg->handleReset();
@@ -209,7 +255,7 @@ class RegistrationTest extends TestCase
 
     public function test_render_card_otp_step_when_pending(): void
     {
-        $this->transients['appinio_registration_pending'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
+        $this->transients['appinio_registration_pending_1'] = ['email' => 'o@shop.com', 'name' => 'Shop', 'resend_at' => 0];
         $this->stubRenderHelpers();
 
         ob_start();

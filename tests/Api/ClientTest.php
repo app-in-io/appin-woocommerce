@@ -323,6 +323,28 @@ class ClientTest extends TestCase
         self::assertSame(60, $result['body']['retry_after']);
     }
 
+    public function test_request_otp_omits_api_key_header_on_fresh_install(): void
+    {
+        // No key yet → the keyless registration call must not send an empty X-API-Key.
+        Functions\when('get_option')->justReturn('');
+
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with(Mockery::any(), Mockery::on(function (array $args): bool {
+                self::assertArrayNotHasKey('X-API-Key', $args['headers']);
+                self::assertSame('woocommerce', $args['headers']['X-Platform']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(202);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+
+        (new Client)->requestOtp('o@shop.com', 'https://shop.com', 'Shop', 'en_US');
+    }
+
     public function test_verify_registration_posts_code_and_returns_keys(): void
     {
         Functions\expect('wp_remote_request')

@@ -263,6 +263,14 @@ final class SettingsPage
                 . '</p></div>';
         }
 
+        // Success confirmation after in-plugin registration. Shown here (not in the
+        // registration card) because once the key is saved the card no longer renders.
+        if (isset($_GET['appinio_connected'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            echo '<div class="notice notice-success is-dismissible"><p>'
+                . esc_html__('Your store is connected! You can now sync your products.', 'appinio-search')
+                . '</p></div>';
+        }
+
         // Sync section
         $this->renderSyncSection();
 

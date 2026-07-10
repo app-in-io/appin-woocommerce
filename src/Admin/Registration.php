@@ -83,21 +83,27 @@ class Registration
         }
 
         $result = $this->client()->verifyRegistration((string) $pending['email'], home_url(), $code);
+        $apiKey = (string) ($result['body']['api_key'] ?? '');
 
-        if ($result['status'] === 201) {
-            update_option('appinio_api_key', (string) ($result['body']['api_key'] ?? ''));
+        if ($result['status'] === 201 && $apiKey !== '') {
+            update_option('appinio_api_key', $apiKey);
             update_option('appinio_public_key', (string) ($result['body']['public_key'] ?? ''));
             $this->clearPending();
-            $this->flash('success', __('Your store is connected! You can now sync your products.', 'appinio-search'));
-            $this->redirectBack();
+            // Signal success via a query arg: once the key is set the registration card no
+            // longer renders, so a flash notice would never be shown — the settings page
+            // reads this arg and prints the confirmation itself.
+            $this->redirectBack(['appinio_connected' => 1]);
 
             return;
         }
 
         // Keep the pending state so the user can re-enter the code or resend.
-        $this->flash('error', $result['status'] === 409
-            ? __('A store for this website is already registered. Paste its API key below instead.', 'appinio-search')
-            : __('That code is invalid or expired. Check the email or resend a new code.', 'appinio-search'));
+        $this->flash('error', match (true) {
+            $result['status'] === 409 => __('A store for this website is already registered. Paste its API key below instead.', 'appinio-search'),
+            $result['status'] === 422 => __('That code is invalid or expired. Check the email or resend a new code.', 'appinio-search'),
+            // 201-without-key, network (0) or 5xx — a valid code should not be blamed.
+            default => __('Could not reach AppIn to verify the code. Please try again in a moment.', 'appinio-search'),
+        });
         $this->redirectBack();
     }
 
@@ -152,14 +158,13 @@ class Registration
 
             case 429:
                 $retryAfter = max(1, (int) ($result['body']['retry_after'] ?? self::DEFAULT_COOLDOWN));
-                // Only advance/refresh step 2 if a code was already in flight (a resend);
-                // a first-request throttle means no code exists yet, so stay on step 1.
-                if ($this->pending() !== null) {
-                    $this->setPending($email, $name, time() + $retryAfter);
-                }
+                // A per-domain cooldown means a code was already emailed (possibly in an
+                // earlier session whose local state is gone), so advance to the OTP step
+                // regardless — otherwise a user holding a valid code has nowhere to enter it.
+                $this->setPending($email, $name, time() + $retryAfter);
                 $this->flash('error', sprintf(
                     /* translators: %d: number of seconds */
-                    __('Please wait %d seconds before requesting another code.', 'appinio-search'),
+                    __('A code was already sent. You can request a new one in %d seconds.', 'appinio-search'),
                     $retryAfter
                 ));
 
@@ -291,11 +296,13 @@ class Registration
      */
     private function renderResendCountdown(int $seconds): void
     {
+        // Phrasing keeps the number last with no count-dependent word, so the JS countdown
+        // (which only swaps the digits) never produces "1 seconds".
         printf(
             '<p class="description appinio-resend-hint">%s</p>',
             esc_html(sprintf(
-                /* translators: %d: number of seconds */
-                _n('You can resend in %d second.', 'You can resend in %d seconds.', $seconds, 'appinio-search'),
+                /* translators: %d: number of seconds remaining before the code can be resent */
+                __('Seconds until you can resend: %d', 'appinio-search'),
                 $seconds
             ))
         );
@@ -342,14 +349,14 @@ class Registration
      */
     private function pending(): ?array
     {
-        $data = get_transient(self::PENDING_TRANSIENT);
+        $data = get_transient($this->pendingKey());
 
         return \is_array($data) ? $data : null;
     }
 
     private function setPending(string $email, string $name, int $resendAt): void
     {
-        set_transient(self::PENDING_TRANSIENT, [
+        set_transient($this->pendingKey(), [
             'email' => $email,
             'name' => $name,
             'resend_at' => $resendAt,
@@ -358,12 +365,12 @@ class Registration
 
     private function clearPending(): void
     {
-        delete_transient(self::PENDING_TRANSIENT);
+        delete_transient($this->pendingKey());
     }
 
     private function flash(string $type, string $message): void
     {
-        set_transient(self::NOTICE_TRANSIENT, ['type' => $type, 'message' => $message], self::OTP_TTL);
+        set_transient($this->noticeKey(), ['type' => $type, 'message' => $message], self::OTP_TTL);
     }
 
     /**
@@ -371,10 +378,10 @@ class Registration
      */
     private function takeNotice(): ?array
     {
-        $notice = get_transient(self::NOTICE_TRANSIENT);
+        $notice = get_transient($this->noticeKey());
 
         if (\is_array($notice)) {
-            delete_transient(self::NOTICE_TRANSIENT);
+            delete_transient($this->noticeKey());
 
             return $notice;
         }
@@ -383,12 +390,36 @@ class Registration
     }
 
     /**
+     * Step state and notices are scoped to the current WP user, so two admins of the same
+     * store registering at once don't clobber each other's OTP session or see each other's
+     * notices. The API's per-domain dedup remains the backstop against a double registration.
+     */
+    private function pendingKey(): string
+    {
+        return self::PENDING_TRANSIENT . '_' . get_current_user_id();
+    }
+
+    private function noticeKey(): string
+    {
+        return self::NOTICE_TRANSIENT . '_' . get_current_user_id();
+    }
+
+    /**
      * Redirect back to the settings page after handling a POST. Protected so tests can
      * override it to capture the redirect instead of exiting the process.
+     *
+     * @param  array<string, int|string>  $args  extra query args (e.g. a success flag the
+     *                                            settings page reads to show a confirmation)
      */
-    protected function redirectBack(): void
+    protected function redirectBack(array $args = []): void
     {
-        wp_safe_redirect(admin_url('admin.php?page=appinio-search'));
+        $url = admin_url('admin.php?page=appinio-search');
+
+        if ($args !== []) {
+            $url = add_query_arg($args, $url);
+        }
+
+        wp_safe_redirect($url);
         exit;
     }
 }
