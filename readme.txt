@@ -40,6 +40,7 @@ The plugin is a thin integration layer: all AI, indexing, embedding, and ranking
 * Rich field mapping — title, description, price, sale/compare-at price, currency, image, stock, SKU, categories, tags, rating, review count, brand, and product attributes.
 * Variable & grouped products — the parent is indexed with min/max variation price and aggregated attributes; grouped products include their children.
 * AI search widget — the `<semantic-search>` element, loaded from the AppIn CDN and auto-wired to your store's search input.
+* Light / Dark / Auto appearance — pick a widget theme, or let Auto match your store's background.
 * Category-aware — on category pages the widget scopes results to that category automatically.
 * Status guard — only published products are indexed; drafts and trashed products are removed from the index.
 * HPOS compatible — declares WooCommerce High-Performance Order Storage compatibility.

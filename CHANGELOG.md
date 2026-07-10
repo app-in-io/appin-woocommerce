@@ -7,6 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **Widget Appearance setting** (Light / Dark / Auto) under Search Widget: the search widget now
+  honors an explicit theme. **Auto** matches the store's background (measured client-side) — there is
+  no standard WordPress light/dark flag, so choosing the theme is the plugin's job, not the widget's.
+- **Explicit "Show all results" URL**: the plugin now passes a permalink-aware, canonical search URL
+  (built via `get_search_link()`, works with both plain `?s=` and pretty `/search/term/` permalinks)
+  to the widget instead of relying on its generic default. Keeps the widget's "Show all results" link
+  consistent with the AI-powered results-page takeover.
 - **AI search on the results page**: the WordPress/WooCommerce search results page (`/?s=`) is now
   powered by AppIn instead of native keyword search — fixing typos and semantic queries for every
   entry path (sidebar form, bookmarks, back button, mobile), not just the dropdown widget. Products
