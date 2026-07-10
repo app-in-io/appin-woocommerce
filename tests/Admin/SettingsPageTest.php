@@ -179,4 +179,19 @@ class SettingsPageTest extends TestCase
         // The stored value is preselected.
         self::assertStringContainsString('value="dark" selected', $output);
     }
+
+    public function test_action_links_prepend_settings_shortcut(): void
+    {
+        Functions\when('admin_url')->alias(
+            static fn ($path = '') => 'https://shop.test/wp-admin/' . ltrim((string) $path, '/')
+        );
+
+        $links = (new SettingsPage)->addActionLinks(['deactivate' => '<a>Deactivate</a>']);
+
+        // Settings is prepended (index 0) with a link to the plugin's settings page,
+        // and the existing action links are preserved.
+        self::assertStringContainsString('page=appinio-search', $links[0]);
+        self::assertStringContainsString('Settings', $links[0]);
+        self::assertSame('<a>Deactivate</a>', $links['deactivate']);
+    }
 }

@@ -22,7 +22,27 @@ final class SettingsPage
         add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+        add_filter('plugin_action_links_' . plugin_basename(APPINIO_PLUGIN_FILE), [$this, 'addActionLinks']);
         $this->registration->register();
+    }
+
+    /**
+     * Add a "Settings" shortcut to the plugin's row on the Plugins screen.
+     *
+     * @param  array<int|string, string>  $links
+     * @return array<int|string, string>
+     */
+    public function addActionLinks(array $links): array
+    {
+        $settings = \sprintf(
+            '<a href="%s">%s</a>',
+            esc_url(admin_url('admin.php?page=appinio-search')),
+            esc_html__('Settings', 'appinio-search')
+        );
+
+        array_unshift($links, $settings);
+
+        return $links;
     }
 
     public function enqueueScripts(string $hook): void

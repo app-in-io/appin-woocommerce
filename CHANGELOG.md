@@ -7,6 +7,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **Settings shortcut on the Plugins screen**: the plugin's row now shows a **Settings** link
+  (next to Deactivate) that opens the AppIn Search settings page directly.
 - **In-plugin self-serve registration**: create your AppIn account and get your keys straight
   from the plugin — no dashboard round-trip. Enter your email and store name, receive a
   6-digit code by email, enter it, and the secret + public keys are provisioned and saved
