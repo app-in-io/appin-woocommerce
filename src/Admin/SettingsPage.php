@@ -12,13 +12,17 @@ if (! defined('ABSPATH')) {
 
 final class SettingsPage
 {
-    public function __construct(private IndexState $indexState = new IndexState) {}
+    public function __construct(
+        private IndexState $indexState = new IndexState,
+        private Registration $registration = new Registration,
+    ) {}
 
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+        $this->registration->register();
     }
 
     public function enqueueScripts(string $hook): void
@@ -310,6 +314,14 @@ final class SettingsPage
                 . '</p></div>';
         }
 
+        // Success confirmation after in-plugin registration. Shown here (not in the
+        // registration card) because once the key is saved the card no longer renders.
+        if (isset($_GET['appinio_connected'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            echo '<div class="notice notice-success is-dismissible"><p>'
+                . esc_html__('Your store is connected! You can now sync your products.', 'appinio-search')
+                . '</p></div>';
+        }
+
         // Sync section
         $this->renderSyncSection();
 
@@ -332,49 +344,11 @@ final class SettingsPage
             . esc_html__('AppIn dashboard', 'appinio-search') . '</a>';
     }
 
-    /**
-     * Getting-started card shown when no API key is configured yet — guides a
-     * fresh installer from account creation to the first sync.
-     */
-    private function renderOnboarding(): void
-    {
-        echo '<div class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;">';
-        echo '<h2 style="margin-top:0;">' . esc_html__('Getting started', 'appinio-search') . '</h2>';
-        echo '<ol style="margin-left:18px;">';
-        printf(
-            '<li>%s</li>',
-            wp_kses_post(\sprintf(
-                /* translators: %s: link to the AppIn website */
-                esc_html__('Create a free account at %s.', 'appinio-search'),
-                '<a href="' . esc_url('https://app-in.io') . '" target="_blank" rel="noopener">app-in.io</a>'
-            ))
-        );
-        printf(
-            '<li>%s</li>',
-            wp_kses_post(\sprintf(
-                /* translators: %s: link to the AppIn dashboard */
-                esc_html__('Copy your API key from the %s under Sites > API Keys.', 'appinio-search'),
-                $this->dashboardLink()
-            ))
-        );
-        printf(
-            '<li>%s</li>',
-            esc_html__('Paste it below, save, then run Sync All Products.', 'appinio-search')
-        );
-        echo '</ol>';
-        printf(
-            '<p><a href="%s" class="button button-primary" target="_blank" rel="noopener">%s</a></p>',
-            esc_url('https://app-in.io'),
-            esc_html__('Create a free AppIn account', 'appinio-search')
-        );
-        echo '</div>';
-    }
-
     private function renderSyncSection(): void
     {
         $apiKey = get_option('appinio_api_key', '');
         if ($apiKey === '') {
-            $this->renderOnboarding();
+            $this->registration->renderCard();
 
             return;
         }

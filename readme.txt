@@ -33,6 +33,7 @@ The plugin is a thin integration layer: all AI, indexing, embedding, and ranking
 
 = Features =
 
+* Sign up from the plugin — create your AppIn account with an email + one-time code, no dashboard round-trip; your API keys are set up automatically.
 * Multilingual & cross-language — 100+ languages out of the box; a query in one language finds products described in another.
 * Real-time product sync — create, update, stock change, trash, and restore are all pushed automatically.
 * Debounced & reliable — Action Scheduler coalesces WooCommerce's multiple saves into one API call, so a single edit never triggers duplicate indexing.
@@ -62,8 +63,9 @@ This plugin relies on the AppIn cloud service to provide AI search. It is **not*
 2. When a product is trashed or unpublished, the plugin sends a delete request containing the product ID.
 3. On every storefront page load (once a Public Key is configured), the plugin loads the AppIn search widget JavaScript from `https://cdn.app-in.io/v1/search.js`. The visitor's browser fetches this file directly from AppIn's CDN, which receives standard HTTP request metadata (IP address, user agent, referrer).
 4. When a shopper searches, the widget sends the query text and your Public Key to the AppIn API, which returns ranked results.
+5. If you register from within the plugin, your email address, store name, store URL, and admin language are sent to the AppIn API (`https://api.app-in.io`) to create your account and email you a one-time verification code. This happens only when you choose to sign up from the plugin.
 
-No customer personal data is sent — only your store's product catalog and shoppers' search queries.
+No customer personal data is sent — only your store's product catalog, shoppers' search queries, and (if you register in-plugin) your own account email.
 
 **Terms and privacy:**
 
@@ -77,9 +79,9 @@ Using this plugin means the search widget script runs in visitors' browsers and 
 1. Upload the plugin via **Plugins → Add New → Upload Plugin**, or install it from the WordPress.org plugin directory.
 2. Activate the plugin (WooCommerce must be active).
 3. Go to **WooCommerce → AppIn Search**.
-4. Enter your **API Key** (`sk_live_...`) and save. [Get your key at my.app-in.io](https://my.app-in.io).
+4. **Create your account right here**: enter your email and store name, then the 6-digit code we email you. Your keys are set up automatically. (Already have a key? Paste your **API Key** `sk_live_...` instead — [get it at my.app-in.io](https://my.app-in.io).)
 5. Click **Sync All Products** to index your catalog.
-6. To enable the storefront widget, enter your **Public Key** (`pk_live_...`) and, optionally, a custom search-input CSS selector.
+6. The storefront widget uses your **Public Key** (`pk_live_...`), set automatically on registration or entered manually, plus an optional custom search-input CSS selector.
 
 == Support ==
 

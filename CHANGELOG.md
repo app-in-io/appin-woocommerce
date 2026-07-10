@@ -7,6 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **In-plugin self-serve registration**: create your AppIn account and get your keys straight
+  from the plugin — no dashboard round-trip. Enter your email and store name, receive a
+  6-digit code by email, enter it, and the secret + public keys are provisioned and saved
+  automatically. The code entry supports one-tap autofill (`autocomplete="one-time-code"`),
+  the resend button has a cooldown countdown that survives a page reload, and a "Change email
+  / start over" link lets you edit details. Email/store-name are sent to AppIn; the store URL
+  and admin language are derived server-side. Pasting an existing API key still works.
 - **Widget Appearance setting** (Light / Dark / Auto) under Search Widget: the search widget now
   honors an explicit theme. **Auto** matches the store's background (measured client-side) — there is
   no standard WordPress light/dark flag, so choosing the theme is the plugin's job, not the widget's.

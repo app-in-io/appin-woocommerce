@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace AppInIo\Tests\Admin;
 
+use AppInIo\Admin\Registration;
 use AppInIo\Admin\SettingsPage;
+use AppInIo\Sync\IndexState;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -57,7 +59,7 @@ class SettingsPageTest extends TestCase
         self::assertStringContainsString('href="https://my.app-in.io"', $output);
     }
 
-    public function test_onboarding_shown_when_no_api_key(): void
+    public function test_registration_card_shown_when_no_api_key(): void
     {
         Functions\when('get_option')->justReturn('');
         Functions\when('current_user_can')->justReturn(true);
@@ -66,13 +68,21 @@ class SettingsPageTest extends TestCase
         Functions\when('do_settings_sections')->justReturn(null);
         Functions\when('submit_button')->justReturn(null);
 
+        // With no API key the sync section hands off to the self-serve registration card.
+        $registration = new class extends Registration
+        {
+            public function renderCard(): void
+            {
+                echo '<!--registration-card-->';
+            }
+        };
+
         ob_start();
-        (new SettingsPage)->render();
+        (new SettingsPage(new IndexState, $registration))->render();
         $output = ob_get_clean();
 
-        self::assertStringContainsString('Getting started', $output);
-        self::assertStringContainsString('Create a free AppIn account', $output);
-        self::assertStringContainsString('href="https://app-in.io"', $output);
+        self::assertStringContainsString('registration-card', $output);
+        self::assertStringNotContainsString('Sync Status', $output);
     }
 
     public function test_sync_status_shown_when_api_key_set(): void
