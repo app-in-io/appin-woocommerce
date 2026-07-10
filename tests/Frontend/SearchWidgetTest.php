@@ -18,6 +18,16 @@ class SearchWidgetTest extends TestCase
 
         // renderElement() wraps the element in wp_kses — pass the markup through.
         Functions\when('wp_kses')->returnArg();
+
+        // show-all-url is built from get_search_link() (permalink-aware) + esc_url().
+        // Stub the search URL so the {query} placeholder round-trips through str_replace.
+        Functions\when('esc_url')->returnArg();
+        Functions\when('get_search_link')->alias(static fn ($query) => 'https://store.test/?s=' . $query);
+
+        // Auto theme prints an inline luminance script via wp_print_inline_script_tag.
+        Functions\when('wp_print_inline_script_tag')->alias(static function ($javascript): void {
+            echo $javascript;
+        });
     }
 
     protected function tearDown(): void
@@ -147,5 +157,95 @@ class SearchWidgetTest extends TestCase
         $output = ob_get_clean();
 
         self::assertStringContainsString('input-selector=".my-search-input"', $output);
+    }
+
+    public function test_render_element_passes_canonical_show_all_url(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+
+        $widget = new SearchWidget;
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        // Permalink-aware URL from get_search_link(), with the widget's {query} placeholder
+        // preserved (esc_url must not have encoded the braces).
+        self::assertStringContainsString('show-all-url="https://store.test/?s={query}"', $output);
+    }
+
+    public function test_render_element_dark_theme_sets_attribute(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            'appinio_widget_theme' => 'dark',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+
+        $widget = new SearchWidget;
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('theme="dark"', $output);
+        self::assertStringNotContainsString("setAttribute('theme'", $output);
+    }
+
+    public function test_render_element_light_theme_omits_attribute_and_script(): void
+    {
+        // No stored theme → defaults to light → no theme attribute, no inline script.
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+
+        $widget = new SearchWidget;
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        self::assertStringNotContainsString('theme=', $output);
+        self::assertStringNotContainsString("setAttribute('theme'", $output);
+    }
+
+    public function test_render_element_auto_theme_prints_luminance_script(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            'appinio_widget_theme' => 'auto',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+
+        $widget = new SearchWidget;
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        // Auto resolves client-side: no server-rendered theme attribute, but the
+        // luminance script that flips the element to dark is emitted.
+        self::assertStringNotContainsString('theme="dark"', $output);
+        self::assertStringContainsString("setAttribute('theme', 'dark')", $output);
     }
 }
