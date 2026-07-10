@@ -94,7 +94,7 @@ class RegistrationTest extends TestCase
 
     public function test_request_otp_202_sets_pending_and_success_notice(): void
     {
-        $_POST = ['appinio_reg_email' => 'o@shop.com', 'appinio_reg_name' => 'My Shop'];
+        $_POST = ['appinio_reg_email' => 'o@shop.com', 'appinio_reg_name' => 'My Shop', 'appinio_reg_consent' => '1'];
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('is_wp_error')->justReturn(false);
         Functions\when('wp_remote_retrieve_response_code')->justReturn(202);
@@ -111,8 +111,22 @@ class RegistrationTest extends TestCase
 
     public function test_request_otp_invalid_email_errors_without_calling_api(): void
     {
-        $_POST = ['appinio_reg_email' => 'not-an-email', 'appinio_reg_name' => 'Shop'];
+        $_POST = ['appinio_reg_email' => 'not-an-email', 'appinio_reg_name' => 'Shop', 'appinio_reg_consent' => '1'];
         // No wp_remote_request expectation → the guard must return before any API call.
+        Functions\expect('wp_remote_request')->never();
+
+        $reg = new SpyRegistration(new Client);
+        $reg->handleRequestOtp();
+
+        self::assertNull($this->pending());
+        self::assertSame('error', $this->notice()['type']);
+    }
+
+    public function test_request_otp_without_consent_errors_without_calling_api(): void
+    {
+        // Valid email but the consent box was not ticked — the gate must stop the request
+        // before any API call and before any pending state is created.
+        $_POST = ['appinio_reg_email' => 'o@shop.com', 'appinio_reg_name' => 'Shop'];
         Functions\expect('wp_remote_request')->never();
 
         $reg = new SpyRegistration(new Client);
@@ -124,7 +138,7 @@ class RegistrationTest extends TestCase
 
     public function test_request_otp_429_advances_to_otp_step_with_cooldown(): void
     {
-        $_POST = ['appinio_reg_email' => 'o@shop.com', 'appinio_reg_name' => 'Shop'];
+        $_POST = ['appinio_reg_email' => 'o@shop.com', 'appinio_reg_name' => 'Shop', 'appinio_reg_consent' => '1'];
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('is_wp_error')->justReturn(false);
         Functions\when('wp_remote_retrieve_response_code')->justReturn(429);
@@ -251,6 +265,11 @@ class RegistrationTest extends TestCase
         self::assertStringContainsString('name="appinio_reg_name"', $output);
         self::assertStringContainsString('value="admin@shop.com"', $output);
         self::assertStringNotContainsString('one-time-code', $output);
+        // Required legal-consent gate with links to the policy documents. Assert the checkbox
+        // specifically (the email input is also `required`, so a bare 'required' would be vacuous).
+        self::assertStringContainsString('name="appinio_reg_consent" value="1" required', $output);
+        self::assertStringContainsString('app-in.io/terms', $output);
+        self::assertStringContainsString('app-in.io/dpa', $output);
     }
 
     public function test_render_card_otp_step_when_pending(): void
@@ -267,6 +286,9 @@ class RegistrationTest extends TestCase
         self::assertStringContainsString('o@shop.com', $output);
         // The "start over" affordance is present so email/name can be edited again.
         self::assertStringContainsString('appinio_register_reset', $output);
+        // The resend form must carry the consent forward, else a resend hits the consent gate
+        // in handleRequestOtp() and dead-ends. (On the OTP step this is the only consent input.)
+        self::assertStringContainsString('type="hidden" name="appinio_reg_consent" value="1"', $output);
     }
 
     private function stubRenderHelpers(): void

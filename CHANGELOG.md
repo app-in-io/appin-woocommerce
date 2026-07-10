@@ -20,6 +20,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   the resend button has a cooldown countdown that survives a page reload, and a "Change email
   / start over" link lets you edit details. Email/store-name are sent to AppIn; the store URL
   and admin language are derived server-side. Pasting an existing API key still works.
+- **Required policy consent at registration**: the "Connect your store" form now has a required
+  checkbox — you must agree to the Terms of Service, Privacy Policy, Data Processing Agreement and
+  WooCommerce Service Terms (linked inline) before a code is sent. Enforced in the browser
+  (HTML5 `required`) and server-side in the request-OTP handler.
 - **Widget Appearance setting** (Light / Dark / Auto) under Search Widget: the search widget now
   honors an explicit theme. **Auto** matches the store's background (measured client-side) — there is
   no standard WordPress light/dark flag, so choosing the theme is the plugin's job, not the widget's.
