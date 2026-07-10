@@ -162,7 +162,7 @@ class Registration
                 // earlier session whose local state is gone), so advance to the OTP step
                 // regardless — otherwise a user holding a valid code has nowhere to enter it.
                 $this->setPending($email, $name, time() + $retryAfter);
-                $this->flash('error', sprintf(
+                $this->flash('error', \sprintf(
                     /* translators: %d: number of seconds */
                     __('A code was already sent. You can request a new one in %d seconds.', 'appinio-search'),
                     $retryAfter
@@ -188,7 +188,7 @@ class Registration
     private function renderEmailStep(): void
     {
         $user = wp_get_current_user();
-        $email = $user && $user->user_email ? $user->user_email : (string) get_option('admin_email', '');
+        $email = $user->user_email !== '' ? (string) $user->user_email : (string) get_option('admin_email', '');
         $name = (string) get_bloginfo('name');
 
         printf(
@@ -233,7 +233,7 @@ class Registration
         printf(
             '<p>%s</p>',
             wp_kses(
-                sprintf(
+                \sprintf(
                     /* translators: %s: email address */
                     __('We sent a 6-digit code to <strong>%s</strong>. Enter it below to finish.', 'appinio-search'),
                     esc_html($email)
@@ -300,14 +300,14 @@ class Registration
         // (which only swaps the digits) never produces "1 seconds".
         printf(
             '<p class="description appinio-resend-hint">%s</p>',
-            esc_html(sprintf(
+            esc_html(\sprintf(
                 /* translators: %d: number of seconds remaining before the code can be resent */
                 __('Seconds until you can resend: %d', 'appinio-search'),
                 $seconds
             ))
         );
 
-        wp_print_inline_script_tag(sprintf(
+        wp_print_inline_script_tag(\sprintf(
             <<<'JS'
                 (function () {
                     var left = %d;
@@ -409,7 +409,7 @@ class Registration
      * override it to capture the redirect instead of exiting the process.
      *
      * @param  array<string, int|string>  $args  extra query args (e.g. a success flag the
-     *                                            settings page reads to show a confirmation)
+     *                                           settings page reads to show a confirmation)
      */
     protected function redirectBack(array $args = []): void
     {
