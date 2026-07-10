@@ -14,7 +14,7 @@ if (! defined('ABSPATH')) {
  * On a single-language store — neither plugin active — every method degrades to
  * null / [] / no-op, so the plugin behaves exactly as before (no `lang` emitted,
  * no query widening). `lang` codes are normalized to the API's ≤5-char contract
- * (`WooCommerceProductData::$lang` is `Max(5)`): `en_US` / `pt-BR` → `en` / `pt`.
+ * (`WooCommerceProductData::$lang` is `Max(5)`): `en_US` / `pt-BR` → `en-us` / `pt-br`.
  */
 class LanguageResolver
 {
@@ -117,7 +117,7 @@ class LanguageResolver
 
     private function wpmlActive(): bool
     {
-        return \defined('ICL_SITEPRESS_VERSION');
+        return defined('ICL_SITEPRESS_VERSION');
     }
 
     /**
