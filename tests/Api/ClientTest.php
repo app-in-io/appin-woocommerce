@@ -280,4 +280,74 @@ class ClientTest extends TestCase
 
         self::assertNull((new Client)->searchProducts('boots'));
     }
+
+    public function test_request_otp_posts_registration_payload_with_platform_header(): void
+    {
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/register/request-otp', Mockery::on(function (array $args): bool {
+                self::assertSame('POST', $args['method']);
+                self::assertSame('woocommerce', $args['headers']['X-Platform']);
+                self::assertSame(
+                    ['email' => 'o@shop.com', 'store_url' => 'https://shop.com', 'name' => 'Shop', 'locale' => 'de_DE'],
+                    json_decode($args['body'], true)
+                );
+                self::assertSame(15, $args['timeout']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(202);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"status":"otp_sent","expires_in":600}');
+
+        $result = (new Client)->requestOtp('o@shop.com', 'https://shop.com', 'Shop', 'de_DE');
+
+        self::assertTrue($result['ok']);
+        self::assertSame(202, $result['status']);
+    }
+
+    public function test_request_otp_does_not_retry_on_429(): void
+    {
+        // maxRetries=1: a 429 cooldown must surface, never trigger a second OTP email.
+        Functions\expect('wp_remote_request')->once()->andReturn('R429');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(429);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"retry_after":60}');
+
+        $result = (new Client)->requestOtp('o@shop.com', 'https://shop.com', 'Shop', 'en_US');
+
+        self::assertFalse($result['ok']);
+        self::assertSame(429, $result['status']);
+        self::assertSame(60, $result['body']['retry_after']);
+    }
+
+    public function test_verify_registration_posts_code_and_returns_keys(): void
+    {
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/register/verify', Mockery::on(function (array $args): bool {
+                self::assertSame('POST', $args['method']);
+                self::assertSame('woocommerce', $args['headers']['X-Platform']);
+                self::assertSame(
+                    ['email' => 'o@shop.com', 'store_url' => 'https://shop.com', 'code' => '123456'],
+                    json_decode($args['body'], true)
+                );
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(201);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"api_key":"sk_live_x","public_key":"pk_live_y"}');
+
+        $result = (new Client)->verifyRegistration('o@shop.com', 'https://shop.com', '123456');
+
+        self::assertTrue($result['ok']);
+        self::assertSame(201, $result['status']);
+        self::assertSame('sk_live_x', $result['body']['api_key']);
+        self::assertSame('pk_live_y', $result['body']['public_key']);
+    }
 }

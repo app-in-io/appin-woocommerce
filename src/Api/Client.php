@@ -96,6 +96,38 @@ final class Client
     }
 
     /**
+     * Request a registration OTP for a store (self-serve onboarding). Keyless endpoint —
+     * the store has no key yet. No auto-retry (maxRetries=1): a 429 is a resend cooldown
+     * that must surface to the user, not silently trigger another email.
+     *
+     * @return array{ok: bool, status: int, body: array<string, mixed>}
+     */
+    public function requestOtp(string $email, string $storeUrl, string $name, string $locale): array
+    {
+        return $this->request('POST', '/register/request-otp', [
+            'email' => $email,
+            'store_url' => $storeUrl,
+            'name' => $name,
+            'locale' => $locale,
+        ], 15, 1);
+    }
+
+    /**
+     * Verify a registration OTP and provision the store. On success the body carries the
+     * minted `api_key` + `public_key`. Keyless, no auto-retry (a verify must not be replayed).
+     *
+     * @return array{ok: bool, status: int, body: array<string, mixed>}
+     */
+    public function verifyRegistration(string $email, string $storeUrl, string $code): array
+    {
+        return $this->request('POST', '/register/verify', [
+            'email' => $email,
+            'store_url' => $storeUrl,
+            'code' => $code,
+        ], 15, 1);
+    }
+
+    /**
      * Whether a failed request's status is worth retrying: network errors (status 0),
      * rate limits (429) and server-side errors (5xx). A 4xx is a permanent client error.
      */
