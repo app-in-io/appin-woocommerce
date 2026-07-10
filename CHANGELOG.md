@@ -7,6 +7,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **readme "Terms and privacy" now links the full legal set**: the WooCommerce Service Terms
+  (product schedule) at `https://app-in.io/woocommerce/eula` and the GDPR Data Processing
+  Agreement at `https://app-in.io/dpa`, alongside the existing Terms of Service and Privacy
+  Policy links.
 - **Settings shortcut on the Plugins screen**: the plugin's row now shows a **Settings** link
   (next to Deactivate) that opens the AppIn Search settings page directly.
 - **In-plugin self-serve registration**: create your AppIn account and get your keys straight

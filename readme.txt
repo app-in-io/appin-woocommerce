@@ -70,7 +70,9 @@ No customer personal data is sent — only your store's product catalog, shopper
 **Terms and privacy:**
 
 * Terms of Service: [https://app-in.io/terms](https://app-in.io/terms)
+* WooCommerce Service Terms (product schedule): [https://app-in.io/woocommerce/eula](https://app-in.io/woocommerce/eula)
 * Privacy Policy: [https://app-in.io/privacy](https://app-in.io/privacy)
+* Data Processing Agreement (GDPR): [https://app-in.io/dpa](https://app-in.io/dpa)
 
 Using this plugin means the search widget script runs in visitors' browsers and product data is transmitted to AppIn. Please update your own site's privacy notice accordingly.
 
