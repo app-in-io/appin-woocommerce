@@ -32,6 +32,9 @@ class Registration
     /** Fallback resend cooldown when the API doesn't send a retry_after (matches server default). */
     private const DEFAULT_COOLDOWN = 60;
 
+    /** Base of the public marketing site that hosts the legal documents linked at registration. */
+    private const SITE_URL = 'https://app-in.io';
+
     public function __construct(private ?Client $client = null) {}
 
     public function register(): void
@@ -44,6 +47,17 @@ class Registration
     public function handleRequestOtp(): void
     {
         $this->authorize('appinio_register_request_otp');
+
+        // Consent is a hard gate: creating the AppIn account forms the contract (Terms + EULA)
+        // and puts the store owner (controller) and AppIn (processor) under the DPA, so the
+        // registration cannot proceed without an affirmative agreement. The checkbox's HTML5
+        // `required` is only the first-line UX guard; this is the enforcement.
+        if (($_POST['appinio_reg_consent'] ?? '') !== '1') {
+            $this->flash('error', __('Please agree to the Terms of Service, Privacy Policy, Data Processing Agreement and WooCommerce Service Terms to continue.', 'appinio-search'));
+            $this->redirectBack();
+
+            return;
+        }
 
         $email = sanitize_email(wp_unslash((string) ($_POST['appinio_reg_email'] ?? '')));
         $name = sanitize_text_field(wp_unslash((string) ($_POST['appinio_reg_name'] ?? '')));
@@ -212,12 +226,47 @@ class Registration
             esc_attr($name)
         );
 
+        $this->renderConsent();
+
         submit_button(__('Send code', 'appinio-search'));
         echo '</form>';
 
         printf(
             '<p class="description">%s</p>',
             esc_html__('Already have an API key? Paste it in the settings form below instead.', 'appinio-search')
+        );
+    }
+
+    /**
+     * Required legal-consent gate. One combined checkbox: accepting forms the contract
+     * (Terms of Service + WooCommerce Service Terms), acknowledges the Privacy notice, and
+     * puts the store under the Data Processing Agreement (Art. 28) that governs the personal
+     * data the store syncs to AppIn. The DPA/EULA pages go live with the legal-docs release.
+     */
+    private function renderConsent(): void
+    {
+        printf(
+            '<p><label><input type="checkbox" name="appinio_reg_consent" value="1" required /> %s</label></p>',
+            wp_kses(
+                \sprintf(
+                    /* translators: %1$s: Terms of Service link, %2$s: Privacy Policy link, %3$s: Data Processing Agreement link, %4$s: WooCommerce Service Terms link */
+                    __('I agree to the %1$s, %2$s, %3$s and %4$s.', 'appinio-search'),
+                    $this->policyLink('/terms', __('Terms of Service', 'appinio-search')),
+                    $this->policyLink('/privacy', __('Privacy Policy', 'appinio-search')),
+                    $this->policyLink('/dpa', __('Data Processing Agreement', 'appinio-search')),
+                    $this->policyLink('/woocommerce/eula', __('WooCommerce Service Terms', 'appinio-search'))
+                ),
+                ['a' => ['href' => [], 'target' => [], 'rel' => []]]
+            )
+        );
+    }
+
+    private function policyLink(string $path, string $label): string
+    {
+        return \sprintf(
+            '<a href="%s" target="_blank" rel="noopener">%s</a>',
+            esc_url(self::SITE_URL . $path),
+            esc_html($label)
         );
     }
 
@@ -267,6 +316,9 @@ class Registration
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:inline;">';
         wp_nonce_field('appinio_register_request_otp');
         echo '<input type="hidden" name="action" value="appinio_register_request_otp" />';
+        // Consent was already given on the email step to reach the OTP step; carry it forward
+        // so a resend passes the same gate in handleRequestOtp().
+        echo '<input type="hidden" name="appinio_reg_consent" value="1" />';
         printf('<input type="hidden" name="appinio_reg_email" value="%s" />', esc_attr($email));
         printf('<input type="hidden" name="appinio_reg_name" value="%s" />', esc_attr($name));
         printf(
