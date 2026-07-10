@@ -119,6 +119,12 @@ final class SettingsPage
             'default' => true,
         ]);
 
+        register_setting('appinio_search', 'appinio_widget_theme', [
+            'type' => 'string',
+            'sanitize_callback' => [$this, 'sanitizeTheme'],
+            'default' => 'light',
+        ]);
+
         add_settings_section(
             'appinio_main',
             __('Connection', 'appinio-search'),
@@ -178,6 +184,26 @@ final class SettingsPage
             'appinio-search',
             'appinio_widget',
         );
+
+        add_settings_field(
+            'appinio_widget_theme',
+            __('Widget Appearance', 'appinio-search'),
+            [$this, 'renderThemeField'],
+            'appinio-search',
+            'appinio_widget',
+        );
+    }
+
+    /**
+     * Restrict the appearance option to the values the widget understands.
+     *
+     * WordPress passes the raw request value to a sanitize callback, which may be an
+     * array (e.g. a manipulated `field[]=x` submission) — accept `mixed` and guard for
+     * a string, otherwise strict_types would fatal on a non-string argument.
+     */
+    public function sanitizeTheme(mixed $value): string
+    {
+        return \is_string($value) && \in_array($value, ['light', 'dark', 'auto'], true) ? $value : 'light';
     }
 
     public function renderApiKeyField(): void
@@ -244,6 +270,31 @@ final class SettingsPage
             '<label><input type="checkbox" name="appinio_results_page" value="1" %s /> %s</label>',
             checked($checked, true, false),
             esc_html__('Power the WordPress search results page (/?s=) with AI. Products use AI search; other content stays native. Falls back to native search if AppIn is unavailable.', 'appinio-search')
+        );
+    }
+
+    public function renderThemeField(): void
+    {
+        $value = get_option('appinio_widget_theme', 'light');
+        $options = [
+            'light' => __('Light', 'appinio-search'),
+            'dark' => __('Dark', 'appinio-search'),
+            'auto' => __('Auto (match store background)', 'appinio-search'),
+        ];
+
+        echo '<select name="appinio_widget_theme">';
+        foreach ($options as $optionValue => $label) {
+            printf(
+                '<option value="%s" %s>%s</option>',
+                esc_attr($optionValue),
+                selected($value, $optionValue, false),
+                esc_html($label)
+            );
+        }
+        echo '</select>';
+        printf(
+            '<p class="description">%s</p>',
+            esc_html__('Colour theme for the search widget. Auto follows your store\'s background (light or dark).', 'appinio-search')
         );
     }
 
