@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AppInIo\Mapper;
 
+use AppInIo\I18n\LanguageResolver;
 use WC_Product;
 use WC_Product_Variable;
 
@@ -13,6 +14,10 @@ if (! defined('ABSPATH')) {
 
 final class ProductMapper
 {
+    public function __construct(
+        private LanguageResolver $lang = new LanguageResolver,
+    ) {}
+
     /**
      * Map a WC_Product to the AppIn API index format.
      *
@@ -25,6 +30,7 @@ final class ProductMapper
             'url' => get_permalink($product->get_id()),
             'title' => $product->get_name(),
             'content' => $this->buildContent($product),
+            'lang' => $this->lang->postLanguage((int) $product->get_id()),
             'price' => $this->resolvePrice($product),
             'currency' => get_woocommerce_currency(),
             'image_url' => $this->resolveImageUrl($product),

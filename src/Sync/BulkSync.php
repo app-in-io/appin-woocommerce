@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppInIo\Sync;
 
 use AppInIo\Api\Client;
+use AppInIo\I18n\LanguageResolver;
 use AppInIo\Mapper\ProductMapper;
 
 if (! defined('ABSPATH')) {
@@ -21,6 +22,7 @@ class BulkSync
     public function __construct(
         private RetryPolicy $retryPolicy = new RetryPolicy,
         private IndexState $indexState = new IndexState,
+        private LanguageResolver $lang = new LanguageResolver,
     ) {}
 
     public function register(): void
@@ -144,13 +146,24 @@ class BulkSync
     {
         update_option('appinio_bulk_heartbeat', time(), false);
 
-        $products = wc_get_products([
-            'status' => 'publish',
-            'limit' => self::BATCH_SIZE,
-            'page' => $page,
-            'return' => 'objects',
-            'type' => ['simple', 'variable', 'external', 'grouped'],
-        ]);
+        // On a multilingual store (WPML / Polylang) the product query is language-filtered
+        // by default, so a plain fetch would only ever index the current/default language.
+        // Widen to every language for the duration of the fetch — each product is then
+        // tagged with its own `lang` by ProductMapper. No-op on single-language stores.
+        $this->lang->beginAllLanguages();
+
+        try {
+            $products = wc_get_products([
+                'status' => 'publish',
+                'limit' => self::BATCH_SIZE,
+                'page' => $page,
+                'return' => 'objects',
+                'type' => ['simple', 'variable', 'external', 'grouped'],
+                ...$this->lang->allLanguagesQueryArgs(),
+            ]);
+        } finally {
+            $this->lang->endAllLanguages();
+        }
 
         if (empty($products)) {
             $this->finishSync();
@@ -158,7 +171,7 @@ class BulkSync
             return;
         }
 
-        $mapper = new ProductMapper;
+        $mapper = new ProductMapper($this->lang);
         $client = new Client;
 
         $items = [];
@@ -216,11 +229,19 @@ class BulkSync
     {
         update_option('appinio_bulk_heartbeat', time(), false);
 
-        $products = wc_get_products([
-            'limit' => self::BATCH_SIZE,
-            'page' => $page,
-            'return' => 'ids',
-        ]);
+        // Delete must also span every language so no translated product is left indexed.
+        $this->lang->beginAllLanguages();
+
+        try {
+            $products = wc_get_products([
+                'limit' => self::BATCH_SIZE,
+                'page' => $page,
+                'return' => 'ids',
+                ...$this->lang->allLanguagesQueryArgs(),
+            ]);
+        } finally {
+            $this->lang->endAllLanguages();
+        }
 
         if (empty($products)) {
             $this->finishDelete();

@@ -7,6 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **Multilingual support (WPML / Polylang)**: products are now tagged with their language,
+  and search is scoped to the visitor's language, so a multilingual store no longer returns
+  mixed-language duplicates of the same product. Bulk "Sync All" and "Delete All" now cover
+  **every** language (previously only the site's default language was indexed); the search
+  results page (`/?s=`) and the search widget both pass the visitor's current language. Single-
+  language stores are unaffected — no language is sent and behaviour is unchanged. Language is
+  detected automatically from WPML or Polylang; no configuration needed.
 - **readme "Terms and privacy" now links the full legal set**: the WooCommerce Service Terms
   (product schedule) at `https://app-in.io/woocommerce/eula` and the GDPR Data Processing
   Agreement at `https://app-in.io/dpa`, alongside the existing Terms of Service and Privacy

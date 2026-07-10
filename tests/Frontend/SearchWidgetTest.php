@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppInIo\Tests\Frontend;
 
 use AppInIo\Frontend\SearchWidget;
+use AppInIo\I18n\LanguageResolver;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
@@ -103,6 +104,52 @@ class SearchWidgetTest extends TestCase
         self::assertStringContainsString('platform="woocommerce"', $output);
         self::assertStringNotContainsString('category-id', $output);
         self::assertStringNotContainsString('input-selector', $output);
+    }
+
+    public function test_render_element_includes_lang_on_multilingual_store(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+
+        $widget = new SearchWidget(new class extends LanguageResolver
+        {
+            public function currentLanguage(): ?string
+            {
+                return 'de';
+            }
+        });
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('lang="de"', $output);
+    }
+
+    public function test_render_element_omits_lang_on_single_language_store(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+
+        $widget = new SearchWidget;
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        self::assertStringNotContainsString('lang=', $output);
     }
 
     public function test_render_element_skipped_when_no_key(): void

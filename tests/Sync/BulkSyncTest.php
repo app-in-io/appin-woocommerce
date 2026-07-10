@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AppInIo\Tests\Sync;
 
+use AppInIo\I18n\LanguageResolver;
 use AppInIo\Sync\BulkSync;
 use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
@@ -359,6 +360,38 @@ class BulkSyncTest extends TestCase
         (new BulkSync)->processDeleteBatch(1);
 
         self::assertSame(1, $this->options['appinio_last_delete_failed']);
+    }
+
+    public function test_process_batch_widens_query_to_all_languages(): void
+    {
+        $this->stubClientHttp(202);
+        Functions\when('current_time')->justReturn('2026-07-06 10:00:00');
+
+        // Resolver that widens the query (Polylang-style) → the batch query must carry
+        // `lang => ''`, otherwise only the default language would ever be indexed.
+        $lang = new class extends LanguageResolver
+        {
+            public function allLanguagesQueryArgs(): array
+            {
+                return ['lang' => ''];
+            }
+        };
+
+        Functions\expect('wc_get_products')
+            ->once()
+            ->with(Mockery::on(function (array $args): bool {
+                self::assertSame('', $args['lang']);
+                self::assertSame('publish', $args['status']);
+
+                return true;
+            }))
+            ->andReturn([]); // empty → finishSync, no HTTP, no next batch
+
+        Functions\expect('as_schedule_single_action')->never();
+
+        (new BulkSync(lang: $lang))->processBatch(1);
+
+        self::assertFalse($this->options['appinio_bulk_sync_running']);
     }
 
     /**
