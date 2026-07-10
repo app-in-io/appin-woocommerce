@@ -181,6 +181,30 @@ class SearchWidgetTest extends TestCase
         self::assertStringContainsString('show-all-url="https://store.test/?s={query}"', $output);
     }
 
+    public function test_render_element_show_all_url_falls_back_when_token_mangled(): void
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_public_key' => 'pk_live_abc123',
+            'appinio_search_selector' => '',
+            default => $default,
+        });
+
+        Functions\when('esc_attr')->returnArg();
+        Functions\when('is_product_category')->justReturn(false);
+        // A filter slug-sanitized the token out of the URL — it can no longer be replaced.
+        Functions\when('get_search_link')->justReturn('https://store.test/search/appinio-q/');
+        Functions\when('home_url')->alias(static fn ($path = '') => 'https://store.test/' . ltrim((string) $path, '/'));
+
+        $widget = new SearchWidget;
+
+        ob_start();
+        $widget->renderElement();
+        $output = ob_get_clean();
+
+        // Falls back to the always-valid plain ?s= form so {query} is never lost.
+        self::assertStringContainsString('show-all-url="https://store.test/?s={query}"', $output);
+    }
+
     public function test_render_element_dark_theme_sets_attribute(): void
     {
         Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {

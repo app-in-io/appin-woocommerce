@@ -7,6 +7,7 @@ namespace AppInIo\Tests\Admin;
 use AppInIo\Admin\SettingsPage;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SettingsPageTest extends TestCase
@@ -124,5 +125,48 @@ class SettingsPageTest extends TestCase
         $output = ob_get_clean();
 
         self::assertStringContainsString('Delete in progress', $output);
+    }
+
+    /**
+     * @return array<string, array{mixed, string}>
+     */
+    public static function themeProvider(): array
+    {
+        return [
+            'light stays light' => ['light', 'light'],
+            'dark stays dark' => ['dark', 'dark'],
+            'auto stays auto' => ['auto', 'auto'],
+            'unknown falls back' => ['neon', 'light'],
+            'empty falls back' => ['', 'light'],
+            // WordPress hands the raw request value to sanitize callbacks — a non-string
+            // must not fatal under strict_types, it must fall back to light.
+            'array falls back' => [['dark'], 'light'],
+            'null falls back' => [null, 'light'],
+        ];
+    }
+
+    #[DataProvider('themeProvider')]
+    public function test_sanitize_theme_restricts_to_known_values(mixed $input, string $expected): void
+    {
+        self::assertSame($expected, (new SettingsPage)->sanitizeTheme($input));
+    }
+
+    public function test_theme_field_renders_options_with_current_selected(): void
+    {
+        Functions\when('get_option')->justReturn('dark');
+        Functions\when('selected')->alias(
+            static fn ($value, $current, $echo = true): string => (string) $value === (string) $current ? 'selected' : ''
+        );
+
+        ob_start();
+        (new SettingsPage)->renderThemeField();
+        $output = ob_get_clean();
+
+        self::assertStringContainsString('name="appinio_widget_theme"', $output);
+        self::assertStringContainsString('value="light"', $output);
+        self::assertStringContainsString('value="dark"', $output);
+        self::assertStringContainsString('value="auto"', $output);
+        // The stored value is preselected.
+        self::assertStringContainsString('value="dark" selected', $output);
     }
 }

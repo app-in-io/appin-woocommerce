@@ -192,10 +192,14 @@ final class SettingsPage
 
     /**
      * Restrict the appearance option to the values the widget understands.
+     *
+     * WordPress passes the raw request value to a sanitize callback, which may be an
+     * array (e.g. a manipulated `field[]=x` submission) — accept `mixed` and guard for
+     * a string, otherwise strict_types would fatal on a non-string argument.
      */
-    public function sanitizeTheme(?string $value): string
+    public function sanitizeTheme(mixed $value): string
     {
-        return \in_array($value, ['light', 'dark', 'auto'], true) ? $value : 'light';
+        return \is_string($value) && \in_array($value, ['light', 'dark', 'auto'], true) ? $value : 'light';
     }
 
     public function renderApiKeyField(): void
