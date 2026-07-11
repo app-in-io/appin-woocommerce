@@ -6,6 +6,7 @@ namespace AppInIo\Tests\Frontend;
 
 use AppInIo\Api\Client;
 use AppInIo\Frontend\SearchResults;
+use AppInIo\I18n\LanguageResolver;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -199,6 +200,35 @@ class SearchResultsTest extends TestCase
         $this->searchResultsWithNative([99])->takeover($query);
     }
 
+    public function test_current_language_is_passed_to_search(): void
+    {
+        // Multilingual store: the visitor's current language scopes the AI search.
+        $lang = new class extends LanguageResolver
+        {
+            public function currentLanguage(): ?string
+            {
+                return 'fr';
+            }
+        };
+
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with(Mockery::any(), Mockery::on(function (array $args): bool {
+                self::assertSame('fr', json_decode($args['body'], true)['lang']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{"results":[{"id":"5"}]}');
+
+        $query = $this->passingQuery('boots');
+        $query->allows('set');
+
+        $this->searchResultsWithNative([99], $lang)->takeover($query);
+    }
+
     // --- helpers ------------------------------------------------------------
 
     /**
@@ -231,14 +261,14 @@ class SearchResultsTest extends TestCase
      *
      * @param  list<int>  $native
      */
-    private function searchResultsWithNative(array $native): SearchResults
+    private function searchResultsWithNative(array $native, ?LanguageResolver $lang = null): SearchResults
     {
-        return new class(new Client, $native) extends SearchResults
+        return new class(new Client, $native, $lang) extends SearchResults
         {
             /** @param list<int> $native */
-            public function __construct(Client $client, private array $native)
+            public function __construct(Client $client, private array $native, ?LanguageResolver $lang)
             {
-                parent::__construct($client);
+                parent::__construct($client, $lang);
             }
 
             protected function nativeNonProductIds(string $term): array

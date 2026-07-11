@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace AppInIo\Frontend;
 
+use AppInIo\I18n\LanguageResolver;
+
 if (! defined('ABSPATH')) {
     exit;
 }
 
 final class SearchWidget
 {
+    public function __construct(
+        private LanguageResolver $lang = new LanguageResolver,
+    ) {}
+
     public function register(): void
     {
         add_action('wp_enqueue_scripts', [$this, 'enqueueAssets']);
@@ -50,6 +56,14 @@ final class SearchWidget
             $attrs .= \sprintf(' category-id="%d"', get_queried_object_id());
         }
 
+        // On a multilingual store (WPML / Polylang) scope search to the visitor's current
+        // language; null on a single-language store → no attribute, unchanged markup.
+        $lang = $this->lang->currentLanguage();
+
+        if ($lang !== null) {
+            $attrs .= \sprintf(' lang="%s"', esc_attr($lang));
+        }
+
         $selector = get_option('appinio_search_selector', '');
 
         if (! empty($selector)) {
@@ -82,7 +96,7 @@ final class SearchWidget
 
         echo wp_kses(
             \sprintf('<semantic-search %s></semantic-search>', $attrs),
-            ['semantic-search' => ['api-key' => true, 'platform' => true, 'category-id' => true, 'input-selector' => true, 'show-all-url' => true, 'theme' => true]]
+            ['semantic-search' => ['api-key' => true, 'platform' => true, 'category-id' => true, 'input-selector' => true, 'show-all-url' => true, 'theme' => true, 'lang' => true]]
         );
 
         if ($theme === 'auto') {

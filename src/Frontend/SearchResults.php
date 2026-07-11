@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppInIo\Frontend;
 
 use AppInIo\Api\Client;
+use AppInIo\I18n\LanguageResolver;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -33,7 +34,10 @@ class SearchResults
      * Client is injectable (and the native lookup is a protected seam) so the
      * takeover can be unit-tested without real HTTP or a WordPress database.
      */
-    public function __construct(private ?Client $client = null) {}
+    public function __construct(
+        private ?Client $client = null,
+        private ?LanguageResolver $lang = null,
+    ) {}
 
     public function register(): void
     {
@@ -56,7 +60,9 @@ class SearchResults
             return;
         }
 
-        $productIds = ($this->client ??= new Client)->searchProducts($term, self::PRODUCT_LIMIT, null, $this->categoryId($query));
+        $lang = ($this->lang ??= new LanguageResolver)->currentLanguage();
+
+        $productIds = ($this->client ??= new Client)->searchProducts($term, self::PRODUCT_LIMIT, $lang, $this->categoryId($query));
 
         // null = AI request failed. Leave the query untouched (flag stays unset, so
         // nullifyNativeSql does nothing either) → native search runs in full,

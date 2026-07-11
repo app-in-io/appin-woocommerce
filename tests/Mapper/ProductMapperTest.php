@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AppInIo\Tests\Mapper;
 
+use AppInIo\I18n\LanguageResolver;
 use AppInIo\Mapper\ProductMapper;
 use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
@@ -274,6 +275,35 @@ class ProductMapperTest extends TestCase
         $data = (new ProductMapper)->toApiData($product);
 
         self::assertSame('Nike', $data['brand']);
+    }
+
+    public function test_lang_from_resolver_is_included(): void
+    {
+        $product = $this->makeWcProduct();
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $mapper = new ProductMapper(new class extends LanguageResolver
+        {
+            public function postLanguage(int $postId): ?string
+            {
+                return 'fr';
+            }
+        });
+
+        $data = $mapper->toApiData($product);
+
+        self::assertSame('fr', $data['lang']);
+    }
+
+    public function test_lang_absent_on_single_language_store(): void
+    {
+        $product = $this->makeWcProduct();
+        Functions\when('get_the_terms')->justReturn(false);
+
+        // Default resolver, no multilingual plugin → postLanguage() returns null → key dropped.
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertArrayNotHasKey('lang', $data);
     }
 
     private function mockChild(int $id, string $status): \WC_Product
