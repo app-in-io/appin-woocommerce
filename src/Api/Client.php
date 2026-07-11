@@ -12,14 +12,28 @@ final class Client
 {
     private const MAX_RETRIES = 3;
 
+    private const DEFAULT_API_URL = 'https://api.app-in.io/v1';
+
     private string $apiUrl;
 
     private string $apiKey;
 
     public function __construct()
     {
-        $this->apiUrl = rtrim(APPINIO_API_URL, '/');
+        $this->apiUrl = self::apiUrl();
         $this->apiKey = get_option('appinio_api_key', '');
+    }
+
+    /**
+     * Resolve the AppIn API base URL.
+     *
+     * The production default is baked in as DEFAULT_API_URL and passed through the
+     * `appinio_api_url` filter — the sole override seam (used by the dev harness to
+     * target local infrastructure per wp_get_environment_type()).
+     */
+    public static function apiUrl(): string
+    {
+        return rtrim((string) apply_filters('appinio_api_url', self::DEFAULT_API_URL), '/');
     }
 
     /**

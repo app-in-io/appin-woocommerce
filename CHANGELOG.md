@@ -77,6 +77,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   the API is unavailable. New **Search Results Page** setting (on by default) under Search Widget.
 
 ### Changed
+- **API base URL resolves through the `appinio_api_url` filter**: the plugin now passes a
+  hardcoded production default (baked into `Api\Client`) through a WordPress filter, making that
+  hook the **sole** override seam (the dev harness registers it to target local infrastructure per
+  environment). The `APPINIO_API_URL` constant has been **removed** — it is no longer defined or
+  honored anywhere.
 - **Unique prefix (WordPress.org requirement)**: renamed the plugin's namespace
   (`AppIn\WooCommerce` → `AppInIo`), constants (`APPIN_*` → `APPINIO_*`), option keys and hooks
   (`appin_*` → `appinio_*`) to a distinct 4+ character prefix. The plugin slug and text domain

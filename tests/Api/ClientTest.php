@@ -21,12 +21,44 @@ class ClientTest extends TestCase
         Functions\when('get_option')->justReturn('sk_test_key');
         // Encode bodies exactly like WordPress would.
         Functions\when('wp_json_encode')->alias(static fn ($data) => json_encode($data));
+        // The constructor resolves the base URL through the `appinio_api_url` filter.
+        // Default: pass the value through unchanged (no override registered).
+        Functions\when('apply_filters')->returnArg(2);
     }
 
     protected function tearDown(): void
     {
         Monkey\tearDown();
         parent::tearDown();
+    }
+
+    public function test_api_url_returns_hardcoded_default_with_filter_passthrough(): void
+    {
+        // The production default is baked into Client::DEFAULT_API_URL; the filter passes it
+        // through unchanged → the canonical prod base URL, no trailing slash.
+        self::assertSame('https://api.app-in.io/v1', Client::apiUrl());
+    }
+
+    public function test_api_url_trims_trailing_slash(): void
+    {
+        // A filter value carrying a trailing slash is trimmed.
+        Functions\when('apply_filters')->justReturn('https://api.app-in.io/v1/');
+
+        self::assertSame('https://api.app-in.io/v1', Client::apiUrl());
+    }
+
+    public function test_filter_override_wins_over_default(): void
+    {
+        // The dev harness registers `appinio_api_url` to target local infrastructure.
+        // The filter receives the hardcoded default and its return value takes precedence.
+        Functions\when('apply_filters')->alias(function (string $hook, string $value): string {
+            self::assertSame('appinio_api_url', $hook);
+            self::assertSame('https://api.app-in.io/v1', $value);
+
+            return 'http://api.app-in.local/v1';
+        });
+
+        self::assertSame('http://api.app-in.local/v1', Client::apiUrl());
     }
 
     public function test_index_product_posts_json_with_platform_headers(): void
