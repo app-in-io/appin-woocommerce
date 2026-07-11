@@ -9,10 +9,6 @@ if (! defined('ABSPATH')) {
     \define('ABSPATH', '/tmp/wordpress/');
 }
 
-if (! defined('APPINIO_API_URL')) {
-    \define('APPINIO_API_URL', 'https://api.app-in.io/v1');
-}
-
 if (! defined('APPINIO_CDN_URL')) {
     \define('APPINIO_CDN_URL', 'https://cdn.app-in.io/v1/search.js');
 }
