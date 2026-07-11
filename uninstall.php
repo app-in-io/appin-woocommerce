@@ -36,6 +36,7 @@ $appinio_search_purge = static function () use ($appinio_search_options, $appini
     }
 
     delete_transient('appinio_indexed_count');
+    delete_transient('appinio_remote_counts');
     delete_post_meta_by_key('_appinio_indexed');
 
     if (\function_exists('as_unschedule_all_actions')) {

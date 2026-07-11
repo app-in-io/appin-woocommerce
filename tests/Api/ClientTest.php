@@ -101,6 +101,38 @@ class ClientTest extends TestCase
         self::assertSame(200, $result['status']);
     }
 
+    public function test_get_counts_sends_get_without_body_and_parses_contract(): void
+    {
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with('https://api.app-in.io/v1/index/counts', Mockery::on(function (array $args): bool {
+                self::assertSame('GET', $args['method']);
+                self::assertSame('sk_test_key', $args['headers']['X-API-Key']);
+                self::assertSame('woocommerce', $args['headers']['X-Platform']);
+                // A GET must carry no request body — some servers/WAFs reject one.
+                self::assertArrayNotHasKey('body', $args);
+                self::assertSame(10, $args['timeout']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn(
+            '{"counts":{"pages":0,"products":1234,"docs":0},"total":1234,"pending":3,'
+            . '"status":"completed","last_indexed_at":"2026-07-11T07:57:41+00:00","error":null}'
+        );
+
+        $result = (new Client)->getCounts();
+
+        self::assertTrue($result['ok']);
+        self::assertSame(200, $result['status']);
+        self::assertSame(1234, $result['body']['counts']['products']);
+        self::assertSame(3, $result['body']['pending']);
+        self::assertSame('completed', $result['body']['status']);
+    }
+
     public function test_network_error_retries_then_returns_status_zero(): void
     {
         // A transport-level WP_Error is transient — retry up to MAX_RETRIES, then give up

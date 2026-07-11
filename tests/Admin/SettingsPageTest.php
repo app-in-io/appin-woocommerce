@@ -28,6 +28,40 @@ class SettingsPageTest extends TestCase
         Functions\when('__')->returnArg();
         // Field descriptions wrap the link markup in wp_kses_post — pass it through.
         Functions\when('wp_kses_post')->returnArg();
+        // The drift warning uses _n() — return the matching form so sprintf can run.
+        Functions\when('_n')->alias(static fn ($single, $plural, $number) => $number === 1 ? $single : $plural);
+    }
+
+    /**
+     * Render the full settings page with a connected store, a given local "queued" count
+     * and a given cached remote-counts snapshot (the value RemoteIndexState reads from its
+     * transient). Returns the rendered HTML.
+     *
+     * @param  array<string, mixed>  $remote
+     */
+    private function renderDashboard(int $queued, array $remote): string
+    {
+        Functions\when('get_option')->alias(fn ($key, $default = '') => match ($key) {
+            'appinio_api_key' => 'sk_live_x',
+            'appinio_bulk_sync_running' => false,
+            'appinio_last_sync' => '',
+            default => $default,
+        });
+        // IndexState reads 'appinio_indexed_count'; RemoteIndexState reads 'appinio_remote_counts'.
+        Functions\when('get_transient')->alias(fn ($key) => $key === 'appinio_remote_counts' ? $remote : $queued);
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('wp_count_posts')->justReturn((object) ['publish' => 20]);
+        Functions\when('wp_nonce_url')->returnArg();
+        Functions\when('admin_url')->returnArg();
+        Functions\when('settings_fields')->justReturn(null);
+        Functions\when('do_settings_sections')->justReturn(null);
+        Functions\when('submit_button')->justReturn(null);
+
+        ob_start();
+        (new SettingsPage)->render();
+
+        return (string) ob_get_clean();
     }
 
     protected function tearDown(): void
@@ -93,7 +127,10 @@ class SettingsPageTest extends TestCase
             'appinio_last_sync' => '',
             default => $default,
         });
-        Functions\when('get_transient')->justReturn(5); // IndexState count (cache hit)
+        // IndexState count (cache hit = 5) + a cached remote snapshot so no HTTP is made.
+        Functions\when('get_transient')->alias(fn ($key) => $key === 'appinio_remote_counts'
+            ? ['available' => true, 'products' => 5, 'pending' => 0, 'status' => 'completed', 'last_indexed_at' => null]
+            : 5);
         Functions\when('current_user_can')->justReturn(true);
         Functions\when('get_admin_page_title')->justReturn('AppIn Search');
         Functions\when('wp_count_posts')->justReturn((object) ['publish' => 10]);
@@ -120,7 +157,10 @@ class SettingsPageTest extends TestCase
             'appinio_bulk_operation' => 'delete',
             default => $default,
         });
-        Functions\when('get_transient')->justReturn(3);
+        // IndexState count (cache hit = 3) + a cached remote snapshot so no HTTP is made.
+        Functions\when('get_transient')->alias(fn ($key) => $key === 'appinio_remote_counts'
+            ? ['available' => true, 'products' => 3, 'pending' => 0, 'status' => 'completed', 'last_indexed_at' => null]
+            : 3);
         Functions\when('current_user_can')->justReturn(true);
         Functions\when('get_admin_page_title')->justReturn('AppIn Search');
         Functions\when('wp_count_posts')->justReturn((object) ['publish' => 10]);
@@ -135,6 +175,62 @@ class SettingsPageTest extends TestCase
         $output = ob_get_clean();
 
         self::assertStringContainsString('Delete in progress', $output);
+    }
+
+    public function test_indexed_in_search_row_shows_backend_count_and_hides_drift_when_converged(): void
+    {
+        $output = $this->renderDashboard(10, [
+            'available' => true, 'products' => 10, 'pending' => 0, 'status' => 'completed', 'last_indexed_at' => null,
+        ]);
+
+        self::assertStringContainsString('Indexed in search', $output);
+        self::assertStringContainsString('<strong class="appinio-indexed-count">10</strong>', $output);
+        // indexed == queued and status completed → drift badge present but hidden.
+        self::assertStringContainsString('appinio-index-drift" style="color:#b32d2e;display:none"', $output);
+    }
+
+    public function test_indexed_row_shows_em_dash_when_backend_unavailable(): void
+    {
+        $output = $this->renderDashboard(10, ['available' => false]);
+
+        self::assertStringContainsString('<strong class="appinio-indexed-count">—</strong>', $output);
+        // Unavailable → we can't tell, so no drift warning.
+        self::assertStringContainsString('appinio-index-drift" style="color:#b32d2e;display:none"', $output);
+    }
+
+    public function test_drift_badge_visible_when_indexed_below_queued_and_settled(): void
+    {
+        $output = $this->renderDashboard(10, [
+            'available' => true, 'products' => 4, 'pending' => 0, 'status' => 'completed', 'last_indexed_at' => null,
+        ]);
+
+        // Fewer indexed than queued, queue drained → the badge is shown with a counting message.
+        self::assertStringContainsString('appinio-index-drift" style="color:#b32d2e;">', $output);
+        self::assertStringNotContainsString('appinio-index-drift" style="color:#b32d2e;display:none"', $output);
+        self::assertStringContainsString('4 of 10 products are in the search index', $output);
+    }
+
+    public function test_no_drift_badge_while_indexing_is_in_flight(): void
+    {
+        $output = $this->renderDashboard(10, [
+            'available' => true, 'products' => 4, 'pending' => 6, 'status' => 'running', 'last_indexed_at' => null,
+        ]);
+
+        // pending > 0 → the lag is expected, so the badge must stay hidden (no false alarm).
+        self::assertStringContainsString('appinio-index-drift" style="color:#b32d2e;display:none"', $output);
+    }
+
+    public function test_drift_badge_shows_non_counting_copy_when_last_index_failed(): void
+    {
+        $output = $this->renderDashboard(10, [
+            'available' => true, 'products' => 10, 'pending' => 0, 'status' => 'failed', 'last_indexed_at' => null,
+        ]);
+
+        // Counts match but the last run failed → badge shown with the plain failure copy,
+        // NOT the self-contradictory "10 of 10 … haven't indexed yet" counting message.
+        self::assertStringContainsString('appinio-index-drift" style="color:#b32d2e;">', $output);
+        self::assertStringContainsString('The last indexing run reported a failure', $output);
+        self::assertStringNotContainsString('10 of 10 products are in the search index', $output);
     }
 
     /**
