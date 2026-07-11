@@ -306,6 +306,141 @@ class ProductMapperTest extends TestCase
         self::assertArrayNotHasKey('lang', $data);
     }
 
+    public function test_category_html_entities_are_decoded(): void
+    {
+        $product = $this->makeWcProduct();
+
+        $term = Mockery::mock('WP_Term');
+        $term->name = 'Drinkware &amp; Bottles';
+        $term->term_id = 7;
+        $term->parent = 0;
+
+        Functions\when('get_the_terms')->alias(fn ($id, $taxonomy) => match ($taxonomy) {
+            'product_cat' => [$term],
+            default => false,
+        });
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Drinkware & Bottles', $data['category']);
+    }
+
+    public function test_title_and_content_fallback_decode_html_entities(): void
+    {
+        $product = $this->makeWcProduct([
+            'get_name' => 'Salt &amp; Pepper Kit',
+            'get_short_description' => '',
+            'get_description' => '',
+        ]);
+        Functions\when('get_the_terms')->justReturn(false);
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Salt & Pepper Kit', $data['title']);
+        self::assertSame('Salt & Pepper Kit', $data['content']);
+    }
+
+    public function test_tag_and_brand_html_entities_are_decoded(): void
+    {
+        $product = $this->makeWcProduct();
+
+        $tag = Mockery::mock('WP_Term');
+        $tag->name = 'Salt &amp; Pepper';
+
+        $brand = Mockery::mock('WP_Term');
+        $brand->name = 'Ben &amp; Jerry';
+
+        Functions\when('get_the_terms')->alias(fn ($id, $taxonomy) => match ($taxonomy) {
+            'product_tag' => [$tag],
+            'product_brand' => [$brand],
+            default => false,
+        });
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame(['Salt & Pepper'], $data['tags']);
+        self::assertSame('Ben & Jerry', $data['brand']);
+    }
+
+    public function test_attribute_value_html_entities_are_decoded(): void
+    {
+        $attribute = Mockery::mock('WC_Product_Attribute');
+        $attribute->allows('get_name')->andReturn('finish');
+        $attribute->allows('is_taxonomy')->andReturn(false);
+        $attribute->allows('get_options')->andReturn(['Baker&#039;s Choice']);
+
+        $product = $this->makeWcProduct(['get_attributes' => [$attribute]]);
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('wc_attribute_label')->justReturn('Finish');
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame([
+            ['name' => 'Finish', 'value' => "Baker's Choice"],
+        ], $data['attributes']);
+    }
+
+    public function test_encoded_markup_in_description_is_stripped_not_leaked(): void
+    {
+        $product = $this->makeWcProduct([
+            'get_short_description' => 'Fits &lt;div&gt;spec&lt;/div&gt; here',
+            'get_description' => '',
+        ]);
+        Functions\when('get_the_terms')->justReturn(false);
+        // Realistic strip so decoded entities that turn into real markup get removed.
+        Functions\when('wp_strip_all_tags')->alias(fn ($s) => strip_tags((string) $s));
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Fits spec here', $data['content']);
+    }
+
+    public function test_encoded_comparison_operators_in_description_survive_stripping(): void
+    {
+        $product = $this->makeWcProduct([
+            'get_short_description' => 'Rated to &lt; -5°C, packs to &lt; 1L',
+            'get_description' => '',
+        ]);
+        Functions\when('get_the_terms')->justReturn(false);
+        // Realistic strip so the strip-before-decode ordering is exercised as in production.
+        Functions\when('wp_strip_all_tags')->alias(fn ($s) => strip_tags((string) $s));
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        // A bare "<" followed by a space/digit is real text, not markup — nothing eaten.
+        self::assertSame('Rated to < -5°C, packs to < 1L', $data['content']);
+    }
+
+    public function test_encoded_less_than_before_letter_is_not_eaten(): void
+    {
+        // "under M" written as an encoded comparison operator. Decode-before-strip turns it into
+        // a bare "<M …" that strip_tags treats as an unclosed tag and eats to end of string.
+        $product = $this->makeWcProduct([
+            'get_short_description' => 'Ideal for sizes &lt;M and above',
+            'get_description' => '',
+        ]);
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('wp_strip_all_tags')->alias(fn ($s) => strip_tags((string) $s));
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Ideal for sizes <M and above', $data['content']);
+    }
+
+    public function test_real_markup_in_description_is_stripped_and_entities_decoded(): void
+    {
+        $product = $this->makeWcProduct([
+            'get_short_description' => '<p>Warm &amp; light</p>',
+            'get_description' => '',
+        ]);
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('wp_strip_all_tags')->alias(fn ($s) => strip_tags((string) $s));
+
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertSame('Warm & light', $data['content']);
+    }
+
     private function mockChild(int $id, string $status): \WC_Product
     {
         $child = Mockery::mock('WC_Product');
