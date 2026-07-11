@@ -93,6 +93,7 @@ This plugin is an API client for the AppIn API:
 - `POST /v1/index/products` — index a product (with `X-Platform: woocommerce`)
 - `DELETE /v1/index/products` — remove a product
 - `POST /v1/search/products` — results-page takeover (`searchProducts()`, short timeout, no retries)
+- `GET /v1/index/counts` — index reconciliation (`Api\Client::getCounts()`): live Qdrant counts + `pending` in-flight jobs + `reconciled` freshness flag + last index status. Consumed by `Sync\RemoteIndexState` (30s transient cache) to power the "Indexed in search" dashboard row + drift badge. Secret key only.
 - API Key: `sk_live_...` format, stored in `wp_options` as `appinio_api_key`
 - Platform: `woocommerce` (selects `WooCommerceProductData` DTO on the API side)
 
