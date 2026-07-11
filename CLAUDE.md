@@ -90,7 +90,7 @@ vendor/bin/phpunit --filter=ClassName  # run specific test
 - **Variable products**: index parent only with min/max variation prices + aggregated attributes
 - **Status guard**: only `publish` products indexed; draft/private/trash auto-removed from index
 - **Results-page takeover**: standard `pre_get_posts` + `post__in` + `posts_search`-nullify; AI products merged with native non-product matches; graceful native fallback on API failure; gated by `appinio_results_page` (on by default)
-- API base URL resolves through the `appinio_api_url` filter — the sole override seam (production default hardcoded in `Api\Client`). The dev harness overrides it via `WP_ENVIRONMENT_TYPE` + a monorepo mu-plugin; no `APPIN*_API_URL` constant is honored. `APPINIO_CDN_URL` remains a constant overridable in `wp-config.php`.
+- API base URL resolves through the `appinio_api_url` filter — the sole override seam (production default hardcoded in `Api\Client`). The dev harness overrides it via `WP_ENVIRONMENT_TYPE` + a monorepo mu-plugin; no `APPIN*_API_URL` constant is honored. The widget CDN script URL resolves the same way through the `appinio_cdn_url` filter (production default hardcoded in `Frontend\SearchWidget`); no `APPINIO_CDN_URL` constant is honored.
 
 ## API Contract
 

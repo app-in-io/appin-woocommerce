@@ -9,26 +9,6 @@ if (! defined('ABSPATH')) {
     \define('ABSPATH', '/tmp/wordpress/');
 }
 
-if (! defined('APPINIO_CDN_URL')) {
-    \define('APPINIO_CDN_URL', 'https://cdn.app-in.io/v1/search.js');
-}
-
-if (! defined('APPINIO_PLUGIN_FILE')) {
-    \define('APPINIO_PLUGIN_FILE', \dirname(__DIR__) . '/appinio-search.php');
-}
-
-if (! defined('APPINIO_PLUGIN_DIR')) {
-    \define('APPINIO_PLUGIN_DIR', \dirname(__DIR__) . '/');
-}
-
-if (! defined('APPINIO_PLUGIN_URL')) {
-    \define('APPINIO_PLUGIN_URL', 'https://example.com/wp-content/plugins/appinio-search/');
-}
-
-if (! defined('APPINIO_VERSION')) {
-    \define('APPINIO_VERSION', '1.0.0-test');
-}
-
 if (! defined('DAY_IN_SECONDS')) {
     \define('DAY_IN_SECONDS', 86400);
 }

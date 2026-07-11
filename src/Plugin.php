@@ -18,6 +18,8 @@ final class Plugin
 {
     private static ?self $instance = null;
 
+    private string $file = '';
+
     private function __construct() {}
 
     public static function instance(): self
@@ -25,8 +27,10 @@ final class Plugin
         return self::$instance ??= new self;
     }
 
-    public function boot(): void
+    public function boot(string $file): void
     {
+        $this->file = $file;
+
         $apiKey = get_option('appinio_api_key', '');
 
         (new SettingsPage)->register();
@@ -39,5 +43,23 @@ final class Plugin
         (new ProductSync)->register();
         (new BulkSync)->register();
         (new SearchResults)->register();
+    }
+
+    /**
+     * Absolute path to the plugin's main file, recorded on boot(). Replaces the former
+     * plugin-file constant so no global define is needed.
+     */
+    public function file(): string
+    {
+        return $this->file;
+    }
+
+    /**
+     * The plugin's basename (e.g. `appinio-search/appinio-search.php`) — used to build
+     * the `plugin_action_links_{$basename}` hook on the Plugins screen.
+     */
+    public function basename(): string
+    {
+        return plugin_basename($this->file);
     }
 }

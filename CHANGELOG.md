@@ -82,6 +82,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   hook the **sole** override seam (the dev harness registers it to target local infrastructure per
   environment). The `APPINIO_API_URL` constant has been **removed** — it is no longer defined or
   honored anywhere.
+- **Widget CDN URL resolves through the `appinio_cdn_url` filter**: the search widget script URL now
+  passes a hardcoded production default (baked into `Frontend\SearchWidget`) through a WordPress
+  filter — the same override seam as the API URL, used by the dev harness to target the local Vite
+  dev server. The `APPINIO_CDN_URL` constant has been **removed**. Also removed three dead constants
+  that had no consumers: `APPINIO_VERSION` (the plugin header + `readme.txt` carry the version, and
+  the enqueue intentionally passes `null` to avoid a `?ver` query), `APPINIO_PLUGIN_DIR` and
+  `APPINIO_PLUGIN_URL`. The last plugin `define()`, `APPINIO_PLUGIN_FILE`, is also **removed** — the
+  plugin file path and basename now come from `Plugin::file()` / `Plugin::basename()` (recorded when
+  `boot()` runs), leaving the plugin with no global constants of its own.
 - **Unique prefix (WordPress.org requirement)**: renamed the plugin's namespace
   (`AppIn\WooCommerce` → `AppInIo`), constants (`APPIN_*` → `APPINIO_*`), option keys and hooks
   (`appin_*` → `appinio_*`) to a distinct 4+ character prefix. The plugin slug and text domain

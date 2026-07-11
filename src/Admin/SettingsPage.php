@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AppInIo\Admin;
 
+use AppInIo\Plugin;
 use AppInIo\Sync\IndexState;
 use AppInIo\Sync\RemoteIndexState;
 
@@ -35,7 +36,7 @@ final class SettingsPage
         add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
-        add_filter('plugin_action_links_' . plugin_basename(APPINIO_PLUGIN_FILE), [$this, 'addActionLinks']);
+        add_filter('plugin_action_links_' . Plugin::instance()->basename(), [$this, 'addActionLinks']);
         $this->registration->register();
     }
 

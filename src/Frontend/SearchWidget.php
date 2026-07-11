@@ -12,9 +12,24 @@ if (! defined('ABSPATH')) {
 
 final class SearchWidget
 {
+    private const DEFAULT_CDN_URL = 'https://cdn.app-in.io/v1/search.js';
+
     public function __construct(
         private LanguageResolver $lang = new LanguageResolver,
     ) {}
+
+    /**
+     * Resolve the search widget script URL.
+     *
+     * The production default is baked in as DEFAULT_CDN_URL and passed through the
+     * `appinio_cdn_url` filter — the sole override seam (used by the dev harness to
+     * target the local Vite dev server). This is a full script URL, not a base — no
+     * trailing-slash trimming.
+     */
+    public static function cdnUrl(): string
+    {
+        return (string) apply_filters('appinio_cdn_url', self::DEFAULT_CDN_URL);
+    }
 
     public function register(): void
     {
@@ -34,7 +49,7 @@ final class SearchWidget
         // phpcs:disable WordPress.WP.EnqueuedResourceParameters.MissingVersion
         wp_enqueue_script(
             'appinio-search-widget',
-            APPINIO_CDN_URL,
+            self::cdnUrl(),
             [],
             null,
             ['strategy' => 'defer', 'in_footer' => true]
