@@ -29,6 +29,10 @@ class SearchWidgetTest extends TestCase
         Functions\when('wp_print_inline_script_tag')->alias(static function ($javascript): void {
             echo $javascript;
         });
+
+        // enqueueAssets() resolves the CDN URL through the `appinio_cdn_url` filter.
+        // Default: pass the value through unchanged (no override registered).
+        Functions\when('apply_filters')->returnArg(2);
     }
 
     protected function tearDown(): void
@@ -57,7 +61,7 @@ class SearchWidgetTest extends TestCase
             ->once()
             ->with(
                 'appinio-search-widget',
-                APPINIO_CDN_URL,
+                'https://cdn.app-in.io/v1/search.js',
                 [],
                 null,
                 ['strategy' => 'defer', 'in_footer' => true]
@@ -318,5 +322,26 @@ class SearchWidgetTest extends TestCase
         // luminance script that flips the element to dark is emitted.
         self::assertStringNotContainsString('theme="dark"', $output);
         self::assertStringContainsString("setAttribute('theme', 'dark')", $output);
+    }
+
+    public function test_cdn_url_returns_hardcoded_default_with_filter_passthrough(): void
+    {
+        // The production default is baked into SearchWidget::DEFAULT_CDN_URL; the filter
+        // passes it through unchanged → the canonical prod script URL.
+        self::assertSame('https://cdn.app-in.io/v1/search.js', SearchWidget::cdnUrl());
+    }
+
+    public function test_cdn_url_filter_override_wins_over_default(): void
+    {
+        // The dev harness registers `appinio_cdn_url` to target the local Vite dev server.
+        // The filter receives the hardcoded default and its return value takes precedence.
+        Functions\when('apply_filters')->alias(function (string $hook, string $value): string {
+            self::assertSame('appinio_cdn_url', $hook);
+            self::assertSame('https://cdn.app-in.io/v1/search.js', $value);
+
+            return 'http://localhost:5174/src/search/loader.ts';
+        });
+
+        self::assertSame('http://localhost:5174/src/search/loader.ts', SearchWidget::cdnUrl());
     }
 }

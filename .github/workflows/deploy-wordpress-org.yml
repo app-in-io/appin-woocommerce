@@ -25,7 +25,6 @@ jobs:
             exit 1
           fi
           sed -i -E "s/(Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
-          sed -i -E "s/(APPINIO_VERSION', ')[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
           sed -i -E "s/(Stable tag:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" readme.txt
 
       - name: Deploy to WordPress.org

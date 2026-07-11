@@ -22,14 +22,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-if (! defined('APPINIO_CDN_URL')) {
-    \define('APPINIO_CDN_URL', 'https://cdn.app-in.io/v1/search.js');
-}
-
 \define('APPINIO_PLUGIN_FILE', __FILE__);
-\define('APPINIO_PLUGIN_DIR', plugin_dir_path(__FILE__));
-\define('APPINIO_PLUGIN_URL', plugin_dir_url(__FILE__));
-\define('APPINIO_VERSION', '0.9.0');
 
 require_once __DIR__ . '/autoload.php';
 
