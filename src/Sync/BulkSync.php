@@ -23,7 +23,19 @@ class BulkSync
         private RetryPolicy $retryPolicy = new RetryPolicy,
         private IndexState $indexState = new IndexState,
         private LanguageResolver $lang = new LanguageResolver,
+        private ?RemoteIndexState $remoteIndexState = null,
     ) {}
+
+    /**
+     * Lazily resolve the remote index state. Deferred (not a constructor default) so that
+     * merely constructing BulkSync — e.g. to register hooks — does not build an API Client
+     * and read options, matching how the per-request Client is created inline in the batch
+     * handlers rather than at construction.
+     */
+    private function remoteState(): RemoteIndexState
+    {
+        return $this->remoteIndexState ??= new RemoteIndexState;
+    }
 
     public function register(): void
     {
@@ -45,12 +57,20 @@ class BulkSync
             wp_send_json_error('', 403);
         }
 
+        $remote = $this->remoteState();
+
         wp_send_json([
             'running' => (bool) get_option('appinio_bulk_sync_running', false),
             'operation' => (string) get_option('appinio_bulk_operation', 'sync'),
             'synced' => $this->indexState->count(),
             'last_sync' => get_option('appinio_last_sync', ''),
             'delete_failed' => (int) get_option('appinio_last_delete_failed', 0),
+            // Real index reconciliation (from the search backend, 30s-cached): how many
+            // products actually landed, how many jobs are still in flight, and the last
+            // index status. null on any field means the backend was unavailable.
+            'indexed' => $remote->products(),
+            'pending' => $remote->pending(),
+            'index_status' => $remote->status(),
         ]);
     }
 
@@ -286,6 +306,10 @@ class BulkSync
         update_option('appinio_bulk_sync_running', false, false);
         delete_option('appinio_bulk_heartbeat');
         update_option('appinio_last_sync', current_time('mysql'), false);
+        // Bust the 30s remote-counts cache so the dashboard's next poll re-fetches fresh
+        // indexed/pending figures for the work this run just queued (jobs may still be in
+        // flight on the backend even though local queuing is done).
+        $this->remoteState()->flush();
         // Keep appinio_bulk_operation as the last op so the widget's terminal poll (which
         // fires after this) still labels the run correctly; startBulk overwrites it next.
     }
@@ -294,6 +318,9 @@ class BulkSync
     {
         update_option('appinio_bulk_sync_running', false, false);
         delete_option('appinio_bulk_heartbeat');
+        // Bust the 30s remote-counts cache (symmetric with finishSync) so the dashboard's
+        // next poll re-fetches the now-lower indexed count instead of a stale too-high one.
+        $this->remoteState()->flush();
         // The "Synced" count derives from the per-product flag (removed per item above),
         // so there is nothing to reset here — and "Last sync" is a sync-only timestamp.
     }

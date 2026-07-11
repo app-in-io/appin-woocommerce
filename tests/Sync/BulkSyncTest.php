@@ -52,6 +52,44 @@ class BulkSyncTest extends TestCase
         self::assertNotFalse(has_action('wp_ajax_appinio_sync_status', [$bulk, 'ajaxSyncStatus']));
     }
 
+    public function test_ajax_sync_status_includes_remote_reconciliation_fields(): void
+    {
+        Functions\when('check_ajax_referer')->justReturn(true);
+        Functions\when('current_user_can')->justReturn(true);
+        Functions\when('get_option')->alias(fn ($key, $default = false) => match ($key) {
+            'appinio_bulk_sync_running' => true,
+            'appinio_bulk_operation' => 'sync',
+            'appinio_last_sync' => '2026-07-06 10:00:00',
+            'appinio_api_key' => 'sk_test_key',
+            default => $default,
+        });
+        // IndexState count (queued) served from cache; remote counts fetched fresh over HTTP.
+        Functions\when('get_transient')->alias(fn ($key) => $key === 'appinio_indexed_count' ? 7 : false);
+
+        // Real Client (final) — stub the HTTP layer for the getCounts call.
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_request')->justReturn('RESP');
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(200);
+        Functions\when('wp_remote_retrieve_body')->justReturn((string) json_encode([
+            'counts' => ['products' => 1234],
+            'pending' => 3,
+            'status' => 'running',
+            'last_indexed_at' => null,
+        ]));
+
+        $captured = null;
+        Functions\when('wp_send_json')->alias(function ($data) use (&$captured): void {
+            $captured = $data;
+        });
+
+        (new BulkSync)->ajaxSyncStatus();
+
+        self::assertSame(7, $captured['synced']);       // local queued count
+        self::assertSame(1234, $captured['indexed']);   // real index count
+        self::assertSame(3, $captured['pending']);      // jobs still in flight
+        self::assertSame('running', $captured['index_status']);
+    }
+
     public function test_handle_bulk_sync_starts_first_batch_and_redirects(): void
     {
         Functions\when('check_admin_referer')->justReturn(true);
@@ -344,6 +382,25 @@ class BulkSyncTest extends TestCase
         (new BulkSync)->processDeleteBatch(1);
 
         self::assertFalse($this->options['appinio_bulk_sync_running']);
+    }
+
+    public function test_finish_delete_flushes_the_remote_counts_cache(): void
+    {
+        // After a delete run the indexed count drops — the 30s remote cache must be busted
+        // (symmetric with finishSync) so the dashboard doesn't show a stale too-high number.
+        $this->stubClientHttp(200);
+        Functions\when('wc_get_products')->justReturn([]); // empty → finishDelete
+
+        $flushed = [];
+        Functions\when('delete_transient')->alias(function ($key) use (&$flushed): bool {
+            $flushed[] = $key;
+
+            return true;
+        });
+
+        (new BulkSync)->processDeleteBatch(1);
+
+        self::assertContains('appinio_remote_counts', $flushed);
     }
 
     public function test_process_delete_batch_records_a_failure(): void

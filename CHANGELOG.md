@@ -7,6 +7,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **Sync reconciliation & live indexing progress**: the Sync Status dashboard now shows two
+  distinct numbers — **Synced (queued)** (what the plugin has sent for indexing) and **Indexed
+  in search** (how many products actually landed in the AI search index, read live from the
+  backend). Once indexing settles, if fewer products are indexed than were queued — or the last
+  index run failed — a drift warning appears prompting a retry, so async indexing failures are no
+  longer invisible. While a sync is still in flight the warning is suppressed (the index legitimately
+  lags the queue), and the "Indexed in search" figure updates live showing how many index jobs remain
+  ("Indexing… (N pending)"), converging on its own once the queue drains. The real counts are cached
+  for 30 seconds, so live polling never hammers the API, and the backend count shows a dash ("—")
+  rather than a misleading number whenever the search service is unavailable or its counts are stale.
 - **Multilingual support (WPML / Polylang)**: products are now tagged with their language,
   and search is scoped to the visitor's language, so a multilingual store no longer returns
   mixed-language duplicates of the same product. Bulk "Sync All" and "Delete All" now cover

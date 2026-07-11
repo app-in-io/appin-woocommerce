@@ -55,6 +55,20 @@ final class Client
     }
 
     /**
+     * Fetch the store's real index counts from the search backend (Qdrant): how many
+     * documents are actually indexed per collection, how many index jobs are still in
+     * flight, and the last index-tracking status. Used to reconcile the locally-tracked
+     * "queued" count against what truly landed in the index. Short timeout, few retries —
+     * it drives a dashboard poll, not a critical write.
+     *
+     * @return array{ok: bool, status: int, body: array<string, mixed>}
+     */
+    public function getCounts(): array
+    {
+        return $this->request('GET', '/index/counts', [], 10, 2);
+    }
+
+    /**
      * Search products by query and return the matching product IDs in relevance
      * order. Used by the results-page takeover — runs on page render, so it uses a
      * short timeout and no retries: a slow/failed call must fall back to native
@@ -159,9 +173,13 @@ final class Client
         $args = [
             'method' => $method,
             'headers' => $headers,
-            'body' => wp_json_encode($body),
             'timeout' => $timeout,
         ];
+
+        // GET/HEAD carry no request body — some servers/WAFs reject a body on a GET.
+        if ($method !== 'GET' && $method !== 'HEAD') {
+            $args['body'] = wp_json_encode($body);
+        }
 
         // do/while guarantees at least one attempt regardless of $maxRetries.
         // $status stays 0 until an HTTP response arrives (i.e. on network errors).

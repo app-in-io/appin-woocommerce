@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AppInIo\Admin;
 
 use AppInIo\Sync\IndexState;
+use AppInIo\Sync\RemoteIndexState;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -15,7 +16,19 @@ final class SettingsPage
     public function __construct(
         private IndexState $indexState = new IndexState,
         private Registration $registration = new Registration,
+        private ?RemoteIndexState $remoteIndexState = null,
     ) {}
+
+    /**
+     * Lazily resolve the remote index state. Deferred (not a constructor default) so that
+     * constructing SettingsPage — e.g. to render a single field or sanitize an option —
+     * does not build an API Client and read options; the real index counts are only needed
+     * when the sync dashboard actually renders.
+     */
+    private function remoteState(): RemoteIndexState
+    {
+        return $this->remoteIndexState ??= new RemoteIndexState;
+    }
 
     public function register(): void
     {
@@ -62,35 +75,112 @@ final class SettingsPage
         return "
         (function(\$) {
             var container = document.getElementById('appinio-sync-section');
-            if (!container || !container.dataset.running) return;
+            if (!container) return;
 
-            var poll = setInterval(function() {
+            function poll(cb) {
                 \$.post('{$ajaxUrl}', {
                     action: 'appinio_sync_status',
                     _ajax_nonce: '{$nonce}'
-                }, function(resp) {
-                    if (!resp.running) {
-                        clearInterval(poll);
-                        var synced = container.querySelector('.appinio-synced-count');
-                        var lastSync = container.querySelector('.appinio-last-sync');
-                        var actions = container.querySelector('.appinio-actions');
-                        var progress = container.querySelector('.appinio-progress');
+                }, cb);
+            }
 
-                        if (synced) synced.textContent = resp.synced;
-                        // Only a sync writes a 'Last sync' timestamp — never after a delete.
-                        if (lastSync && resp.operation === 'sync' && resp.last_sync) {
-                            lastSync.closest('tr').style.display = '';
-                            lastSync.textContent = resp.last_sync;
+            // --- Local progress ticker (unchanged): runs only while a bulk run is active. ---
+            if (container.dataset.running) {
+                var localPoll = setInterval(function() {
+                    poll(function(resp) {
+                        if (!resp.running) {
+                            clearInterval(localPoll);
+                            var synced = container.querySelector('.appinio-synced-count');
+                            var lastSync = container.querySelector('.appinio-last-sync');
+                            var actions = container.querySelector('.appinio-actions');
+                            var progress = container.querySelector('.appinio-progress');
+
+                            if (synced) synced.textContent = resp.synced;
+                            // Only a sync writes a 'Last sync' timestamp — never after a delete.
+                            if (lastSync && resp.operation === 'sync' && resp.last_sync) {
+                                lastSync.closest('tr').style.display = '';
+                                lastSync.textContent = resp.last_sync;
+                            }
+                            if (progress) progress.style.display = 'none';
+                            if (actions) actions.style.display = '';
+                            if (resp.delete_failed > 0) { location.reload(); }
+                        } else {
+                            var synced = container.querySelector('.appinio-synced-count');
+                            if (synced) synced.textContent = resp.synced;
                         }
-                        if (progress) progress.style.display = 'none';
-                        if (actions) actions.style.display = '';
-                        if (resp.delete_failed > 0) { location.reload(); }
+                    });
+                }, 3000);
+            }
+
+            // --- Remote reconciliation ticker: runs even on an idle dashboard. ---
+            var indexedCell = container.querySelector('.appinio-indexed-count');
+            var driftBadge = container.querySelector('.appinio-index-drift');
+
+            function renderRemote(resp) {
+                // Older API without the reconciliation fields — leave the server-rendered UI as is.
+                if (typeof resp.indexed === 'undefined' && typeof resp.pending === 'undefined') {
+                    return;
+                }
+
+                var indexed = (resp.indexed === null || typeof resp.indexed === 'undefined') ? null : resp.indexed;
+                var pending = (typeof resp.pending === 'number') ? resp.pending : 0;
+                var queuedEl = container.querySelector('.appinio-synced-count');
+                var queued = queuedEl ? (parseInt(queuedEl.textContent, 10) || 0) : 0;
+
+                if (indexedCell) {
+                    if (indexed === null) {
+                        indexedCell.textContent = '—';
+                    } else if (pending > 0) {
+                        indexedCell.textContent = indexed + ' / ' + queued + ' — Indexing… (' + pending + ' pending)';
                     } else {
-                        var synced = container.querySelector('.appinio-synced-count');
-                        if (synced) synced.textContent = resp.synced;
+                        indexedCell.textContent = String(indexed);
                     }
-                });
-            }, 3000);
+                }
+
+                if (driftBadge) {
+                    // While jobs are still in flight (pending > 0) the index legitimately lags —
+                    // that is not drift, so the badge stays hidden until the queue drains.
+                    var drift = pending === 0 && (resp.index_status === 'failed' || (indexed !== null && indexed < queued));
+                    if (drift) {
+                        if (indexed !== null && indexed < queued) {
+                            driftBadge.textContent = indexed + ' of ' + queued +
+                                ' products are in the search index — some queued items haven\'t indexed yet or failed. Retry sync.';
+                        } else {
+                            driftBadge.textContent = 'The last indexing run reported a failure — retry sync to be safe.';
+                        }
+                        driftBadge.style.display = '';
+                    } else {
+                        driftBadge.style.display = 'none';
+                    }
+                }
+            }
+
+            var remotePoll = null;
+            var remoteTicks = 0;
+            // Safety cap (~30 min at 15s): an open dashboard whose backend never drains its
+            // pending jobs (e.g. stuck queue) must not poll forever. Generous so real long
+            // syncs still get live updates.
+            var REMOTE_MAX_TICKS = 120;
+            // One immediate fetch on load — renders the indexed cell + drift even when idle.
+            poll(function(resp) {
+                renderRemote(resp);
+                var pending = (typeof resp.pending === 'number') ? resp.pending : 0;
+                // Only keep polling if there is live work to converge on.
+                if (resp.running === true || pending > 0) {
+                    remotePoll = setInterval(function() {
+                        remoteTicks++;
+                        poll(function(r) {
+                            renderRemote(r);
+                            var p = (typeof r.pending === 'number') ? r.pending : 0;
+                            // Self-stop once the queue is drained and no run is active, or when
+                            // the safety cap is hit.
+                            if ((!r.running && p === 0) || remoteTicks >= REMOTE_MAX_TICKS) {
+                                clearInterval(remotePoll);
+                            }
+                        });
+                    }, 15000);
+                }
+            });
         })(jQuery);
         ";
     }
@@ -380,6 +470,12 @@ final class SettingsPage
         $isDeleting = $isSyncing && get_option('appinio_bulk_operation', 'sync') === 'delete';
         $deleteFailed = (int) get_option('appinio_last_delete_failed', 0);
 
+        // Real index reconciliation: how many products actually landed in the search index
+        // (from the backend, 30s-cached), versus $synced (what the store queued locally).
+        $remote = $this->remoteState();
+        $indexed = $remote->products();
+        $hasDrift = $remote->drift($synced);
+
         echo '<div id="appinio-sync-section" class="card" style="max-width:600px;margin-bottom:20px;padding:12px 20px;"';
         if ($isSyncing) {
             echo ' data-running="1"';
@@ -391,14 +487,44 @@ final class SettingsPage
         echo '<tr><th>' . esc_html__('Published products', 'appinio-search') . '</th>';
         echo '<td><strong>' . esc_html((string) $total) . '</strong></td></tr>';
 
-        echo '<tr><th>' . esc_html__('Synced', 'appinio-search') . '</th>';
+        echo '<tr><th>' . esc_html__('Synced (queued)', 'appinio-search') . '</th>';
         echo '<td><strong class="appinio-synced-count">' . esc_html((string) $synced) . '</strong></td></tr>';
+
+        echo '<tr><th>' . esc_html__('Indexed in search', 'appinio-search') . '</th>';
+        echo '<td><strong class="appinio-indexed-count">'
+            . esc_html($indexed === null ? '—' : (string) $indexed)
+            . '</strong></td></tr>';
 
         echo '<tr' . ($lastSync ? '' : ' style="display:none"') . '>';
         echo '<th>' . esc_html__('Last sync', 'appinio-search') . '</th>';
         echo '<td class="appinio-last-sync">' . esc_html($lastSync) . '</td></tr>';
 
         echo '</tbody></table>';
+
+        // Drift warning: fewer products are actually indexed than were queued, or the last
+        // index run failed. Always emitted (hidden when converged) so the JS poller can
+        // toggle it live as pending jobs drain. Two copy variants: a counting "shortfall"
+        // message when fewer are indexed than queued, and a plain "last run failed" message
+        // for the failed-but-counts-match case (a counting message there would contradict
+        // itself). The JS poller rebuilds this text live; this is the initial / no-JS render.
+        if ($indexed !== null && $indexed < $synced) {
+            $driftMessage = \sprintf(
+                /* translators: 1: number of products in the search index, 2: number queued */
+                _n(
+                    '%1$d of %2$d product is in the search index — some queued items haven\'t indexed yet or failed. Retry sync.',
+                    '%1$d of %2$d products are in the search index — some queued items haven\'t indexed yet or failed. Retry sync.',
+                    $synced,
+                    'appinio-search'
+                ),
+                $indexed,
+                $synced
+            );
+        } else {
+            $driftMessage = __('The last indexing run reported a failure — retry sync to be safe.', 'appinio-search');
+        }
+
+        echo '<p class="appinio-index-drift" style="color:#b32d2e;' . ($hasDrift ? '' : 'display:none') . '">'
+            . esc_html($driftMessage) . '</p>';
 
         if ($deleteFailed > 0) {
             echo '<p class="appinio-delete-failed" style="color:#b32d2e;">' . esc_html(\sprintf(
