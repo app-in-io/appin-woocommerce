@@ -28,7 +28,7 @@ final class ProductMapper
         $data = [
             'id' => (string) $product->get_id(),
             'url' => get_permalink($product->get_id()),
-            'title' => $product->get_name(),
+            'title' => $this->decode($product->get_name()),
             'content' => $this->buildContent($product),
             'lang' => $this->lang->postLanguage((int) $product->get_id()),
             'price' => $this->resolvePrice($product),
@@ -77,11 +77,42 @@ final class ProductMapper
     private function buildContent(WC_Product $product): string
     {
         $parts = array_filter([
-            wp_strip_all_tags($product->get_short_description()),
-            wp_strip_all_tags($product->get_description()),
+            $this->cleanText($product->get_short_description()),
+            $this->cleanText($product->get_description()),
         ]);
 
-        return implode("\n\n", $parts) ?: $product->get_name();
+        return implode("\n\n", $parts) ?: $this->decode($product->get_name());
+    }
+
+    /**
+     * Turn stored rich-text (descriptions) into plain text for the index, in this order:
+     *   1. wp_strip_all_tags — remove the real HTML markup (in valid stored HTML a literal "<"
+     *      is always encoded as "&lt;", so no legit text is at risk here);
+     *   2. decode entities — reveal the wanted plain-text form ("&amp;" → "&", "&lt;" → "<");
+     *   3. strip only tag-like sequences the decode may have revealed (encoded markup such as
+     *      "&lt;div&gt;"). A "<" followed by a letter or "/" is markup; "< -5°C" / "<1L"
+     *      (space or digit after "<") is legit spec text and survives.
+     *
+     * Decoding BEFORE stripping is wrong: a description legitimately containing an encoded
+     * comparison operator (e.g. "Rated to &lt; -5°C") would decode to a bare "<" that
+     * wp_strip_all_tags treats as an unclosed tag and eats to the next ">" — destroying content.
+     */
+    private function cleanText(string $value): string
+    {
+        $text = $this->decode(wp_strip_all_tags($value));
+
+        return (string) preg_replace('/<\/?[a-zA-Z][^>]*>/', '', $text);
+    }
+
+    /**
+     * WordPress stores taxonomy/term text HTML-entity-encoded (e.g. "Drinkware &amp; Bottles").
+     * The AppIn index is plain text, so decode entities before sending — otherwise the escaped
+     * literal shows up in the search widget. Term names never contain markup, so this plain
+     * decode is enough for category/tag/brand/attribute fields (rich text goes through cleanText).
+     */
+    private function decode(string $value): string
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     private function resolvePrice(WC_Product $product): ?float
@@ -116,7 +147,7 @@ final class ProductMapper
     {
         $terms = $this->getProductCategoryTerms($product);
 
-        return $terms ? $terms[0]->name : null;
+        return $terms ? $this->decode($terms[0]->name) : null;
     }
 
     private function resolveCategoryId(WC_Product $product): ?int
@@ -154,7 +185,7 @@ final class ProductMapper
             return [];
         }
 
-        return array_values(array_map(fn ($t) => $t->name, $terms));
+        return array_values(array_map(fn ($t) => $this->decode($t->name), $terms));
     }
 
     /**
@@ -165,13 +196,13 @@ final class ProductMapper
         // Check taxonomy first (e.g. Perfect Brands plugin)
         $terms = get_the_terms($product->get_id(), 'product_brand');
         if ($terms && ! is_wp_error($terms)) {
-            return $terms[0]->name;
+            return $this->decode($terms[0]->name);
         }
 
         // Fallback: product attribute named "Brand"
         $brand = $product->get_attribute('brand');
 
-        return $brand !== '' ? $brand : null;
+        return $brand !== '' ? $this->decode($brand) : null;
     }
 
     /**
@@ -183,8 +214,8 @@ final class ProductMapper
 
         foreach ($product->get_attributes() as $attribute) {
             $name = $attribute instanceof \WC_Product_Attribute
-                ? wc_attribute_label($attribute->get_name())
-                : (string) $attribute;
+                ? $this->decode(wc_attribute_label($attribute->get_name()))
+                : $this->decode((string) $attribute);
 
             if ($attribute instanceof \WC_Product_Attribute) {
                 $values = $attribute->is_taxonomy()
@@ -192,7 +223,7 @@ final class ProductMapper
                     : $attribute->get_options();
 
                 foreach ($values as $value) {
-                    $attributes[] = ['name' => $name, 'value' => (string) $value];
+                    $attributes[] = ['name' => $name, 'value' => $this->decode((string) $value)];
                 }
             }
         }
@@ -219,7 +250,7 @@ final class ProductMapper
 
             $children[] = [
                 'id' => (string) $child->get_id(),
-                'title' => $child->get_name(),
+                'title' => $this->decode($child->get_name()),
                 'url' => (string) get_permalink($child->get_id()),
                 'price' => $child->get_price() !== '' ? (float) $child->get_price() : null,
                 'sku' => $child->get_sku() ?: null,

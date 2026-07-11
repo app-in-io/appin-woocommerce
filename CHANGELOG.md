@@ -7,6 +7,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **HTML entities in product text decoded before indexing**: WordPress stores taxonomy term names
+  HTML-entity-encoded (e.g. `Drinkware &amp; Bottles`), so category, tag, brand, attribute and
+  title/content text carried the escaped literal into the search index and the widget rendered
+  `&amp;` to shoppers. These fields are now decoded before indexing, so names like "Drinkware &
+  Bottles" display correctly in the search widget. Product descriptions are cleaned in the correct
+  order — strip the real HTML markup first, then decode entities, then remove any tag-like sequences
+  the decode revealed — so entity-encoded markup (e.g. `&lt;div&gt;`) is stripped out of the indexed
+  text while a legitimate encoded comparison operator (e.g. `Rated to &lt; -5°C`) survives intact
+  instead of being eaten as an unclosed tag.
 - **Sync Status dashboard never updated live**: the polling script was printed inline after
   `jquery-core` in the page `<head>`, so it ran before the dashboard existed in the DOM and bailed
   immediately — no live updates ever fired. Reworked onto the WordPress **Heartbeat API** (the admin
