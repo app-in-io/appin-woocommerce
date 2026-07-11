@@ -65,6 +65,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   (`appinio-search`) are unchanged.
 - readme.txt: WP.org listing SEO/GEO pass — keyworded title, optimized tags, multilingual
   differentiator surfaced, GEO fact block, comparison-intent FAQ.
+- **"Visit plugin site" link** (Plugins screen) now points to the WooCommerce landing page
+  (`https://app-in.io/woocommerce`) instead of the generic product site.
 
 ### Fixed
 - **Search-excluded products no longer indexed**: products with catalog visibility "Catalog only" or

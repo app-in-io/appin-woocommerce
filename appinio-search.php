@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name:       AppIn Search
- * Plugin URI:        https://app-in.io
+ * Plugin URI:        https://app-in.io/woocommerce
  * Description:       Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync.
  * Version:           0.9.0
  * Author:            appinio

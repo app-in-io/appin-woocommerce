@@ -16,9 +16,6 @@
 /phpunit.xml      export-ignore
 /phpstan.neon     export-ignore
 /pint.json        export-ignore
-/compose.yml      export-ignore
-/seed.sql         export-ignore
-/seed-products.php export-ignore
 /CHANGELOG.md     export-ignore
 /README.md        export-ignore
 /CLAUDE.md        export-ignore

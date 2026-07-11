@@ -17,9 +17,6 @@
 /phpunit.xml
 /phpstan.neon
 /pint.json
-/compose.yml
-/seed.sql
-/seed-products.php
 /CHANGELOG.md
 /README.md
 /CLAUDE.md

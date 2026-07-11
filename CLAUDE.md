@@ -47,21 +47,26 @@ tests/
 
 ## Running (Docker)
 
-Own `compose.yml` — isolated from the main API project. Requires `search-network` to reach the API.
+The local WordPress dev harness is **not part of this plugin** — it lives in the
+monorepo root (`compose.wordpress.yml` + `docker/wordpress/seed.sql`) and mounts
+both `appin-search` and `appin-chat` into one WordPress + WooCommerce install.
+Requires `search-network` to reach the API. Run from the monorepo root:
 
 ```bash
-docker network create search-network       # once, shared with api
-docker compose up -d                       # wordpress + mariadb
-docker compose run --rm wp-cli wp theme install storefront --activate
-docker compose run --rm wp-cli wp plugin install woocommerce --activate
-docker compose run --rm wp-cli wp plugin activate appinio-search
+make up-wp        # docker compose -f compose.wordpress.yml up -d (wordpress + mariadb)
+make wp-setup     # install Storefront + WooCommerce, activate the plugin
 ```
 
-Or from the root repo: `make up-wp && make wp-setup`.
+WordPress available at `woo.app-in.local` (OrbStack). This plugin auto-mounted at
+`wp-content/plugins/appinio-search`; appin-chat at `wp-content/plugins/appin-chat`.
 
-WordPress available at `woo.app-in.local` (OrbStack). Plugin auto-mounted at `wp-content/plugins/appinio-search`.
+First start auto-loads `docker/wordpress/seed.sql` into MariaDB (WP tables +
+WooCommerce + plugin settings). To reset:
+`docker compose -f compose.wordpress.yml down -v && make up-wp && make wp-setup`.
 
-First start auto-loads `seed.sql` into MariaDB (WP tables + WooCommerce + plugin settings). To reset: `docker compose down -v && docker compose up -d && make wp-setup`.
+Demo catalog: activate the **appin-demo-seeder** plugin
+(`wordpress-plugin/appin-demo-seeder`) and seed from wp-admin (Tools → AppIn Demo
+Seeder) — it replaces the old `seed-products.php` WP-CLI seeder.
 
 ## Commands
 
