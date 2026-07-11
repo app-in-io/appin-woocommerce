@@ -9,10 +9,6 @@ if (! defined('ABSPATH')) {
     \define('ABSPATH', '/tmp/wordpress/');
 }
 
-if (! defined('APPINIO_PLUGIN_FILE')) {
-    \define('APPINIO_PLUGIN_FILE', \dirname(__DIR__) . '/appinio-search.php');
-}
-
 if (! defined('DAY_IN_SECONDS')) {
     \define('DAY_IN_SECONDS', 86400);
 }

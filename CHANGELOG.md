@@ -88,7 +88,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   dev server. The `APPINIO_CDN_URL` constant has been **removed**. Also removed three dead constants
   that had no consumers: `APPINIO_VERSION` (the plugin header + `readme.txt` carry the version, and
   the enqueue intentionally passes `null` to avoid a `?ver` query), `APPINIO_PLUGIN_DIR` and
-  `APPINIO_PLUGIN_URL`.
+  `APPINIO_PLUGIN_URL`. The last plugin `define()`, `APPINIO_PLUGIN_FILE`, is also **removed** — the
+  plugin file path and basename now come from `Plugin::file()` / `Plugin::basename()` (recorded when
+  `boot()` runs), leaving the plugin with no global constants of its own.
 - **Unique prefix (WordPress.org requirement)**: renamed the plugin's namespace
   (`AppIn\WooCommerce` → `AppInIo`), constants (`APPIN_*` → `APPINIO_*`), option keys and hooks
   (`appin_*` → `appinio_*`) to a distinct 4+ character prefix. The plugin slug and text domain

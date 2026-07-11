@@ -22,8 +22,6 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-\define('APPINIO_PLUGIN_FILE', __FILE__);
-
 require_once __DIR__ . '/autoload.php';
 
 add_action('before_woocommerce_init', function (): void {
@@ -47,5 +45,5 @@ add_action('plugins_loaded', function (): void {
         return;
     }
 
-    AppInIo\Plugin::instance()->boot();
+    AppInIo\Plugin::instance()->boot(__FILE__);
 });
