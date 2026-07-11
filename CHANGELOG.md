@@ -6,6 +6,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **Sync Status dashboard never updated live**: the polling script was printed inline after
+  `jquery-core` in the page `<head>`, so it ran before the dashboard existed in the DOM and bailed
+  immediately — no live updates ever fired. Reworked onto the WordPress **Heartbeat API** (the admin
+  heartbeat already ticks on this screen): the server attaches the sync/reconciliation data to the
+  heartbeat response and the dashboard updates on `heartbeat-tick`. The beat speeds up to ~5s while a
+  sync is in flight and eases back when it settles. Removes the bespoke `setInterval` poller and its
+  custom admin-ajax action entirely.
+
 ### Added
 - **Sync reconciliation & live indexing progress**: the Sync Status dashboard now shows two
   distinct numbers — **Synced (queued)** (what the plugin has sent for indexing) and **Indexed
