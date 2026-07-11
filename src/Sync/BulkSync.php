@@ -43,23 +43,31 @@ class BulkSync
         add_action('admin_post_appinio_bulk_delete', [$this, 'handleBulkDelete']);
         add_action('appinio_bulk_sync_batch', [$this, 'processBatch']);
         add_action('appinio_bulk_delete_batch', [$this, 'processDeleteBatch']);
-        add_action('wp_ajax_appinio_sync_status', [$this, 'ajaxSyncStatus']);
+        // Ride WordPress's built-in Heartbeat API rather than a bespoke setInterval poller:
+        // the admin heartbeat is already ticking on this screen, is DOM-ready-safe, and needs
+        // no custom nonce/admin-ajax action of our own.
+        add_filter('heartbeat_received', [$this, 'heartbeatReceived'], 10, 2);
     }
 
     /**
-     * AJAX endpoint: return sync status as JSON.
+     * Attach live sync status to the admin Heartbeat response.
+     *
+     * Only runs when the settings page opted in (`$data['appinio_sync_status']`, set client-side
+     * on our screen only) so we never pay the reconciliation cost on unrelated admin heartbeats.
+     *
+     * @param  array<string, mixed>  $response
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
-    public function ajaxSyncStatus(): void
+    public function heartbeatReceived(array $response, array $data): array
     {
-        check_ajax_referer('appinio_sync_status');
-
-        if (! current_user_can('manage_woocommerce')) {
-            wp_send_json_error('', 403);
+        if (empty($data['appinio_sync_status']) || ! current_user_can('manage_woocommerce')) {
+            return $response;
         }
 
         $remote = $this->remoteState();
 
-        wp_send_json([
+        $response['appinio_sync_status'] = [
             'running' => (bool) get_option('appinio_bulk_sync_running', false),
             'operation' => (string) get_option('appinio_bulk_operation', 'sync'),
             'synced' => $this->indexState->count(),
@@ -71,7 +79,9 @@ class BulkSync
             'indexed' => $remote->products(),
             'pending' => $remote->pending(),
             'index_status' => $remote->status(),
-        ]);
+        ];
+
+        return $response;
     }
 
     /**

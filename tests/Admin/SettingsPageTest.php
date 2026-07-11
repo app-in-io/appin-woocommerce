@@ -290,4 +290,47 @@ class SettingsPageTest extends TestCase
         self::assertStringContainsString('Settings', $links[0]);
         self::assertSame('<a>Deactivate</a>', $links['deactivate']);
     }
+
+    public function test_enqueue_scripts_rides_the_heartbeat_api_on_the_settings_screen(): void
+    {
+        $handle = null;
+        $script = null;
+        Functions\when('wp_enqueue_script')->justReturn(true);
+        Functions\expect('wp_add_inline_script')->once()->andReturnUsing(
+            function ($h, $s) use (&$handle, &$script): bool {
+                $handle = $h;
+                $script = $s;
+
+                return true;
+            }
+        );
+
+        (new SettingsPage)->enqueueScripts('woocommerce_page_appinio-search');
+
+        // Must attach to the heartbeat script (runs after wp.heartbeat, DOM-safe), NOT jquery-core
+        // in the header where the sync section does not exist yet.
+        self::assertSame('heartbeat', $handle);
+        self::assertStringContainsString('heartbeat-tick', $script);
+        self::assertStringContainsString('heartbeat-send', $script);
+        self::assertStringNotContainsString('setInterval', $script);
+    }
+
+    public function test_enqueue_scripts_is_a_noop_off_the_settings_screen(): void
+    {
+        $called = false;
+        Functions\when('wp_enqueue_script')->alias(function () use (&$called) {
+            $called = true;
+
+            return true;
+        });
+        Functions\when('wp_add_inline_script')->alias(function () use (&$called) {
+            $called = true;
+
+            return true;
+        });
+
+        (new SettingsPage)->enqueueScripts('edit.php');
+
+        self::assertFalse($called, 'enqueueScripts must not enqueue anything off the settings screen');
+    }
 }

@@ -64,83 +64,64 @@ final class SettingsPage
             return;
         }
 
-        wp_add_inline_script('jquery-core', $this->syncPollingScript());
+        // Attach to the Heartbeat handle (not jquery-core): our code binds to the
+        // heartbeat-tick/-send events, so it must run after wp.heartbeat is defined, and it
+        // needs no DOM-ready guard of its own — the tick fires long after the page is built.
+        wp_enqueue_script('heartbeat');
+        wp_add_inline_script('heartbeat', $this->syncPollingScript());
     }
 
+    /**
+     * Live sync-status UI, driven by the WordPress Heartbeat API.
+     *
+     * Binds to the heartbeat-send/-tick events (see {@see BulkSync::heartbeatReceived}) rather
+     * than a bespoke setInterval poller. Binding to `document` is DOM-ready-safe even though the
+     * script prints before the page body, and reuses WP's already-running admin heartbeat, so
+     * there is no custom nonce, admin-ajax action, or self-stop bookkeeping.
+     */
     private function syncPollingScript(): string
     {
-        $nonce = wp_create_nonce('appinio_sync_status');
-        $ajaxUrl = admin_url('admin-ajax.php');
-
         return "
         (function(\$) {
-            var container = document.getElementById('appinio-sync-section');
-            if (!container) return;
+            // Opt in: only this screen asks the server to attach the sync payload.
+            \$(document).on('heartbeat-send', function(e, data) {
+                data.appinio_sync_status = true;
+            });
 
-            function poll(cb) {
-                \$.post('{$ajaxUrl}', {
-                    action: 'appinio_sync_status',
-                    _ajax_nonce: '{$nonce}'
-                }, cb);
-            }
+            \$(document).on('heartbeat-tick', function(e, data) {
+                var s = data.appinio_sync_status;
+                if (!s) return;
 
-            // --- Local progress ticker (unchanged): runs only while a bulk run is active. ---
-            if (container.dataset.running) {
-                var localPoll = setInterval(function() {
-                    poll(function(resp) {
-                        if (!resp.running) {
-                            clearInterval(localPoll);
-                            var synced = container.querySelector('.appinio-synced-count');
-                            var lastSync = container.querySelector('.appinio-last-sync');
-                            var actions = container.querySelector('.appinio-actions');
-                            var progress = container.querySelector('.appinio-progress');
+                var container = document.getElementById('appinio-sync-section');
+                if (!container) return;
 
-                            if (synced) synced.textContent = resp.synced;
-                            // Only a sync writes a 'Last sync' timestamp — never after a delete.
-                            if (lastSync && resp.operation === 'sync' && resp.last_sync) {
-                                lastSync.closest('tr').style.display = '';
-                                lastSync.textContent = resp.last_sync;
-                            }
-                            if (progress) progress.style.display = 'none';
-                            if (actions) actions.style.display = '';
-                            if (resp.delete_failed > 0) { location.reload(); }
-                        } else {
-                            var synced = container.querySelector('.appinio-synced-count');
-                            if (synced) synced.textContent = resp.synced;
-                        }
-                    });
-                }, 3000);
-            }
+                var syncedEl = container.querySelector('.appinio-synced-count');
+                var indexedEl = container.querySelector('.appinio-indexed-count');
+                var driftBadge = container.querySelector('.appinio-index-drift');
+                var lastSync = container.querySelector('.appinio-last-sync');
+                var progress = container.querySelector('.appinio-progress');
+                var actions = container.querySelector('.appinio-actions');
 
-            // --- Remote reconciliation ticker: runs even on an idle dashboard. ---
-            var indexedCell = container.querySelector('.appinio-indexed-count');
-            var driftBadge = container.querySelector('.appinio-index-drift');
+                if (syncedEl) syncedEl.textContent = s.synced;
 
-            function renderRemote(resp) {
-                // Older API without the reconciliation fields — leave the server-rendered UI as is.
-                if (typeof resp.indexed === 'undefined' && typeof resp.pending === 'undefined') {
-                    return;
-                }
+                var queued = (typeof s.synced === 'number') ? s.synced
+                    : (syncedEl ? (parseInt(syncedEl.textContent, 10) || 0) : 0);
+                var pending = (typeof s.pending === 'number') ? s.pending : 0;
+                var indexed = (s.indexed === null || typeof s.indexed === 'undefined') ? null : s.indexed;
 
-                var indexed = (resp.indexed === null || typeof resp.indexed === 'undefined') ? null : resp.indexed;
-                var pending = (typeof resp.pending === 'number') ? resp.pending : 0;
-                var queuedEl = container.querySelector('.appinio-synced-count');
-                var queued = queuedEl ? (parseInt(queuedEl.textContent, 10) || 0) : 0;
-
-                if (indexedCell) {
+                if (indexedEl) {
                     if (indexed === null) {
-                        indexedCell.textContent = '—';
+                        indexedEl.textContent = '—';
                     } else if (pending > 0) {
-                        indexedCell.textContent = indexed + ' / ' + queued + ' — Indexing… (' + pending + ' pending)';
+                        indexedEl.textContent = indexed + ' / ' + queued + ' — Indexing… (' + pending + ' pending)';
                     } else {
-                        indexedCell.textContent = String(indexed);
+                        indexedEl.textContent = String(indexed);
                     }
                 }
 
                 if (driftBadge) {
-                    // While jobs are still in flight (pending > 0) the index legitimately lags —
-                    // that is not drift, so the badge stays hidden until the queue drains.
-                    var drift = pending === 0 && (resp.index_status === 'failed' || (indexed !== null && indexed < queued));
+                    // Lagging counts while jobs are still in flight (pending > 0) are normal, not drift.
+                    var drift = pending === 0 && (s.index_status === 'failed' || (indexed !== null && indexed < queued));
                     if (drift) {
                         if (indexed !== null && indexed < queued) {
                             driftBadge.textContent = indexed + ' of ' + queued +
@@ -153,32 +134,32 @@ final class SettingsPage
                         driftBadge.style.display = 'none';
                     }
                 }
-            }
 
-            var remotePoll = null;
-            var remoteTicks = 0;
-            // Safety cap (~30 min at 15s): an open dashboard whose backend never drains its
-            // pending jobs (e.g. stuck queue) must not poll forever. Generous so real long
-            // syncs still get live updates.
-            var REMOTE_MAX_TICKS = 120;
-            // One immediate fetch on load — renders the indexed cell + drift even when idle.
-            poll(function(resp) {
-                renderRemote(resp);
-                var pending = (typeof resp.pending === 'number') ? resp.pending : 0;
-                // Only keep polling if there is live work to converge on.
-                if (resp.running === true || pending > 0) {
-                    remotePoll = setInterval(function() {
-                        remoteTicks++;
-                        poll(function(r) {
-                            renderRemote(r);
-                            var p = (typeof r.pending === 'number') ? r.pending : 0;
-                            // Self-stop once the queue is drained and no run is active, or when
-                            // the safety cap is hit.
-                            if ((!r.running && p === 0) || remoteTicks >= REMOTE_MAX_TICKS) {
-                                clearInterval(remotePoll);
-                            }
-                        });
-                    }, 15000);
+                // Bulk-run progress UI.
+                if (s.running) {
+                    if (progress) progress.style.display = '';
+                    if (actions) actions.style.display = 'none';
+                } else {
+                    if (progress) progress.style.display = 'none';
+                    if (actions) actions.style.display = '';
+                    // Only a sync writes a 'Last sync' timestamp — never after a delete.
+                    if (lastSync && s.operation === 'sync' && s.last_sync) {
+                        lastSync.closest('tr').style.display = '';
+                        lastSync.textContent = s.last_sync;
+                    }
+                    if (s.delete_failed > 0) { location.reload(); }
+                }
+
+                // Beat faster while there is live work to converge on; ease off when settled.
+                if (window.wp && wp.heartbeat) {
+                    wp.heartbeat.interval((s.running || pending > 0) ? 'fast' : 60);
+                }
+            });
+
+            // Don't make the admin wait a full beat for the first update.
+            \$(function() {
+                if (window.wp && wp.heartbeat && typeof wp.heartbeat.connectNow === 'function') {
+                    wp.heartbeat.connectNow();
                 }
             });
         })(jQuery);

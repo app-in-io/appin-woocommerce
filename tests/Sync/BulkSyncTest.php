@@ -49,12 +49,11 @@ class BulkSyncTest extends TestCase
         self::assertNotFalse(has_action('admin_post_appinio_bulk_delete', [$bulk, 'handleBulkDelete']));
         self::assertNotFalse(has_action('appinio_bulk_sync_batch', [$bulk, 'processBatch']));
         self::assertNotFalse(has_action('appinio_bulk_delete_batch', [$bulk, 'processDeleteBatch']));
-        self::assertNotFalse(has_action('wp_ajax_appinio_sync_status', [$bulk, 'ajaxSyncStatus']));
+        self::assertNotFalse(has_filter('heartbeat_received', [$bulk, 'heartbeatReceived']));
     }
 
-    public function test_ajax_sync_status_includes_remote_reconciliation_fields(): void
+    public function test_heartbeat_received_attaches_reconciliation_when_opted_in(): void
     {
-        Functions\when('check_ajax_referer')->justReturn(true);
         Functions\when('current_user_can')->justReturn(true);
         Functions\when('get_option')->alias(fn ($key, $default = false) => match ($key) {
             'appinio_bulk_sync_running' => true,
@@ -74,20 +73,29 @@ class BulkSyncTest extends TestCase
             'counts' => ['products' => 1234],
             'pending' => 3,
             'status' => 'running',
+            'reconciled' => true,
             'last_indexed_at' => null,
         ]));
 
-        $captured = null;
-        Functions\when('wp_send_json')->alias(function ($data) use (&$captured): void {
-            $captured = $data;
-        });
+        // Client opted in on our screen via heartbeat-send.
+        $response = (new BulkSync)->heartbeatReceived([], ['appinio_sync_status' => true]);
 
-        (new BulkSync)->ajaxSyncStatus();
+        self::assertArrayHasKey('appinio_sync_status', $response);
+        $s = $response['appinio_sync_status'];
+        self::assertSame(7, $s['synced']);       // local queued count
+        self::assertSame(1234, $s['indexed']);   // real index count
+        self::assertSame(3, $s['pending']);      // jobs still in flight
+        self::assertSame('running', $s['index_status']);
+    }
 
-        self::assertSame(7, $captured['synced']);       // local queued count
-        self::assertSame(1234, $captured['indexed']);   // real index count
-        self::assertSame(3, $captured['pending']);      // jobs still in flight
-        self::assertSame('running', $captured['index_status']);
+    public function test_heartbeat_received_is_a_noop_without_opt_in(): void
+    {
+        // No `appinio_sync_status` in the heartbeat data → unrelated admin screen, leave untouched
+        // (and never pay the reconciliation cost).
+        $response = (new BulkSync)->heartbeatReceived(['existing' => 1], []);
+
+        self::assertSame(['existing' => 1], $response);
+        self::assertArrayNotHasKey('appinio_sync_status', $response);
     }
 
     public function test_handle_bulk_sync_starts_first_batch_and_redirects(): void
