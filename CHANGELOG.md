@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-12 (re-cut)
+
+> The `v0.9.0` tag was **re-cut on 2026-07-12** over the original 2026-07-07 release: the beta had
+> not been distributed beyond the demo store, so the version number was reused rather than burned.
+> Everything below shipped under the same `0.9.0`. **Breaking for anyone running the 2026-07-07
+> build:** the WordPress.org review required a vendor prefix, so the plugin file, namespace, options
+> and hooks were renamed (`appin-search.php` → `appinio-search.php`, `AppIn\WooCommerce` → `AppInIo`,
+> `appinio_*` options/hooks) with no back-compat shim — WordPress sees a different plugin, and the
+> old build's settings (API key, public key, widget config) are not carried over. Reinstall and
+> re-enter the keys.
+
 ### Fixed
 - **HTML entities in product text decoded before indexing**: WordPress stores taxonomy term names
   HTML-entity-encoded (e.g. `Drinkware &amp; Bottles`), so category, tag, brand, attribute and
@@ -118,7 +129,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   shows a distinct "Delete in progress" label, no longer displays a stale "Last sync" timestamp after a
   delete-only run, and surfaces per-item delete failures.
 
-## [0.9.0] - 2026-07-07
+## [0.9.0] - 2026-07-07 (superseded by the 2026-07-12 re-cut above)
 
 First public beta — distributed to early stores for feedback; prepared for the WordPress.org plugin directory.
 
