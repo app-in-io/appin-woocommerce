@@ -227,6 +227,7 @@ class BulkSync
                 }
             } else {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
+                    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated behind WP_DEBUG above; this is the only diagnostic channel a store owner has.
                     error_log(\sprintf(
                         '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
                         $page,
@@ -290,6 +291,7 @@ class BulkSync
             } else {
                 $failed++;
                 if (defined('WP_DEBUG') && WP_DEBUG) {
+                    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated behind WP_DEBUG above; this is the only diagnostic channel a store owner has.
                     error_log(\sprintf(
                         '[AppIn Search] Bulk delete failed for #%d: HTTP %d',
                         $productId,

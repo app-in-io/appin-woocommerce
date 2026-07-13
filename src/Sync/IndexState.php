@@ -49,7 +49,9 @@ final class IndexState
 
         // No core function counts posts by a meta key; the key is indexed, so a direct
         // COUNT is cheap, and the transient above keeps it off the hot path.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        // NoCaching is a false positive: the set_transient() below IS the cache; Plugin Check
+        // only recognises wp_cache_*.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $count = (int) $wpdb->get_var(
             $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s", self::META_KEY)
         );

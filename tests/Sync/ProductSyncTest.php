@@ -25,6 +25,9 @@ class ProductSyncTest extends TestCase
         $processed = new \ReflectionProperty(ProductSync::class, 'processed');
         $processed->setValue(null, []);
 
+        // handleFailure() wraps the exception message in esc_html() — WPCS treats an exception
+        // message as output, and Plugin Check reports the unescaped form as an ERROR.
+        Functions\when('esc_html')->returnArg();
         // RetryPolicy transient helpers — default no-op so success paths don't fatal.
         Functions\when('delete_transient')->justReturn(true);
         Functions\when('get_transient')->justReturn(false);
