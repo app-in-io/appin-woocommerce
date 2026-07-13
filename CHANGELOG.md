@@ -6,9 +6,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.9.0] - 2026-07-12 (re-cut)
+## [0.9.0] - 2026-07-13 (re-cut)
 
-> The `v0.9.0` tag was **re-cut on 2026-07-12** over the original 2026-07-07 release: the beta had
+> The `v0.9.0` tag was **re-cut again on 2026-07-13** to carry the `.distignore` fix below into the
+> tag itself — the WordPress.org SVN deploy is dispatched from a tag ref, so a fix that only exists
+> on `main` would not reach it. The distributed zip is byte-for-byte unaffected (it is built with
+> `git archive`, which never contained `.git`); this re-cut exists solely so that the first SVN
+> deploy cannot leak the repository.
+>
+> The `v0.9.0` tag was previously **re-cut on 2026-07-12** over the original 2026-07-07 release: the beta had
 > not been distributed beyond the demo store, so the version number was reused rather than burned.
 > Everything below shipped under the same `0.9.0`. **Breaking for anyone running the 2026-07-07
 > build:** the WordPress.org review required a vendor prefix, so the plugin file, namespace, options
@@ -18,6 +24,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 > re-enter the keys.
 
 ### Fixed
+- **`.distignore` would have published the entire git history to WordPress.org.** The file listed
+  every dev path except `/.git`, on the assumption that it merely mirrors `.gitattributes` — where
+  `/.git` is genuinely unnecessary, because `git archive` cannot emit it. But the presence of a
+  `.distignore` *switches* 10up's `deploy.sh` off the git-archive path entirely:
+  `.distignore` present → `rsync -rc --exclude-from=.distignore "$GITHUB_WORKSPACE/" trunk/`;
+  absent → `git archive HEAD | tar x`. The rsync path copies the raw `actions/checkout` workspace,
+  in which `.git` is an ordinary directory that nothing excludes. The first SVN deploy would
+  therefore have committed the full repository — all history, all branches — into the WordPress.org
+  trunk, and shipped it inside every zip downloaded from the directory. `/.git` is now the first
+  entry. Not reachable before this fix only because `deploy-wordpress-org.yml` is `workflow_dispatch`-only
+  pending directory approval. Same gap was found and fixed in the sibling appin-chat plugin
+  (app-in-io/appin-chat#10), which is where this one was spotted.
 - **HTML entities in product text decoded before indexing**: WordPress stores taxonomy term names
   HTML-entity-encoded (e.g. `Drinkware &amp; Bottles`), so category, tag, brand, attribute and
   title/content text carried the escaped literal into the search index and the widget rendered
