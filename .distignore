@@ -1,5 +1,23 @@
 # Files excluded from the WordPress.org SVN deploy (10up action reads .distignore).
 # Mirrors .gitattributes export-ignore, which governs the git-archive release zip.
+#
+# /.git is NOT optional, and it is NOT redundant with .gitattributes. The mere
+# presence of this file makes 10up's deploy.sh take a different code path:
+#
+#   .distignore present -> rsync -rc --exclude-from=.distignore $GITHUB_WORKSPACE/ trunk/
+#   .distignore absent  -> git archive HEAD | tar x
+#
+# The rsync path copies the raw actions/checkout workspace, where .git is an
+# ordinary directory that nothing excludes for free — git-archive is what made
+# the exclusion implicit, and we are not on that path. Without this line the
+# entire repository history is committed to the WordPress.org SVN trunk and
+# shipped inside every zip users download from wordpress.org.
+#
+# Do not "simplify" this by deleting .distignore to fall back to git archive:
+# deploy-wordpress-org.yml injects the version with sed into the WORKING TREE and
+# never commits it, so `git archive HEAD` would publish an unpatched Version: and
+# Stable tag. The rsync path is load-bearing.
+/.git
 /.github
 /.wordpress-org
 /.claude
