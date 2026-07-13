@@ -34,3 +34,28 @@ jobs:
 
       - name: Run tests
         run: vendor/bin/phpunit
+
+  # The same checks the WordPress.org directory runs on submission. The sibling
+  # appin-chat plugin was pended twice by a human reviewer for things a machine
+  # could have caught; this job is so that does not happen to this plugin.
+  plugin-check:
+    name: WordPress Plugin Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Check the artifact users actually receive, not the raw checkout. `git archive`
+      # applies .gitattributes export-ignore, so dist/ contains exactly what the release
+      # zip contains — no .git, no tests/, no vendor/, no dev configs. Checking the
+      # checkout instead would scan files that never ship.
+      - name: Build the distribution tree
+        run: |
+          mkdir -p dist/appinio-search
+          git archive HEAD | tar x --directory=dist/appinio-search
+          find dist -type f | sort
+
+      - name: Run Plugin Check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: ./dist/appinio-search
