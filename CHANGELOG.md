@@ -12,6 +12,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   raw checkout. The sibling appin-chat plugin was pended twice by a human reviewer for things a
   machine could have caught; this plugin is next in the submission queue and will meet the same
   reviewer. Its first run found everything below.
+- **Re-captured WordPress.org directory screenshots** (`.wordpress-org/screenshot-1.png`,
+  `screenshot-2.png`) — the 2026-07-07 originals were stale: screenshot-2 showed the pre-#216
+  three-row Sync Status panel (current one has four: Published / Synced (queued) / Indexed in
+  search / Last sync), and screenshot-1's demo store (`woo.app-in.io`) had placeholder
+  "DEMO"-watermarked product tiles instead of real photos. Both are real captures — screenshot-1
+  against the live demo store, screenshot-2 against the local Docker WP stand, fully reconciled
+  at 240/240/240.
 
 ### Fixed
 - **Unescaped exception message (3 × Plugin Check ERROR).** `ProductSync::handleFailure()` threw
