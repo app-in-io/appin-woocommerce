@@ -6,46 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Added
-- **WordPress Plugin Check in CI** — the same checks the WordPress.org directory runs on
-  submission, against the `git archive` dist tree (the artifact users actually receive), not the
-  raw checkout. The sibling appin-chat plugin was pended twice by a human reviewer for things a
-  machine could have caught; this plugin is next in the submission queue and will meet the same
-  reviewer. Its first run found everything below.
-- **Re-captured WordPress.org directory screenshots** (`.wordpress-org/screenshot-1.png`,
-  `screenshot-2.png`) — the 2026-07-07 originals were stale: screenshot-2 showed the pre-#216
-  three-row Sync Status panel (current one has four: Published / Synced (queued) / Indexed in
-  search / Last sync), and screenshot-1's demo store (`woo.app-in.io`) had placeholder
-  "DEMO"-watermarked product tiles instead of real photos. Both are real captures — screenshot-2
-  against the local Docker WP stand, fully reconciled at 240/240/240. screenshot-1 went through
-  two passes: the first re-capture showed the post-submit `?s=` results page (AI-reranked, but not
-  the widget itself); the second shows the actual `<semantic-search>` modal open with live results,
-  which is what `== Screenshots ==` #1 in `readme.txt` describes.
+## [0.9.0] - 2026-07-14 (re-cut)
 
-### Fixed
-- **Unescaped exception message (3 × Plugin Check ERROR).** `ProductSync::handleFailure()` threw
-  `RuntimeException` with `$action` / `$productId` / `$status` interpolated. WPCS treats an
-  exception message as output (`WordPress.Security.EscapeOutput.ExceptionNotEscaped`); the message
-  in fact goes to Action Scheduler's log, not to a browser, but Plugin Check reports it as an
-  ERROR and it would have stalled the review. Now wrapped in `esc_html()`.
-- **`$_POST` read without `wp_unslash()` in the registration flow.** `appinio_reg_consent` was
-  compared raw, and `appinio_reg_code` was regex-stripped without unslashing first — while the
-  email and name fields three lines away were doing it correctly. Both now go through
-  `sanitize_text_field(wp_unslash(...))`.
-- **Plugin name mismatch.** The `readme.txt` title (keyword-rich, deliberate) and the
-  `Plugin Name:` header disagreed, which Plugin Check flags. The header now carries the full
-  name, so the directory title and the plugin header agree without giving up the listing keywords.
-
-### Changed
-- **Justified `phpcs:ignore` for four false positives**, each with the reason inline: the
-  `error_log()` calls are already gated behind `WP_DEBUG` and are the only diagnostic channel a
-  store owner has; `IndexState`'s direct `COUNT` *is* cached, just in a transient rather than
-  `wp_cache_*`; the nonce *is* verified, inside `authorize()`, which PHPCS cannot follow into; and
-  WPML's `wpml_*` filters are hooks WPML owns and names — a plugin cannot prefix them with its own
-  slug without them never firing.
-
-## [0.9.0] - 2026-07-13 (re-cut)
-
+> The `v0.9.0` tag was **re-cut again on 2026-07-14** to carry WordPress.org submission-readiness
+> work into the tag itself — the WordPress.org SVN deploy is dispatched from a tag ref, so work
+> living only on `main` would not reach it. This re-cut adds Plugin Check to CI (which immediately
+> found 3 real errors, fixed below) and replaces both directory screenshots, which had gone stale.
+>
 > The `v0.9.0` tag was **re-cut again on 2026-07-13** to carry the `.distignore` fix below into the
 > tag itself — the WordPress.org SVN deploy is dispatched from a tag ref, so a fix that only exists
 > on `main` would not reach it. The distributed zip is byte-for-byte unaffected (it is built with
@@ -62,6 +29,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 > re-enter the keys.
 
 ### Fixed
+- **Unescaped exception message (3 × Plugin Check ERROR).** `ProductSync::handleFailure()` threw
+  `RuntimeException` with `$action` / `$productId` / `$status` interpolated. WPCS treats an
+  exception message as output (`WordPress.Security.EscapeOutput.ExceptionNotEscaped`); the message
+  in fact goes to Action Scheduler's log, not to a browser, but Plugin Check reports it as an
+  ERROR and it would have stalled the review. Now wrapped in `esc_html()`.
+- **`$_POST` read without `wp_unslash()` in the registration flow.** `appinio_reg_consent` was
+  compared raw, and `appinio_reg_code` was regex-stripped without unslashing first — while the
+  email and name fields three lines away were doing it correctly. Both now go through
+  `sanitize_text_field(wp_unslash(...))`.
+- **Plugin name mismatch.** The `readme.txt` title (keyword-rich, deliberate) and the
+  `Plugin Name:` header disagreed, which Plugin Check flags. The header now carries the full
+  name, so the directory title and the plugin header agree without giving up the listing keywords.
 - **`.distignore` would have published the entire git history to WordPress.org.** The file listed
   every dev path except `/.git`, on the assumption that it merely mirrors `.gitattributes` — where
   `/.git` is genuinely unnecessary, because `git archive` cannot emit it. But the presence of a
@@ -92,6 +71,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   custom admin-ajax action entirely.
 
 ### Added
+- **WordPress Plugin Check in CI** — the same checks the WordPress.org directory runs on
+  submission, against the `git archive` dist tree (the artifact users actually receive), not the
+  raw checkout. The sibling appin-chat plugin was pended twice by a human reviewer for things a
+  machine could have caught; this plugin is next in the submission queue and will meet the same
+  reviewer. Its first run found the three exception/sanitization/name issues above.
+- **Re-captured WordPress.org directory screenshots** (`.wordpress-org/screenshot-1.png`,
+  `screenshot-2.png`) — the 2026-07-07 originals were stale: screenshot-2 showed the pre-#216
+  three-row Sync Status panel (current one has four: Published / Synced (queued) / Indexed in
+  search / Last sync), and screenshot-1's demo store (`woo.app-in.io`) had placeholder
+  "DEMO"-watermarked product tiles instead of real photos. Both are real captures — screenshot-2
+  against the local Docker WP stand, fully reconciled at 240/240/240. screenshot-1 shows the
+  actual `<semantic-search>` widget modal open with live results (not the post-submit `?s=`
+  results page — a first pass got that wrong), which is what `== Screenshots ==` #1 in
+  `readme.txt` describes.
 - **Sync reconciliation & live indexing progress**: the Sync Status dashboard now shows two
   distinct numbers — **Synced (queued)** (what the plugin has sent for indexing) and **Indexed
   in search** (how many products actually landed in the AI search index, read live from the
@@ -144,6 +137,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   the API is unavailable. New **Search Results Page** setting (on by default) under Search Widget.
 
 ### Changed
+- **Justified `phpcs:ignore` for four false positives**, each with the reason inline: the
+  `error_log()` calls are already gated behind `WP_DEBUG` and are the only diagnostic channel a
+  store owner has; `IndexState`'s direct `COUNT` *is* cached, just in a transient rather than
+  `wp_cache_*`; the nonce *is* verified, inside `authorize()`, which PHPCS cannot follow into; and
+  WPML's `wpml_*` filters are hooks WPML owns and names — a plugin cannot prefix them with its own
+  slug without them never firing.
 - **API base URL resolves through the `appinio_api_url` filter**: the plugin now passes a
   hardcoded production default (baked into `Api\Client`) through a WordPress filter, making that
   hook the **sole** override seam (the dev harness registers it to target local infrastructure per
