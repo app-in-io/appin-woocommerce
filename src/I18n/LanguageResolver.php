@@ -16,6 +16,12 @@ if (! defined('ABSPATH')) {
  * no query widening). `lang` codes are normalized to the API's ≤5-char contract
  * (`WooCommerceProductData::$lang` is `Max(5)`): `en_US` / `pt-BR` → `en-us` / `pt-br`.
  */
+
+// WPML's public API is a set of filters that WPML itself owns and names. A plugin calling them
+// cannot prefix them with its own slug — `appinio_wpml_current_language` would simply never fire.
+// PrefixAllGlobals flags every apply_filters('wpml_*') in this file; all of them are third-party
+// hooks we consume, none are hooks we define.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 class LanguageResolver
 {
     /**
@@ -161,3 +167,5 @@ class LanguageResolver
         return array_values(array_unique($out));
     }
 }
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound

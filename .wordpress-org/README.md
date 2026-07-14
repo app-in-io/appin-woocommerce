@@ -10,11 +10,14 @@ SVN `assets/` folder by `.github/workflows/deploy-wordpress-org.yml` and are
 | `icon-256x256.png` | 256×256 | ✅ done | Directory icon retina |
 | `banner-772x250.png` | 772×250 | ✅ done | Plugin page banner (designed in `design/design.pen`) |
 | `banner-1544x500.png` | 1544×500 | ✅ done | Plugin page banner retina |
-| `screenshot-1.png` | 2880×1640 | ✅ done | **Real capture** — AI search widget on the WooCommerce storefront returning semantic results for "shoes" (matches `== Screenshots ==` #1) |
-| `screenshot-2.png` | 2160×1470 | ✅ done | **Real capture** — WooCommerce → AppIn Search admin: settings + Sync Status (matches #2) |
+| `screenshot-1.png` | 2880×1620 | ✅ done (2026-07-14) | **Real capture** — the actual `<semantic-search>` widget modal open on `woo.app-in.io`, live-typing "lightweight shelter for two people" with real, correctly-ranked results (product photo, category, price) in the dropdown (matches `== Screenshots ==` #1). Not the post-submit `?s=` results page — that's a different surface (native WooCommerce search results, AI-reranked) and doesn't show the widget itself. |
+| `screenshot-2.png` | 2880×2160 | ✅ done (2026-07-14) | **Real capture** — WooCommerce → AppIn Search admin on the local dev stand: current Sync Status panel (Published / Synced (queued) / Indexed in search / Last sync), fully reconciled 240/240/240 (matches #2) |
 
-Screenshots are **real captures** of the running plugin (brand rule: no fake screenshots),
-taken against the plugin's own Docker env with the full search backend (embeddings + Qdrant)
-running and the demo shop's products indexed. screenshot-1 was captured with Playwright driving
-the storefront search; screenshot-2 with headless Chrome on the settings page.
+Screenshots are **real captures** of the running plugin (brand rule: no fake screenshots).
+Re-captured 2026-07-14 — the 2026-07-07 originals were stale: screenshot-2 showed the pre-#216
+three-row Sync Status panel, and screenshot-1's demo store had placeholder "DEMO"-watermarked
+product tiles instead of real photos (see `adr-wp-search-admin-ux-theme-editor.md` for the admin
+rebuild this will need re-shooting again for). screenshot-1 was captured with Playwright against
+the live `woo.app-in.io` demo store; screenshot-2 with Playwright against the local Docker WP
+stand (`woo.app-in.local`) logged in as a local dev admin — production wp-admin is never touched.
 Optional: `icon.svg` (vector icon, WordPress.org supports it).

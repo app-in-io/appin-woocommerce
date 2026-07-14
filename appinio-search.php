@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name:       AppIn Search
+ * Plugin Name:       AppIn Search – AI Semantic & Multilingual Product Search for WooCommerce
  * Plugin URI:        https://app-in.io/woocommerce
  * Description:       Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync.
  * Version:           0.9.0

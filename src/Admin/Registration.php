@@ -52,15 +52,20 @@ class Registration
         // and puts the store owner (controller) and AppIn (processor) under the DPA, so the
         // registration cannot proceed without an affirmative agreement. The checkbox's HTML5
         // `required` is only the first-line UX guard; this is the enforcement.
-        if (($_POST['appinio_reg_consent'] ?? '') !== '1') {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- authorize() above runs check_admin_referer().
+        $consent = sanitize_text_field(wp_unslash((string) ($_POST['appinio_reg_consent'] ?? '')));
+
+        if ($consent !== '1') {
             $this->flash('error', __('Please agree to the Terms of Service, Privacy Policy, Data Processing Agreement and WooCommerce Service Terms to continue.', 'appinio-search'));
             $this->redirectBack();
 
             return;
         }
 
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- authorize() above runs check_admin_referer().
         $email = sanitize_email(wp_unslash((string) ($_POST['appinio_reg_email'] ?? '')));
         $name = sanitize_text_field(wp_unslash((string) ($_POST['appinio_reg_name'] ?? '')));
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
 
         if ($email === '' || ! is_email($email)) {
             $this->flash('error', __('Please enter a valid email address.', 'appinio-search'));
@@ -87,7 +92,8 @@ class Registration
             return;
         }
 
-        $code = preg_replace('/\D/', '', (string) ($_POST['appinio_reg_code'] ?? ''));
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- authorize() above runs check_admin_referer().
+        $code = preg_replace('/\D/', '', sanitize_text_field(wp_unslash((string) ($_POST['appinio_reg_code'] ?? ''))));
 
         if ($code === '') {
             $this->flash('error', __('Enter the 6-digit code from the email.', 'appinio-search'));

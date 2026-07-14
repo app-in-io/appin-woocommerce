@@ -176,12 +176,16 @@ final class ProductSync
     private function handleFailure(string $hook, int $productId, string $action, int $status): void
     {
         if ($this->retryPolicy->attempt($hook, [$productId], $status) === RetryOutcome::Exhausted) {
-            throw new \RuntimeException(\sprintf(
+            // esc_html() is not about HTML here — the message goes to Action Scheduler's log,
+            // not to a browser. But WPCS treats an exception message as output
+            // (WordPress.Security.EscapeOutput.ExceptionNotEscaped) and Plugin Check reports it
+            // as an ERROR, which would stall the WordPress.org review. Escaping costs nothing.
+            throw new \RuntimeException(esc_html(\sprintf(
                 'AppIn %s failed for product #%d after retries (HTTP %d)',
                 $action,
                 $productId,
                 $status
-            ));
+            )));
         }
     }
 
@@ -206,6 +210,7 @@ final class ProductSync
             return;
         }
 
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated behind WP_DEBUG above; this is the only diagnostic channel a store owner has.
         error_log(\sprintf(
             '[AppIn Search] Failed to %s product #%d: HTTP %d — %s',
             $action,
