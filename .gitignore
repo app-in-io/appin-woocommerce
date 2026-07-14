@@ -2,3 +2,6 @@
 /.phpunit.cache/
 /set-secrets.sh
 .DS_Store
+
+# graphify knowledge graph — derived artifacts + LLM cache, rebuilt locally.
+graphify-out/

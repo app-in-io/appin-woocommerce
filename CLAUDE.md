@@ -112,3 +112,18 @@ Field mapping is defined in `Mapper/ProductMapper.php` and must match the WooCom
 - Namespace: `AppInIo`
 - Brain Monkey for mocking WordPress functions in tests
 - Requires: WordPress 6.0+, WooCommerce 8.0+
+
+## Knowledge graph (graphify)
+
+This repo has its own knowledge graph in `graphify-out/` (gitignored, rebuilt locally).
+
+- Codebase questions: run `graphify query "<question>"` **before** grepping — it returns a scoped
+  subgraph instead of raw text. Also: `graphify path "<A>" "<B>"`, `graphify explain "<concept>"`,
+  `graphify affected "<symbol>"`.
+- Cross-repo questions (this repo ↔ api ↔ embeddings ↔ widget): use the merged graph —
+  `graphify query "<question>" --graph <api-repo>/graphify-out/merged-graph.json`, or
+  `make graph-query q="..."` from the api repo. This repo's tag in the merged graph is `wordpress-search`.
+- **Freshness is automatic**: a `graphify watch` daemon rebuilds the graph ~3s after any file save,
+  git hooks rebuild it on commit/checkout, and an hourly job refreshes the docs + semantic layer.
+  Never hand-rebuild; if in doubt run `make graph-status` in the api repo.
+- Never commit `graphify-out/` — it is derived output plus an LLM cache.
