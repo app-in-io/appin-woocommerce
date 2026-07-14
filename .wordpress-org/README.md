@@ -10,7 +10,7 @@ SVN `assets/` folder by `.github/workflows/deploy-wordpress-org.yml` and are
 | `icon-256x256.png` | 256×256 | ✅ done | Directory icon retina |
 | `banner-772x250.png` | 772×250 | ✅ done | Plugin page banner (designed in `design/design.pen`) |
 | `banner-1544x500.png` | 1544×500 | ✅ done | Plugin page banner retina |
-| `screenshot-1.png` | 2880×2106 | ✅ done (2026-07-14) | **Real capture** — `woo.app-in.io` demo storefront, query "lightweight shelter for two people" returning correctly-ranked tent results with real product photos (matches `== Screenshots ==` #1) |
+| `screenshot-1.png` | 2880×1620 | ✅ done (2026-07-14) | **Real capture** — the actual `<semantic-search>` widget modal open on `woo.app-in.io`, live-typing "lightweight shelter for two people" with real, correctly-ranked results (product photo, category, price) in the dropdown (matches `== Screenshots ==` #1). Not the post-submit `?s=` results page — that's a different surface (native WooCommerce search results, AI-reranked) and doesn't show the widget itself. |
 | `screenshot-2.png` | 2880×2160 | ✅ done (2026-07-14) | **Real capture** — WooCommerce → AppIn Search admin on the local dev stand: current Sync Status panel (Published / Synced (queued) / Indexed in search / Last sync), fully reconciled 240/240/240 (matches #2) |
 
 Screenshots are **real captures** of the running plugin (brand rule: no fake screenshots).

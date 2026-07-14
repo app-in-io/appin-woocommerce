@@ -16,9 +16,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   `screenshot-2.png`) — the 2026-07-07 originals were stale: screenshot-2 showed the pre-#216
   three-row Sync Status panel (current one has four: Published / Synced (queued) / Indexed in
   search / Last sync), and screenshot-1's demo store (`woo.app-in.io`) had placeholder
-  "DEMO"-watermarked product tiles instead of real photos. Both are real captures — screenshot-1
-  against the live demo store, screenshot-2 against the local Docker WP stand, fully reconciled
-  at 240/240/240.
+  "DEMO"-watermarked product tiles instead of real photos. Both are real captures — screenshot-2
+  against the local Docker WP stand, fully reconciled at 240/240/240. screenshot-1 went through
+  two passes: the first re-capture showed the post-submit `?s=` results page (AI-reranked, but not
+  the widget itself); the second shows the actual `<semantic-search>` modal open with live results,
+  which is what `== Screenshots ==` #1 in `readme.txt` describes.
 
 ### Fixed
 - **Unescaped exception message (3 × Plugin Check ERROR).** `ProductSync::handleFailure()` threw
