@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Sync;
+namespace Appinio\Tests\Sync;
 
-use AppInIo\I18n\LanguageResolver;
-use AppInIo\Sync\BulkSync;
-use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
+use Appinio\I18n\LanguageResolver;
+use Appinio\Sync\BulkSync;
+use Appinio\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -284,7 +284,7 @@ class BulkSyncTest extends TestCase
         $this->stubClientHttp(503); // transient server error
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('wp_remote_retrieve_header')->justReturn('');
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
         Functions\when('get_transient')->justReturn(false); // first failure
 
         $products = array_map(fn (int $i) => $this->makeWcProduct(['get_id' => $i]), range(1, 20));
@@ -306,7 +306,7 @@ class BulkSyncTest extends TestCase
         $this->stubClientHttp(503);
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('wp_remote_retrieve_header')->justReturn('');
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
         Functions\when('get_transient')->justReturn(4); // next = 5 = cap → Exhausted
 
         $products = array_map(fn (int $i) => $this->makeWcProduct(['get_id' => $i]), range(1, 20));
@@ -417,7 +417,7 @@ class BulkSyncTest extends TestCase
         Functions\when('wc_get_products')->justReturn([10]);
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('wp_remote_retrieve_header')->justReturn('');
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
 
         Functions\expect('delete_post_meta')->never(); // a failed delete must not deindex locally
         Functions\expect('as_schedule_single_action')->never();

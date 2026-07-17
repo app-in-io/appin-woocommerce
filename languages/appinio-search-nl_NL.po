@@ -1,11 +1,11 @@
-# AppIn Search translation.
+# Appinio Search translation.
 # Copyright (C) 2026 appinio
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: AppIn Search 1.0.0\n"
+"Project-Id-Version: Appinio Search 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
-"Last-Translator: AppIn <hello@app-in.io>\n"
+"Last-Translator: Appinio <hello@app-in.io>\n"
 "Language-Team: Nederlands\n"
 "Language: nl_NL\n"
 "MIME-Version: 1.0\n"
@@ -14,20 +14,20 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: appinio-search\n"
 
-msgid "AppIn Search"
-msgstr "AppIn Search"
+msgid "Appinio Search"
+msgstr "Appinio Search"
 
-msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
-msgstr "Synchroniseer WooCommerce-producten met AppIn AI-zoeken. Realtime hooks + bulksynchronisatie."
+msgid "Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync."
+msgstr "Synchroniseer WooCommerce-producten met Appinio AI-zoeken. Realtime hooks + bulksynchronisatie."
 
-msgid "AppIn Search requires WooCommerce to be installed and active."
-msgstr "AppIn Search vereist dat WooCommerce is geïnstalleerd en geactiveerd."
+msgid "Appinio Search requires WooCommerce to be installed and active."
+msgstr "Appinio Search vereist dat WooCommerce is geïnstalleerd en geactiveerd."
 
 msgid "Connection"
 msgstr "Verbinding"
 
-msgid "Connect your WooCommerce store to AppIn AI Search."
-msgstr "Verbind je WooCommerce-winkel met AppIn AI-zoeken."
+msgid "Connect your WooCommerce store to Appinio AI Search."
+msgstr "Verbind je WooCommerce-winkel met Appinio AI-zoeken."
 
 msgid "API Key"
 msgstr "API-sleutel"
@@ -47,8 +47,8 @@ msgstr "Publieke sleutel"
 msgid "Search Input Selector"
 msgstr "Selector voor zoekveld"
 
-msgid "Your AppIn API key. Found in the %s under Sites > API Keys."
-msgstr "Je AppIn API-sleutel. Te vinden in het %s onder Sites > API Keys."
+msgid "Your Appinio API key. Found in the %s under Sites > API Keys."
+msgstr "Je Appinio API-sleutel. Te vinden in het %s onder Sites > API Keys."
 
 msgid "Automatically sync products when created, updated, or deleted."
 msgstr "Producten automatisch synchroniseren bij aanmaken, bijwerken of verwijderen."
@@ -59,8 +59,8 @@ msgstr "Publieke sleutel voor de zoekwidget. Veilig om in de browser te tonen. T
 msgid "Custom CSS selector for the search input. Leave empty to use automatic detection."
 msgstr "Aangepaste CSS-selector voor het zoekveld. Laat leeg voor automatische detectie."
 
-msgid "AppIn dashboard"
-msgstr "AppIn-dashboard"
+msgid "Appinio dashboard"
+msgstr "Appinio-dashboard"
 
 msgid "Getting started"
 msgstr "Aan de slag"
@@ -74,8 +74,8 @@ msgstr "Kopieer je API-sleutel uit het %s onder Sites > API Keys."
 msgid "Paste it below, save, then run Sync All Products."
 msgstr "Plak deze hieronder, sla op en voer daarna Alle producten synchroniseren uit."
 
-msgid "Create a free AppIn account"
-msgstr "Gratis AppIn-account aanmaken"
+msgid "Create a free Appinio account"
+msgstr "Gratis Appinio-account aanmaken"
 
 msgid "Sync Status"
 msgstr "Synchronisatiestatus"
@@ -95,8 +95,8 @@ msgstr "Synchronisatie bezig…"
 msgid "Sync All Products"
 msgstr "Alle producten synchroniseren"
 
-msgid "This will remove all products from AppIn index. Continue?"
-msgstr "Hiermee worden alle producten uit de AppIn-index verwijderd. Doorgaan?"
+msgid "This will remove all products from Appinio index. Continue?"
+msgstr "Hiermee worden alle producten uit de Appinio-index verwijderd. Doorgaan?"
 
 msgid "Delete All from Index"
 msgstr "Alles uit index verwijderen"

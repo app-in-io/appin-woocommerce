@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Frontend;
+namespace Appinio\Frontend;
 
-use AppInIo\Api\Client;
-use AppInIo\I18n\LanguageResolver;
+use Appinio\Api\Client;
+use Appinio\I18n\LanguageResolver;
 
 if (! defined('ABSPATH')) {
     exit;
 }
 
 /**
- * Powers the WordPress/WooCommerce search results page (/?s=) with AppIn AI search.
+ * Powers the WordPress/WooCommerce search results page (/?s=) with Appinio AI search.
  *
  * The dropdown widget only enhances one input; the results page a shopper reaches
  * via the sidebar search form, a bookmark, the back button or mobile is served by
@@ -20,7 +20,7 @@ if (! defined('ABSPATH')) {
  * main search query using the standard WordPress pattern (pre_get_posts + post__in
  * + nullified posts_search), the same primitives every search plugin uses.
  *
- * Products are matched by AppIn AI; other post types (posts, pages) keep native
+ * Products are matched by Appinio AI; other post types (posts, pages) keep native
  * keyword matching, and the two are merged into one result set so a store with a
  * blog does not lose non-product search.
  */
@@ -124,7 +124,7 @@ class SearchResults
     }
 
     /**
-     * Strip the native search WHERE clause once AppIn has resolved the query,
+     * Strip the native search WHERE clause once Appinio has resolved the query,
      * otherwise WordPress would AND its own title/content LIKE on top of post__in
      * and drop semantic matches that lack the literal keyword.
      */

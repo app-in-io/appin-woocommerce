@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Sync;
+namespace Appinio\Sync;
 
 if (! defined('ABSPATH')) {
     exit;

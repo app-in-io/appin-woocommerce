@@ -1,11 +1,11 @@
-# AppIn Search translation.
+# Appinio Search translation.
 # Copyright (C) 2026 appinio
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: AppIn Search 1.0.0\n"
+"Project-Id-Version: Appinio Search 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
-"Last-Translator: AppIn <hello@app-in.io>\n"
+"Last-Translator: Appinio <hello@app-in.io>\n"
 "Language-Team: Українська\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
@@ -14,20 +14,20 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Domain: appinio-search\n"
 
-msgid "AppIn Search"
-msgstr "AppIn Search"
+msgid "Appinio Search"
+msgstr "Appinio Search"
 
-msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
-msgstr "Синхронізація товарів WooCommerce з AppIn AI Search. Хуки в реальному часі + масова синхронізація."
+msgid "Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync."
+msgstr "Синхронізація товарів WooCommerce з Appinio AI Search. Хуки в реальному часі + масова синхронізація."
 
-msgid "AppIn Search requires WooCommerce to be installed and active."
-msgstr "Для роботи AppIn Search потрібно встановити та активувати WooCommerce."
+msgid "Appinio Search requires WooCommerce to be installed and active."
+msgstr "Для роботи Appinio Search потрібно встановити та активувати WooCommerce."
 
 msgid "Connection"
 msgstr "З'єднання"
 
-msgid "Connect your WooCommerce store to AppIn AI Search."
-msgstr "Підключіть свій магазин WooCommerce до AppIn AI Search."
+msgid "Connect your WooCommerce store to Appinio AI Search."
+msgstr "Підключіть свій магазин WooCommerce до Appinio AI Search."
 
 msgid "API Key"
 msgstr "API-ключ"
@@ -47,8 +47,8 @@ msgstr "Публічний ключ"
 msgid "Search Input Selector"
 msgstr "Селектор поля пошуку"
 
-msgid "Your AppIn API key. Found in the %s under Sites > API Keys."
-msgstr "Ваш API-ключ AppIn. Знаходиться в %s у розділі Sites > API Keys."
+msgid "Your Appinio API key. Found in the %s under Sites > API Keys."
+msgstr "Ваш API-ключ Appinio. Знаходиться в %s у розділі Sites > API Keys."
 
 msgid "Automatically sync products when created, updated, or deleted."
 msgstr "Автоматично синхронізувати товари при створенні, оновленні або видаленні."
@@ -59,8 +59,8 @@ msgstr "Публічний ключ для віджета пошуку. Безп
 msgid "Custom CSS selector for the search input. Leave empty to use automatic detection."
 msgstr "Власний CSS-селектор для поля пошуку. Залиште порожнім для автоматичного визначення."
 
-msgid "AppIn dashboard"
-msgstr "панель керування AppIn"
+msgid "Appinio dashboard"
+msgstr "панель керування Appinio"
 
 msgid "Getting started"
 msgstr "Початок роботи"
@@ -74,8 +74,8 @@ msgstr "Скопіюйте свій API-ключ із %s у розділі Sites
 msgid "Paste it below, save, then run Sync All Products."
 msgstr "Вставте його нижче, збережіть і запустіть «Синхронізувати всі товари»."
 
-msgid "Create a free AppIn account"
-msgstr "Створити безкоштовний обліковий запис AppIn"
+msgid "Create a free Appinio account"
+msgstr "Створити безкоштовний обліковий запис Appinio"
 
 msgid "Sync Status"
 msgstr "Стан синхронізації"
@@ -95,8 +95,8 @@ msgstr "Синхронізація триває…"
 msgid "Sync All Products"
 msgstr "Синхронізувати всі товари"
 
-msgid "This will remove all products from AppIn index. Continue?"
-msgstr "Це видалить усі товари з індексу AppIn. Продовжити?"
+msgid "This will remove all products from Appinio index. Continue?"
+msgstr "Це видалить усі товари з індексу Appinio. Продовжити?"
 
 msgid "Delete All from Index"
 msgstr "Видалити все з індексу"

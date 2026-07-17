@@ -1,6 +1,6 @@
 # appinio-search
 
-WordPress plugin: sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync + search widget. PHP 8.1+ | PSR-4 | PHPUnit 11 + Brain Monkey.
+WordPress plugin: sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync + search widget. PHP 8.1+ | PSR-4 | PHPUnit 11 + Brain Monkey.
 
 > **Layout:** This plugin lives at `api/wordpress-plugin/appin-search/` as a subdirectory of the main API project (host checkout dir unchanged; the distributed / wp.org slug is `appinio-search`). It has its own `.git`, CI/CD, and GitHub repo (`app-in-io/appin-woocommerce`). The parent API repo ignores this directory via `.gitignore`.
 
@@ -19,7 +19,7 @@ WordPress plugin: sync WooCommerce products with AppIn AI Search. Real-time hook
 ## Purpose
 
 WordPress/WooCommerce plugin that:
-1. Syncs products to AppIn API (`POST /v1/index/products`) on create/update/delete
+1. Syncs products to Appinio API (`POST /v1/index/products`) on create/update/delete
 2. Provides bulk sync and bulk delete via admin settings page
 3. Embeds the `<semantic-search>` Web Component from CDN for frontend search
 4. All API calls go through `Api/Client.php` with `X-API-Key` + `X-Platform: woocommerce` headers
@@ -65,7 +65,7 @@ WooCommerce + plugin settings). To reset:
 `docker compose -f compose.wordpress.yml down -v && make up-wp && make wp-setup`.
 
 Demo catalog: activate the **appin-demo-seeder** plugin
-(`wordpress-plugin/appin-demo-seeder`) and seed from wp-admin (Tools → AppIn Demo
+(`wordpress-plugin/appin-demo-seeder`) and seed from wp-admin (Tools → Appinio Demo
 Seeder) — it replaces the old `seed-products.php` WP-CLI seeder.
 
 ## Commands
@@ -83,9 +83,9 @@ vendor/bin/phpunit --filter=ClassName  # run specific test
 
 ## Key Decisions
 
-- **No Composer autoload in production**: manual `autoload.php` maps `AppInIo\` → `src/`
+- **No Composer autoload in production**: manual `autoload.php` maps `Appinio\` → `src/`
 - **Singleton pattern** for `Plugin` (WordPress convention)
-- **Unique prefix** (WordPress.org requirement): namespace `AppInIo`, constants `APPINIO_*`, options/hooks `appinio_*`. Slug + text domain stay `appinio-search`.
+- **Unique prefix** (WordPress.org requirement): namespace `Appinio`, constants `APPINIO_*`, options/hooks `appinio_*`. Slug + text domain stay `appinio-search`.
 - **Action Scheduler** for debounced sync (5-second coalesce) — WooCommerce saves products multiple times per edit
 - **Variable products**: index parent only with min/max variation prices + aggregated attributes
 - **Status guard**: only `publish` products indexed; draft/private/trash auto-removed from index
@@ -94,7 +94,7 @@ vendor/bin/phpunit --filter=ClassName  # run specific test
 
 ## API Contract
 
-This plugin is an API client for the AppIn API:
+This plugin is an API client for the Appinio API:
 - `POST /v1/index/products` — index a product (with `X-Platform: woocommerce`)
 - `DELETE /v1/index/products` — remove a product
 - `POST /v1/search/products` — results-page takeover (`searchProducts()`, short timeout, no retries)
@@ -109,7 +109,7 @@ Field mapping is defined in `Mapper/ProductMapper.php` and must match the WooCom
 - PHP 8.1+ features: constructor promotion, named arguments, match, readonly
 - `declare(strict_types=1)` in every file
 - WordPress coding standards for hooks/filters (snake_case function names in callbacks)
-- Namespace: `AppInIo`
+- Namespace: `Appinio`
 - Brain Monkey for mocking WordPress functions in tests
 - Requires: WordPress 6.0+, WooCommerce 8.0+
 

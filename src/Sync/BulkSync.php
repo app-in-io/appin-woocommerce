@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Sync;
+namespace Appinio\Sync;
 
-use AppInIo\Api\Client;
-use AppInIo\I18n\LanguageResolver;
-use AppInIo\Mapper\ProductMapper;
+use Appinio\Api\Client;
+use Appinio\I18n\LanguageResolver;
+use Appinio\Mapper\ProductMapper;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -229,7 +229,7 @@ class BulkSync
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated behind WP_DEBUG above; this is the only diagnostic channel a store owner has.
                     error_log(\sprintf(
-                        '[AppIn Search] Bulk sync batch failed (page %d): HTTP %d — %s',
+                        '[Appinio Search] Bulk sync batch failed (page %d): HTTP %d — %s',
                         $page,
                         $result['status'],
                         $result['body']['error'] ?? $result['body']['message'] ?? 'unknown'
@@ -293,7 +293,7 @@ class BulkSync
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated behind WP_DEBUG above; this is the only diagnostic channel a store owner has.
                     error_log(\sprintf(
-                        '[AppIn Search] Bulk delete failed for #%d: HTTP %d',
+                        '[Appinio Search] Bulk delete failed for #%d: HTTP %d',
                         $productId,
                         $result['status']
                     ));

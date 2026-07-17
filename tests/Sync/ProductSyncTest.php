@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Sync;
+namespace Appinio\Tests\Sync;
 
-use AppInIo\Sync\ProductSync;
-use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
+use Appinio\Sync\ProductSync;
+use Appinio\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -315,7 +315,7 @@ class ProductSyncTest extends TestCase
         Functions\when('wp_remote_retrieve_response_code')->justReturn($status);
         Functions\when('wp_remote_retrieve_body')->justReturn('{}');
         Functions\when('wp_remote_retrieve_header')->justReturn('');
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
     }
 
     /**
@@ -330,6 +330,6 @@ class ProductSyncTest extends TestCase
         Functions\when('wp_remote_retrieve_response_code')->justReturn($status);
         Functions\when('wp_remote_retrieve_body')->justReturn('{}');
         Functions\when('wp_remote_retrieve_header')->justReturn('');
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
     }
 }

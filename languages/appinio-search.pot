@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: AppIn Search 1.0.0\n"
+"Project-Id-Version: Appinio Search 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,16 @@ msgstr ""
 #: appinio-search.php
 #: src/Admin/SettingsPage.php:72
 #: src/Admin/SettingsPage.php:73
-msgid "AppIn Search"
+msgid "Appinio Search"
 msgstr ""
 
 #. Description of the plugin
 #: appinio-search.php
-msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
+msgid "Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync."
 msgstr ""
 
 #: appinio-search.php:54
-msgid "AppIn Search requires WooCommerce to be installed and active."
+msgid "Appinio Search requires WooCommerce to be installed and active."
 msgstr ""
 
 #: src/Admin/SettingsPage.php:108
@@ -34,7 +34,7 @@ msgid "Connection"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:111
-msgid "Connect your WooCommerce store to AppIn AI Search."
+msgid "Connect your WooCommerce store to Appinio AI Search."
 msgstr ""
 
 #: src/Admin/SettingsPage.php:118
@@ -61,16 +61,16 @@ msgstr ""
 msgid "Search Input Selector"
 msgstr ""
 
-#. translators: %s: link to the AppIn dashboard
+#. translators: %s: link to the Appinio dashboard
 #: src/Admin/SettingsPage.php:170
-msgid "Your AppIn API key. Found in the %s under Sites > API Keys."
+msgid "Your Appinio API key. Found in the %s under Sites > API Keys."
 msgstr ""
 
 #: src/Admin/SettingsPage.php:182
 msgid "Automatically sync products when created, updated, or deleted."
 msgstr ""
 
-#. translators: %s: link to the AppIn dashboard
+#. translators: %s: link to the Appinio dashboard
 #: src/Admin/SettingsPage.php:197
 msgid "Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys."
 msgstr ""
@@ -80,19 +80,19 @@ msgid "Custom CSS selector for the search input. Leave empty to use automatic de
 msgstr ""
 
 #: src/Admin/SettingsPage.php:244
-msgid "AppIn dashboard"
+msgid "Appinio dashboard"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:254
 msgid "Getting started"
 msgstr ""
 
-#. translators: %s: link to the AppIn website
+#. translators: %s: link to the Appinio website
 #: src/Admin/SettingsPage.php:260
 msgid "Create a free account at %s."
 msgstr ""
 
-#. translators: %s: link to the AppIn dashboard
+#. translators: %s: link to the Appinio dashboard
 #: src/Admin/SettingsPage.php:268
 msgid "Copy your API key from the %s under Sites > API Keys."
 msgstr ""
@@ -102,7 +102,7 @@ msgid "Paste it below, save, then run Sync All Products."
 msgstr ""
 
 #: src/Admin/SettingsPage.php:280
-msgid "Create a free AppIn account"
+msgid "Create a free Appinio account"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:304
@@ -130,7 +130,7 @@ msgid "Sync All Products"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:333
-msgid "This will remove all products from AppIn index. Continue?"
+msgid "This will remove all products from Appinio index. Continue?"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:334

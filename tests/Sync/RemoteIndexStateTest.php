@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Sync;
+namespace Appinio\Tests\Sync;
 
-use AppInIo\Sync\RemoteIndexState;
+use Appinio\Sync\RemoteIndexState;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -106,7 +106,7 @@ class RemoteIndexStateTest extends TestCase
     public function test_available_is_false_and_counts_null_when_the_backend_fails(): void
     {
         // getCounts retries transient 5xx (maxRetries=2) — shim the namespaced sleep.
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('wp_remote_retrieve_response_code')->justReturn(500);
         Functions\when('wp_remote_retrieve_header')->justReturn('');
@@ -168,7 +168,7 @@ class RemoteIndexStateTest extends TestCase
     public function test_drift_is_false_when_the_backend_is_unavailable(): void
     {
         Functions\when('set_transient')->justReturn(true);
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
         Functions\when('wp_remote_request')->justReturn('RESP');
         Functions\when('wp_remote_retrieve_response_code')->justReturn(500);
         Functions\when('wp_remote_retrieve_header')->justReturn('');

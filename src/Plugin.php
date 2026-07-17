@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AppInIo;
+namespace Appinio;
 
-use AppInIo\Admin\SettingsPage;
-use AppInIo\Frontend\SearchResults;
-use AppInIo\Frontend\SearchWidget;
-use AppInIo\Sync\BulkSync;
-use AppInIo\Sync\ProductSync;
+use Appinio\Admin\SettingsPage;
+use Appinio\Frontend\SearchResults;
+use Appinio\Frontend\SearchWidget;
+use Appinio\Sync\BulkSync;
+use Appinio\Sync\ProductSync;
 
 if (! defined('ABSPATH')) {
     exit;

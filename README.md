@@ -1,19 +1,19 @@
-# AppIn Search for WooCommerce
+# Appinio Search for WooCommerce
 
-Sync WooCommerce products with [AppIn AI Search](https://app-in.io) automatically. Real-time hooks on create/update/delete + bulk sync.
+Sync WooCommerce products with [Appinio AI Search](https://app-in.io) automatically. Real-time hooks on create/update/delete + bulk sync.
 
 ## Requirements
 
 - WordPress 6.0+
 - WooCommerce 8.0+
 - PHP 8.1+
-- AppIn API key ([get one here](https://my.app-in.io))
+- Appinio API key ([get one here](https://my.app-in.io))
 
 ## Installation
 
 1. Download the plugin zip or clone this repo into `wp-content/plugins/appinio-search/`
 2. Activate in WordPress Admin > Plugins
-3. Go to WooCommerce > AppIn Search
+3. Go to WooCommerce > Appinio Search
 4. Enter your API key and save
 
 ## Features
@@ -30,11 +30,11 @@ Hooks are debounced via Action Scheduler (5-second coalesce) to avoid duplicate 
 ### Bulk Sync
 
 - **Sync All Products** — indexes all published products in background batches
-- **Delete All from Index** — removes everything from AppIn index
+- **Delete All from Index** — removes everything from Appinio index
 
 ### Field Mapping
 
-| WooCommerce | AppIn |
+| WooCommerce | Appinio |
 |---|---|
 | Product name | `title` |
 | Description + short description | `content` |
@@ -66,9 +66,9 @@ Only `publish` products are indexed. Draft, pending, or private products are aut
 
 ## Configuration
 
-### Settings (WooCommerce > AppIn Search)
+### Settings (WooCommerce > Appinio Search)
 
-- **API Key** — your `sk_live_...` key from AppIn dashboard
+- **API Key** — your `sk_live_...` key from Appinio dashboard
 - **Auto Sync** — toggle real-time hooks on/off
 
 ### Local Development
@@ -95,7 +95,7 @@ src/
   Frontend/SearchResults.php  AI-powered /?s= results page
 ```
 
-Namespace: `AppInIo`
+Namespace: `AppinioIo`
 
 ## License
 

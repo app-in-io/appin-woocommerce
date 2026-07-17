@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Admin;
+namespace Appinio\Tests\Admin;
 
-use AppInIo\Admin\Registration;
-use AppInIo\Admin\SettingsPage;
-use AppInIo\Sync\IndexState;
+use Appinio\Admin\Registration;
+use Appinio\Admin\SettingsPage;
+use Appinio\Sync\IndexState;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -50,7 +50,7 @@ class SettingsPageTest extends TestCase
         // IndexState reads 'appinio_indexed_count'; RemoteIndexState reads 'appinio_remote_counts'.
         Functions\when('get_transient')->alias(fn ($key) => $key === 'appinio_remote_counts' ? $remote : $queued);
         Functions\when('current_user_can')->justReturn(true);
-        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('get_admin_page_title')->justReturn('Appinio Search');
         Functions\when('wp_count_posts')->justReturn((object) ['publish' => 20]);
         Functions\when('wp_nonce_url')->returnArg();
         Functions\when('admin_url')->returnArg();
@@ -79,7 +79,7 @@ class SettingsPageTest extends TestCase
         $output = ob_get_clean();
 
         self::assertStringContainsString('href="https://my.app-in.io"', $output);
-        self::assertStringContainsString('AppIn dashboard', $output);
+        self::assertStringContainsString('Appinio dashboard', $output);
     }
 
     public function test_public_key_field_links_to_dashboard(): void
@@ -97,7 +97,7 @@ class SettingsPageTest extends TestCase
     {
         Functions\when('get_option')->justReturn('');
         Functions\when('current_user_can')->justReturn(true);
-        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('get_admin_page_title')->justReturn('Appinio Search');
         Functions\when('settings_fields')->justReturn(null);
         Functions\when('do_settings_sections')->justReturn(null);
         Functions\when('submit_button')->justReturn(null);
@@ -132,7 +132,7 @@ class SettingsPageTest extends TestCase
             ? ['available' => true, 'products' => 5, 'pending' => 0, 'status' => 'completed', 'last_indexed_at' => null]
             : 5);
         Functions\when('current_user_can')->justReturn(true);
-        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('get_admin_page_title')->justReturn('Appinio Search');
         Functions\when('wp_count_posts')->justReturn((object) ['publish' => 10]);
         Functions\when('wp_nonce_url')->returnArg();
         Functions\when('admin_url')->returnArg();
@@ -162,7 +162,7 @@ class SettingsPageTest extends TestCase
             ? ['available' => true, 'products' => 3, 'pending' => 0, 'status' => 'completed', 'last_indexed_at' => null]
             : 3);
         Functions\when('current_user_can')->justReturn(true);
-        Functions\when('get_admin_page_title')->justReturn('AppIn Search');
+        Functions\when('get_admin_page_title')->justReturn('Appinio Search');
         Functions\when('wp_count_posts')->justReturn((object) ['publish' => 10]);
         Functions\when('wp_nonce_url')->returnArg();
         Functions\when('admin_url')->returnArg();

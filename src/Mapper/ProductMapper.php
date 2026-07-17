@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Mapper;
+namespace Appinio\Mapper;
 
-use AppInIo\I18n\LanguageResolver;
+use Appinio\I18n\LanguageResolver;
 use WC_Product;
 use WC_Product_Variable;
 
@@ -19,7 +19,7 @@ final class ProductMapper
     ) {}
 
     /**
-     * Map a WC_Product to the AppIn API index format.
+     * Map a WC_Product to the Appinio API index format.
      *
      * @return array<string, mixed>
      */
@@ -106,7 +106,7 @@ final class ProductMapper
 
     /**
      * WordPress stores taxonomy/term text HTML-entity-encoded (e.g. "Drinkware &amp; Bottles").
-     * The AppIn index is plain text, so decode entities before sending — otherwise the escaped
+     * The Appinio index is plain text, so decode entities before sending — otherwise the escaped
      * literal shows up in the search widget. Term names never contain markup, so this plain
      * decode is enough for category/tag/brand/attribute fields (rich text goes through cleanText).
      */

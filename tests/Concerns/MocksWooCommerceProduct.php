@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Concerns;
+namespace Appinio\Tests\Concerns;
 
 use Brain\Monkey\Functions;
 use Mockery;

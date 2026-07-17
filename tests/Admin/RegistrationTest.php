@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Admin;
+namespace Appinio\Tests\Admin;
 
-use AppInIo\Admin\Registration;
-use AppInIo\Api\Client;
+use Appinio\Admin\Registration;
+use Appinio\Api\Client;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;

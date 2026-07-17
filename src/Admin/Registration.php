@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Admin;
+namespace Appinio\Admin;
 
-use AppInIo\Api\Client;
+use Appinio\Api\Client;
 
 if (! defined('ABSPATH')) {
     exit;
 }
 
 /**
- * In-plugin self-serve registration (GTM Idea 5): create the AppIn account + Site + API
+ * In-plugin self-serve registration (GTM Idea 5): create the Appinio account + Site + API
  * keys straight from WP-admin. Two keyless API steps — request an OTP by email, then verify
  * it — after which the minted secret + public keys are saved to options and the plugin is
  * connected. No copy-pasting keys from the dashboard.
@@ -48,8 +48,8 @@ class Registration
     {
         $this->authorize('appinio_register_request_otp');
 
-        // Consent is a hard gate: creating the AppIn account forms the contract (Terms + EULA)
-        // and puts the store owner (controller) and AppIn (processor) under the DPA, so the
+        // Consent is a hard gate: creating the Appinio account forms the contract (Terms + EULA)
+        // and puts the store owner (controller) and Appinio (processor) under the DPA, so the
         // registration cannot proceed without an affirmative agreement. The checkbox's HTML5
         // `required` is only the first-line UX guard; this is the enforcement.
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- authorize() above runs check_admin_referer().
@@ -122,7 +122,7 @@ class Registration
             $result['status'] === 409 => __('A store for this website is already registered. Paste its API key below instead.', 'appinio-search'),
             $result['status'] === 422 => __('That code is invalid or expired. Check the email or resend a new code.', 'appinio-search'),
             // 201-without-key, network (0) or 5xx — a valid code should not be blamed.
-            default => __('Could not reach AppIn to verify the code. Please try again in a moment.', 'appinio-search'),
+            default => __('Could not reach Appinio to verify the code. Please try again in a moment.', 'appinio-search'),
         });
         $this->redirectBack();
     }
@@ -201,7 +201,7 @@ class Registration
                 return;
 
             default:
-                $this->flash('error', __('Could not reach AppIn. Please try again in a moment.', 'appinio-search'));
+                $this->flash('error', __('Could not reach Appinio. Please try again in a moment.', 'appinio-search'));
         }
     }
 
@@ -213,7 +213,7 @@ class Registration
 
         printf(
             '<p>%s</p>',
-            esc_html__('Create your free AppIn account right here — we\'ll email you a 6-digit code to confirm.', 'appinio-search')
+            esc_html__('Create your free Appinio account right here — we\'ll email you a 6-digit code to confirm.', 'appinio-search')
         );
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -247,7 +247,7 @@ class Registration
      * Required legal-consent gate. One combined checkbox: accepting forms the contract
      * (Terms of Service + WooCommerce Service Terms), acknowledges the Privacy notice, and
      * puts the store under the Data Processing Agreement (Art. 28) that governs the personal
-     * data the store syncs to AppIn. The DPA/EULA pages go live with the legal-docs release.
+     * data the store syncs to Appinio. The DPA/EULA pages go live with the legal-docs release.
      */
     private function renderConsent(): void
     {
