@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Sync;
+namespace Appinio\Sync;
 
-use AppInIo\Api\Client;
+use Appinio\Api\Client;
 
 if (! defined('ABSPATH')) {
     exit;

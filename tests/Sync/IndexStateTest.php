@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Sync;
+namespace Appinio\Tests\Sync;
 
-use AppInIo\Sync\IndexState;
+use Appinio\Sync\IndexState;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;

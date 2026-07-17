@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Api;
+namespace Appinio\Tests\Api;
 
-use AppInIo\Api\Client;
+use Appinio\Api\Client;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
@@ -169,7 +169,7 @@ class ClientTest extends TestCase
     {
         // A transport-level WP_Error is transient — retry up to MAX_RETRIES, then give up
         // with status 0. (sleep() is shimmed so the back-off doesn't block the test.)
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
 
         $wpError = Mockery::mock('WP_Error');
         $wpError->allows('get_error_message')->andReturn('Connection refused');
@@ -199,7 +199,7 @@ class ClientTest extends TestCase
     public function test_retries_once_on_429_then_succeeds(): void
     {
         // sleep() is called on the 429 back-off — shim the namespaced call so the test is instant.
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
 
         Functions\expect('wp_remote_request')->twice()->andReturn('R429', 'R200');
         Functions\when('is_wp_error')->justReturn(false);
@@ -215,7 +215,7 @@ class ClientTest extends TestCase
 
     public function test_exhausts_max_retries_on_persistent_429(): void
     {
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
 
         // MAX_RETRIES = 3 → three attempts, all 429.
         Functions\expect('wp_remote_request')->times(3)->andReturn('R429');
@@ -234,7 +234,7 @@ class ClientTest extends TestCase
     public function test_retries_on_5xx_then_succeeds(): void
     {
         // Transient server errors are retryable, just like 429.
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
 
         Functions\expect('wp_remote_request')->twice()->andReturn('R503', 'R200');
         Functions\when('is_wp_error')->justReturn(false);
@@ -250,7 +250,7 @@ class ClientTest extends TestCase
 
     public function test_exhausts_max_retries_on_persistent_5xx(): void
     {
-        Functions\when('AppInIo\Api\sleep')->justReturn(0);
+        Functions\when('Appinio\Api\sleep')->justReturn(0);
 
         Functions\expect('wp_remote_request')->times(3)->andReturn('R500');
         Functions\when('is_wp_error')->justReturn(false);

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Frontend;
+namespace Appinio\Tests\Frontend;
 
-use AppInIo\Api\Client;
-use AppInIo\Frontend\SearchResults;
-use AppInIo\I18n\LanguageResolver;
+use Appinio\Api\Client;
+use Appinio\Frontend\SearchResults;
+use Appinio\I18n\LanguageResolver;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;

@@ -6,8 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.9.0] - 2026-07-14 (re-cut)
+## [0.9.0] - 2026-07-17 (re-cut)
 
+> The `v0.9.0` tag was **re-cut again on 2026-07-17** to carry a pre-submission rebrand into the
+> tag itself. The sibling **appin-chat** plugin was pended by the WordPress.org directory three
+> times over "generic prefix": their tooling splits CamelCase on capitals, so `AppInIo` reads as
+> `app_in_io`, whose first fragment is the flagged common word `app`. Before submitting this plugin
+> we move onto a single unsplittable prefix — the PHP namespace `AppInIo` → `Appinio` (root segment
+> only) and the display name "AppIn Search" → "Appinio Search" — mirroring appin-chat's fix. The
+> slug and text domain (`appinio-search`) and every `appinio_*` option/hook were already compliant
+> and are unchanged, so stored settings survive the upgrade untouched. Details under **Changed**.
+>
 > The `v0.9.0` tag was **re-cut again on 2026-07-14** to carry WordPress.org submission-readiness
 > work into the tag itself — the WordPress.org SVN deploy is dispatched from a tag ref, so work
 > living only on `main` would not reach it. This re-cut adds Plugin Check to CI (which immediately
@@ -137,6 +146,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   the API is unavailable. New **Search Results Page** setting (on by default) under Search Widget.
 
 ### Changed
+- **Rebrand to a single unsplittable prefix (WordPress.org, pre-submission)**: the PHP namespace
+  root `AppInIo` → `Appinio` (autoloader, `composer.json` PSR-4 maps, bootstrap, every `src/` and
+  `tests/` file), and the display name "AppIn Search" → "Appinio Search" (plugin header, admin
+  strings, `readme.txt`/`README.md`, all `languages/` catalogs recompiled). Mirrors appin-chat's
+  rename: the directory's tooling splits `AppInIo` into `app_in_io` and flags the common word
+  `app`; `Appinio` cannot be split. The slug and text domain `appinio-search`, the
+  `woocommerce_page_appinio-search` enqueue guard, the `appinio-search-widget` handle, the
+  `appinio_search` settings group, and every `appinio_*` option/hook are already compliant and are
+  **unchanged** — stored settings (API key, public key, widget config) survive the upgrade.
 - **Justified `phpcs:ignore` for four false positives**, each with the reason inline: the
   `error_log()` calls are already gated behind `WP_DEBUG` and are the only diagnostic channel a
   store owner has; `IndexState`'s direct `COUNT` *is* cached, just in a transient rather than

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Plugin Name:       AppIn Search – AI Semantic & Multilingual Product Search for WooCommerce
+ * Plugin Name:       Appinio Search – AI Semantic & Multilingual Product Search for WooCommerce
  * Plugin URI:        https://app-in.io/woocommerce
- * Description:       Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync.
+ * Description:       Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync.
  * Version:           0.9.0
  * Author:            appinio
  * License:           GPL-2.0-or-later
@@ -38,12 +38,12 @@ add_action('plugins_loaded', function (): void {
     if (! class_exists('WooCommerce')) {
         add_action('admin_notices', function (): void {
             echo '<div class="notice notice-error"><p>';
-            echo esc_html__('AppIn Search requires WooCommerce to be installed and active.', 'appinio-search');
+            echo esc_html__('Appinio Search requires WooCommerce to be installed and active.', 'appinio-search');
             echo '</p></div>';
         });
 
         return;
     }
 
-    AppInIo\Plugin::instance()->boot(__FILE__);
+    Appinio\Plugin::instance()->boot(__FILE__);
 });

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Sync;
+namespace Appinio\Tests\Sync;
 
-use AppInIo\Sync\RetryOutcome;
-use AppInIo\Sync\RetryPolicy;
+use Appinio\Sync\RetryOutcome;
+use Appinio\Sync\RetryPolicy;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;

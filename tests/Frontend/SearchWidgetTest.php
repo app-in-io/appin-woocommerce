@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Frontend;
+namespace Appinio\Tests\Frontend;
 
-use AppInIo\Frontend\SearchWidget;
-use AppInIo\I18n\LanguageResolver;
+use Appinio\Frontend\SearchWidget;
+use Appinio\I18n\LanguageResolver;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;

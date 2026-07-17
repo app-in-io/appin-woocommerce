@@ -1,11 +1,11 @@
-# AppIn Search translation.
+# Appinio Search translation.
 # Copyright (C) 2026 appinio
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: AppIn Search 1.0.0\n"
+"Project-Id-Version: Appinio Search 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
-"Last-Translator: AppIn <hello@app-in.io>\n"
+"Last-Translator: Appinio <hello@app-in.io>\n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
 "MIME-Version: 1.0\n"
@@ -14,20 +14,20 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: appinio-search\n"
 
-msgid "AppIn Search"
-msgstr "AppIn Search"
+msgid "Appinio Search"
+msgstr "Appinio Search"
 
-msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
-msgstr "Synchronisiere WooCommerce-Produkte mit der AppIn-KI-Suche. Echtzeit-Hooks + Massensynchronisierung."
+msgid "Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync."
+msgstr "Synchronisiere WooCommerce-Produkte mit der Appinio-KI-Suche. Echtzeit-Hooks + Massensynchronisierung."
 
-msgid "AppIn Search requires WooCommerce to be installed and active."
-msgstr "AppIn Search erfordert, dass WooCommerce installiert und aktiviert ist."
+msgid "Appinio Search requires WooCommerce to be installed and active."
+msgstr "Appinio Search erfordert, dass WooCommerce installiert und aktiviert ist."
 
 msgid "Connection"
 msgstr "Verbindung"
 
-msgid "Connect your WooCommerce store to AppIn AI Search."
-msgstr "Verbinde deinen WooCommerce-Shop mit der AppIn-KI-Suche."
+msgid "Connect your WooCommerce store to Appinio AI Search."
+msgstr "Verbinde deinen WooCommerce-Shop mit der Appinio-KI-Suche."
 
 msgid "API Key"
 msgstr "API-Schlüssel"
@@ -47,8 +47,8 @@ msgstr "Öffentlicher Schlüssel"
 msgid "Search Input Selector"
 msgstr "Selektor für das Suchfeld"
 
-msgid "Your AppIn API key. Found in the %s under Sites > API Keys."
-msgstr "Dein AppIn-API-Schlüssel. Zu finden im %s unter Sites > API-Schlüssel."
+msgid "Your Appinio API key. Found in the %s under Sites > API Keys."
+msgstr "Dein Appinio-API-Schlüssel. Zu finden im %s unter Sites > API-Schlüssel."
 
 msgid "Automatically sync products when created, updated, or deleted."
 msgstr "Produkte automatisch synchronisieren, wenn sie erstellt, aktualisiert oder gelöscht werden."
@@ -59,8 +59,8 @@ msgstr "Öffentlicher Schlüssel für das Such-Widget. Kann gefahrlos im Browser
 msgid "Custom CSS selector for the search input. Leave empty to use automatic detection."
 msgstr "Benutzerdefinierter CSS-Selektor für das Suchfeld. Leer lassen für automatische Erkennung."
 
-msgid "AppIn dashboard"
-msgstr "AppIn-Dashboard"
+msgid "Appinio dashboard"
+msgstr "Appinio-Dashboard"
 
 msgid "Getting started"
 msgstr "Erste Schritte"
@@ -74,8 +74,8 @@ msgstr "Kopiere deinen API-Schlüssel aus dem %s unter Sites > API-Schlüssel."
 msgid "Paste it below, save, then run Sync All Products."
 msgstr "Füge ihn unten ein, speichere und starte dann „Alle Produkte synchronisieren“."
 
-msgid "Create a free AppIn account"
-msgstr "Kostenloses AppIn-Konto erstellen"
+msgid "Create a free Appinio account"
+msgstr "Kostenloses Appinio-Konto erstellen"
 
 msgid "Sync Status"
 msgstr "Synchronisierungsstatus"
@@ -95,8 +95,8 @@ msgstr "Synchronisierung läuft …"
 msgid "Sync All Products"
 msgstr "Alle Produkte synchronisieren"
 
-msgid "This will remove all products from AppIn index. Continue?"
-msgstr "Dadurch werden alle Produkte aus dem AppIn-Index entfernt. Fortfahren?"
+msgid "This will remove all products from Appinio index. Continue?"
+msgstr "Dadurch werden alle Produkte aus dem Appinio-Index entfernt. Fortfahren?"
 
 msgid "Delete All from Index"
 msgstr "Alle aus dem Index löschen"

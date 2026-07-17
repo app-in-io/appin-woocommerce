@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Api;
+namespace Appinio\Api;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -25,7 +25,7 @@ final class Client
     }
 
     /**
-     * Resolve the AppIn API base URL.
+     * Resolve the Appinio API base URL.
      *
      * The production default is baked in as DEFAULT_API_URL and passed through the
      * `appinio_api_url` filter — the sole override seam (used by the dev harness to

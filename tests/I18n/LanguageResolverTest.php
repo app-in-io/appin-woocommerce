@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\I18n;
+namespace Appinio\Tests\I18n;
 
-use AppInIo\I18n\LanguageResolver;
+use Appinio\I18n\LanguageResolver;
 use Brain\Monkey;
 use Brain\Monkey\Actions;
 use Brain\Monkey\Filters;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\I18n;
+namespace Appinio\I18n;
 
 if (! defined('ABSPATH')) {
     exit;

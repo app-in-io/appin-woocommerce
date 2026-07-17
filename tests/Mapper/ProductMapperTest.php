@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests\Mapper;
+namespace Appinio\Tests\Mapper;
 
-use AppInIo\I18n\LanguageResolver;
-use AppInIo\Mapper\ProductMapper;
-use AppInIo\Tests\Concerns\MocksWooCommerceProduct;
+use Appinio\I18n\LanguageResolver;
+use Appinio\Mapper\ProductMapper;
+use Appinio\Tests\Concerns\MocksWooCommerceProduct;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Frontend;
+namespace Appinio\Frontend;
 
-use AppInIo\I18n\LanguageResolver;
+use Appinio\I18n\LanguageResolver;
 
 if (! defined('ABSPATH')) {
     exit;

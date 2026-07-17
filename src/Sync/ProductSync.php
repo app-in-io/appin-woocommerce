@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Sync;
+namespace Appinio\Sync;
 
-use AppInIo\Api\Client;
-use AppInIo\Mapper\ProductMapper;
+use Appinio\Api\Client;
+use Appinio\Mapper\ProductMapper;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -181,7 +181,7 @@ final class ProductSync
             // (WordPress.Security.EscapeOutput.ExceptionNotEscaped) and Plugin Check reports it
             // as an ERROR, which would stall the WordPress.org review. Escaping costs nothing.
             throw new \RuntimeException(esc_html(\sprintf(
-                'AppIn %s failed for product #%d after retries (HTTP %d)',
+                'Appinio %s failed for product #%d after retries (HTTP %d)',
                 $action,
                 $productId,
                 $status
@@ -212,7 +212,7 @@ final class ProductSync
 
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- gated behind WP_DEBUG above; this is the only diagnostic channel a store owner has.
         error_log(\sprintf(
-            '[AppIn Search] Failed to %s product #%d: HTTP %d — %s',
+            '[Appinio Search] Failed to %s product #%d: HTTP %d — %s',
             $action,
             $productId,
             $result['status'],

@@ -1,11 +1,11 @@
-# AppIn Search translation.
+# Appinio Search translation.
 # Copyright (C) 2026 appinio
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: AppIn Search 1.0.0\n"
+"Project-Id-Version: Appinio Search 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
-"Last-Translator: AppIn <hello@app-in.io>\n"
+"Last-Translator: Appinio <hello@app-in.io>\n"
 "Language-Team: Eesti\n"
 "Language: et\n"
 "MIME-Version: 1.0\n"
@@ -14,20 +14,20 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: appinio-search\n"
 
-msgid "AppIn Search"
-msgstr "AppIn Search"
+msgid "Appinio Search"
+msgstr "Appinio Search"
 
-msgid "Sync WooCommerce products with AppIn AI Search. Real-time hooks + bulk sync."
-msgstr "Sünkrooni WooCommerce'i tooted AppIn AI otsinguga. Reaalajas konksud + hulgisünkroonimine."
+msgid "Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync."
+msgstr "Sünkrooni WooCommerce'i tooted Appinio AI otsinguga. Reaalajas konksud + hulgisünkroonimine."
 
-msgid "AppIn Search requires WooCommerce to be installed and active."
-msgstr "AppIn Search nõuab, et WooCommerce oleks paigaldatud ja aktiveeritud."
+msgid "Appinio Search requires WooCommerce to be installed and active."
+msgstr "Appinio Search nõuab, et WooCommerce oleks paigaldatud ja aktiveeritud."
 
 msgid "Connection"
 msgstr "Ühendus"
 
-msgid "Connect your WooCommerce store to AppIn AI Search."
-msgstr "Ühenda oma WooCommerce'i pood AppIn AI otsinguga."
+msgid "Connect your WooCommerce store to Appinio AI Search."
+msgstr "Ühenda oma WooCommerce'i pood Appinio AI otsinguga."
 
 msgid "API Key"
 msgstr "API-võti"
@@ -47,8 +47,8 @@ msgstr "Avalik võti"
 msgid "Search Input Selector"
 msgstr "Otsinguvälja selektor"
 
-msgid "Your AppIn API key. Found in the %s under Sites > API Keys."
-msgstr "Sinu AppIn API-võti. Leiad selle %s jaotisest Sites > API Keys."
+msgid "Your Appinio API key. Found in the %s under Sites > API Keys."
+msgstr "Sinu Appinio API-võti. Leiad selle %s jaotisest Sites > API Keys."
 
 msgid "Automatically sync products when created, updated, or deleted."
 msgstr "Sünkrooni tooted automaatselt loomisel, uuendamisel või kustutamisel."
@@ -59,8 +59,8 @@ msgstr "Otsinguvidina avalik võti. Seda võib turvaliselt brauseris kasutada. L
 msgid "Custom CSS selector for the search input. Leave empty to use automatic detection."
 msgstr "Kohandatud CSS-selektor otsinguväljale. Jäta tühjaks automaatseks tuvastamiseks."
 
-msgid "AppIn dashboard"
-msgstr "AppIn juhtpaneel"
+msgid "Appinio dashboard"
+msgstr "Appinio juhtpaneel"
 
 msgid "Getting started"
 msgstr "Alustamine"
@@ -74,8 +74,8 @@ msgstr "Kopeeri oma API-võti %s jaotisest Sites > API Keys."
 msgid "Paste it below, save, then run Sync All Products."
 msgstr "Kleebi see allolevale väljale, salvesta ja käivita „Sünkrooni kõik tooted“."
 
-msgid "Create a free AppIn account"
-msgstr "Loo tasuta AppIn konto"
+msgid "Create a free Appinio account"
+msgstr "Loo tasuta Appinio konto"
 
 msgid "Sync Status"
 msgstr "Sünkroonimise olek"
@@ -95,8 +95,8 @@ msgstr "Sünkroonimine käib…"
 msgid "Sync All Products"
 msgstr "Sünkrooni kõik tooted"
 
-msgid "This will remove all products from AppIn index. Continue?"
-msgstr "See eemaldab kõik tooted AppIn indeksist. Kas jätkata?"
+msgid "This will remove all products from Appinio index. Continue?"
+msgstr "See eemaldab kõik tooted Appinio indeksist. Kas jätkata?"
 
 msgid "Delete All from Index"
 msgstr "Kustuta kõik indeksist"

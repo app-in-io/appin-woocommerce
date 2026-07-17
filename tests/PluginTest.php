@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Tests;
+namespace Appinio\Tests;
 
-use AppInIo\Plugin;
+use Appinio\Plugin;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;

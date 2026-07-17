@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppInIo\Admin;
+namespace Appinio\Admin;
 
-use AppInIo\Plugin;
-use AppInIo\Sync\IndexState;
-use AppInIo\Sync\RemoteIndexState;
+use Appinio\Plugin;
+use Appinio\Sync\IndexState;
+use Appinio\Sync\RemoteIndexState;
 
 if (! defined('ABSPATH')) {
     exit;
@@ -171,8 +171,8 @@ final class SettingsPage
     {
         add_submenu_page(
             'woocommerce',
-            __('AppIn Search', 'appinio-search'),
-            __('AppIn Search', 'appinio-search'),
+            __('Appinio Search', 'appinio-search'),
+            __('Appinio Search', 'appinio-search'),
             'manage_woocommerce',
             'appinio-search',
             [$this, 'render'],
@@ -222,7 +222,7 @@ final class SettingsPage
             __('Connection', 'appinio-search'),
             fn () => printf(
                 '<p>%s</p>',
-                esc_html__('Connect your WooCommerce store to AppIn AI Search.', 'appinio-search')
+                esc_html__('Connect your WooCommerce store to Appinio AI Search.', 'appinio-search')
             ),
             'appinio-search',
         );
@@ -308,8 +308,8 @@ final class SettingsPage
         printf(
             '<p class="description">%s</p>',
             wp_kses_post(\sprintf(
-                /* translators: %s: link to the AppIn dashboard */
-                esc_html__('Your AppIn API key. Found in the %s under Sites > API Keys.', 'appinio-search'),
+                /* translators: %s: link to the Appinio dashboard */
+                esc_html__('Your Appinio API key. Found in the %s under Sites > API Keys.', 'appinio-search'),
                 $this->dashboardLink()
             ))
         );
@@ -335,7 +335,7 @@ final class SettingsPage
         printf(
             '<p class="description">%s</p>',
             wp_kses_post(\sprintf(
-                /* translators: %s: link to the AppIn dashboard */
+                /* translators: %s: link to the Appinio dashboard */
                 esc_html__('Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys.', 'appinio-search'),
                 $this->dashboardLink()
             ))
@@ -361,7 +361,7 @@ final class SettingsPage
         printf(
             '<label><input type="checkbox" name="appinio_results_page" value="1" %s /> %s</label>',
             checked($checked, true, false),
-            esc_html__('Power the WordPress search results page (/?s=) with AI. Products use AI search; other content stays native. Falls back to native search if AppIn is unavailable.', 'appinio-search')
+            esc_html__('Power the WordPress search results page (/?s=) with AI. Products use AI search; other content stays native. Falls back to native search if Appinio is unavailable.', 'appinio-search')
         );
     }
 
@@ -428,12 +428,12 @@ final class SettingsPage
     }
 
     /**
-     * Anchor tag linking to the AppIn dashboard, reused across field descriptions.
+     * Anchor tag linking to the Appinio dashboard, reused across field descriptions.
      */
     private function dashboardLink(): string
     {
         return '<a href="' . esc_url('https://my.app-in.io') . '" target="_blank" rel="noopener">'
-            . esc_html__('AppIn dashboard', 'appinio-search') . '</a>';
+            . esc_html__('Appinio dashboard', 'appinio-search') . '</a>';
     }
 
     private function renderSyncSection(): void
@@ -537,7 +537,7 @@ final class SettingsPage
         printf(
             '<a href="%s" class="button" onclick="return confirm(\'%s\');">%s</a>',
             esc_url(wp_nonce_url(admin_url('admin-post.php?action=appinio_bulk_delete'), 'appinio_bulk_delete')),
-            esc_attr__('This will remove all products from AppIn index. Continue?', 'appinio-search'),
+            esc_attr__('This will remove all products from Appinio index. Continue?', 'appinio-search'),
             esc_html__('Delete All from Index', 'appinio-search')
         );
         echo '</p>';
