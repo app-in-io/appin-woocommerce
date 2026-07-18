@@ -6,6 +6,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- `Requires Plugins: woocommerce` plugin header — WordPress verifies WooCommerce is active before
+  activating the plugin (WP 6.5+; ignored on older cores). Addresses the WordPress.org
+  auto-pre-review "Requires Plugins" note.
+- CI `i18n` job (`.github/workflows/test.yml`): validates every `languages/*.po` (`msgfmt -c`),
+  guards that no `.mo` is committed, and smoke-compiles each `.po` to prove the release build works.
+
+### Changed
+- Compiled translations (`languages/*.mo`) are now **build artifacts**, no longer committed to the
+  repo. They are compiled from the `.po` sources during packaging — in the GitHub release zip
+  (`release.yml`) and the WordPress.org SVN deploy (`deploy-wordpress-org.yml`) — so the shipped
+  bundles are always in sync with source and can't drift. `.po` + `.pot` remain committed as source.
+  Bundled `.mo` still ship as a fallback; community locales arrive via translate.wordpress.org
+  language packs, which take priority over bundled files since WP 4.6.
+
+### Removed
+- `languages/*.mo` from version control (see Changed — now generated at packaging time).
+
 ## [0.9.0] - 2026-07-17 (re-cut)
 
 > The `v0.9.0` tag was **re-cut again on 2026-07-17** to carry a pre-submission rebrand into the

@@ -59,3 +59,31 @@ jobs:
         uses: wordpress/plugin-check-action@v1
         with:
           build-dir: ./dist/appinio-search
+
+  # Translations: `.po` (+ `.pot`) are source and committed; `.mo` are build artifacts compiled
+  # during release/deploy packaging (release.yml, deploy-wordpress-org.yml) and never committed.
+  # Bundled `.mo` ship as a fallback — community locales arrive via translate.wordpress.org
+  # language packs, which take priority since WP 4.6. This job keeps the source honest and the
+  # build reproducible.
+  i18n:
+    name: Translations (PO valid, MO built, none committed)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: No compiled .mo committed
+        run: |
+          if git ls-files 'languages/*.mo' | grep -q .; then
+            echo "::error::languages/*.mo are build artifacts and must not be committed — remove with: git rm languages/*.mo"
+            git ls-files 'languages/*.mo'
+            exit 1
+          fi
+
+      - name: Validate and build translations
+        # Same script the release/deploy pipelines use — validates every .po (msgfmt -c) and
+        # proves the build is reproducible. Output is throwaway (/tmp).
+        run: bash .github/scripts/compile-translations.sh /tmp/mo-check
