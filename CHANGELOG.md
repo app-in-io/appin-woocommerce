@@ -6,26 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Added
-- `Requires Plugins: woocommerce` plugin header — WordPress verifies WooCommerce is active before
-  activating the plugin (WP 6.5+; ignored on older cores). Addresses the WordPress.org
-  auto-pre-review "Requires Plugins" note.
-- CI `i18n` job (`.github/workflows/test.yml`): validates every `languages/*.po` (`msgfmt -c`),
-  guards that no `.mo` is committed, and smoke-compiles each `.po` to prove the release build works.
+## [0.9.0] - 2026-07-18 (re-cut)
 
-### Changed
-- Compiled translations (`languages/*.mo`) are now **build artifacts**, no longer committed to the
-  repo. They are compiled from the `.po` sources during packaging — in the GitHub release zip
-  (`release.yml`) and the WordPress.org SVN deploy (`deploy-wordpress-org.yml`) — so the shipped
-  bundles are always in sync with source and can't drift. `.po` + `.pot` remain committed as source.
-  Bundled `.mo` still ship as a fallback; community locales arrive via translate.wordpress.org
-  language packs, which take priority over bundled files since WP 4.6.
-
-### Removed
-- `languages/*.mo` from version control (see Changed — now generated at packaging time).
-
-## [0.9.0] - 2026-07-17 (re-cut)
-
+> The `v0.9.0` tag was **re-cut again on 2026-07-18** to carry the WordPress.org pre-review
+> response (review `AUTOPREREVIEW …/18Jul26/T1`) into the tag — the release zip is built from the
+> tag ref (#39). Two changes: the `Requires Plugins: woocommerce` header (WordPress checks
+> WooCommerce is active before activation), and compiled translations (`languages/*.mo`) become
+> build artifacts — no longer committed, compiled from `.po` during packaging so the bundled
+> fallback can't drift from source. The shipped zip's `.mo` are byte-identical to the previously
+> committed ones. Details under **Changed** / **Removed**. The remaining pre-review item (short
+> slug `appinio-search`) is handled at upload, not in code.
+>
 > The `v0.9.0` tag was **re-cut again on 2026-07-17** to carry a pre-submission rebrand into the
 > tag itself. The sibling **appin-chat** plugin was pended by the WordPress.org directory three
 > times over "generic prefix": their tooling splits CamelCase on capitals, so `AppInIo` reads as
@@ -54,6 +45,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 > `appinio_*` options/hooks) with no back-compat shim — WordPress sees a different plugin, and the
 > old build's settings (API key, public key, widget config) are not carried over. Reinstall and
 > re-enter the keys.
+
+### Changed
+- **Compiled translations (`languages/*.mo`) are now build artifacts** (#39), no longer committed
+  to the repo. They are compiled from the `.po` sources during packaging — in the GitHub release
+  zip (`release.yml`) and the WordPress.org SVN deploy (`deploy-wordpress-org.yml`), via the shared
+  `.github/scripts/compile-translations.sh` (`msgfmt -c` + `nullglob` guard) — so the shipped
+  bundles are always in sync with source and can't drift. `.po` + `.pot` remain committed as source.
+  Bundled `.mo` still ship as a fallback; community locales arrive via translate.wordpress.org
+  language packs, which take priority over bundled files since WP 4.6.
+
+### Removed
+- **`languages/*.mo` from version control** (#39) — now generated at packaging time (see Changed).
 
 ### Fixed
 - **Unescaped exception message (3 × Plugin Check ERROR).** `ProductSync::handleFailure()` threw
@@ -98,6 +101,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   custom admin-ajax action entirely.
 
 ### Added
+- **`Requires Plugins: woocommerce` header** (#39) — WordPress verifies WooCommerce is active
+  before activating the plugin (WP 6.5+; ignored on older cores). Addresses the WordPress.org
+  auto-pre-review "Requires Plugins" note.
+- **CI `i18n` job** (#39, `.github/workflows/test.yml`) — validates every `languages/*.po`
+  (`msgfmt -c`), guards that no `.mo` is committed, and smoke-compiles each `.po` to prove the
+  release build works.
 - **WordPress Plugin Check in CI** — the same checks the WordPress.org directory runs on
   submission, against the `git archive` dist tree (the artifact users actually receive), not the
   raw checkout. The sibling appin-chat plugin was pended twice by a human reviewer for things a
