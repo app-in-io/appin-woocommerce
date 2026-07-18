@@ -24,10 +24,21 @@ jobs:
             git commit -am "ci: set version $VERSION"
           fi
 
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
       - name: Build zip
         id: build_zip
+        # `.mo` are build artifacts (not committed). Export the clean tree via `git archive`
+        # (respects .gitattributes export-ignore — no .git/tests/vendor/.po), then compile the
+        # committed `languages/*.po` into it so the zip ships freshly-built `.mo` alongside the
+        # `.pot` template. `.po` sources stay out of the zip (export-ignored).
         run: |
-          git archive --format=zip --prefix=appinio-search/ -o appinio-search.zip HEAD
+          rm -rf build && mkdir -p build
+          git archive --prefix=appinio-search/ HEAD | tar -x -C build
+          bash .github/scripts/compile-translations.sh build/appinio-search/languages
+          rm -f appinio-search.zip
+          (cd build && zip -qr ../appinio-search.zip appinio-search)
 
       - name: Upload to release
         id: upload_release

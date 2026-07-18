@@ -104,6 +104,28 @@ This plugin is an API client for the Appinio API:
 
 Field mapping is defined in `Mapper/ProductMapper.php` and must match the WooCommerce platform's expected fields in the API.
 
+## Translations
+
+Hybrid model — **we maintain our own locales, community contributes the rest**:
+
+- **`.po` + `.pot` are source (committed); `.mo` are build artifacts (gitignored).** The compiled
+  `.mo` are generated from `.po` during packaging — in the release zip (`release.yml`) and the
+  WordPress.org SVN deploy (`deploy-wordpress-org.yml`) — so the shipped bundles never drift from
+  source. Bundled `.mo` ship as a **fallback**; since WP 4.6 translate.wordpress.org **language
+  packs take priority** over bundled files, so a community pack overrides ours per-locale — no conflict.
+- Text domain **must** equal the slug (`appinio-search`) for both bundled loading and language
+  packs. No `load_plugin_textdomain()` call — WordPress JIT-loads matching `.mo` (compliant because
+  `Requires at least ≥ 4.6`).
+- CI (`i18n` job) validates `.po` (`msgfmt -c`), guards that no `.mo` is committed, and smoke-compiles
+  each `.po`. When strings change: edit the `.po`; refresh the template with
+  `wp i18n make-pot . languages/appinio-search.pot`. For a **local** test build, compile with
+  `msgfmt -o languages/<f>.mo languages/<f>.po` (the `.mo` stay untracked — do not commit them).
+- **Post-approval runbook** (submitting our locales to the community system — no CI/API path exists
+  for this, it is manual): on translate.wordpress.org, open the plugin's translation project →
+  "Import Translations" → upload each `.po`; request **PTE** status for the plugin so imports land
+  as *Current*; once a locale reaches ≥90% approved, WordPress.org generates and auto-delivers the
+  language pack.
+
 ## Coding Style
 
 - PHP 8.1+ features: constructor promotion, named arguments, match, readonly

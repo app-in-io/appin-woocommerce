@@ -3,5 +3,9 @@
 /set-secrets.sh
 .DS_Store
 
+# Compiled translations are build artifacts — generated from languages/*.po during
+# release/deploy packaging (see release.yml, deploy-wordpress-org.yml), never committed.
+/languages/*.mo
+
 # graphify knowledge graph — derived artifacts + LLM cache, rebuilt locally.
 graphify-out/
