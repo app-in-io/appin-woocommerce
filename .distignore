@@ -25,6 +25,7 @@
 /vendor
 /phpstan
 /languages/*.po
+/languages/*.mo
 /.gitattributes
 /.gitignore
 /.distignore

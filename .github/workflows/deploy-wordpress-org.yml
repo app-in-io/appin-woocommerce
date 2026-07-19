@@ -27,14 +27,6 @@ jobs:
           sed -i -E "s/(Version:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" appinio-search.php
           sed -i -E "s/(Stable tag:\s+)[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?/\1${VERSION}/" readme.txt
 
-      - name: Install gettext
-        run: sudo apt-get update && sudo apt-get install -y gettext
-
-      - name: Compile bundled translations
-        # `.mo` are build artifacts (not committed). Compile them into the workspace so the 10up
-        # rsync ships fresh `.mo` to SVN trunk. `.distignore` keeps the `.po` sources out.
-        run: bash .github/scripts/compile-translations.sh languages
-
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
