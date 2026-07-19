@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- Translations are no longer bundled in the distributed plugin. WordPress.org delivers them as
+  language packs from translate.wordpress.org, and the directory review rejects shipping `.po`/`.mo`
+  in the zip. The `release.yml` zip and the `deploy-wordpress-org.yml` SVN deploy now carry only the
+  `.pot` template. `.github/scripts/compile-translations.sh` remains for the CI i18n smoke-test only.
+
+### Removed
+- Compiled `.mo` files from every distribution channel (GitHub Release zip, R2 CDN zip, WP.org SVN).
+  Added `/languages/*.mo` to `.gitattributes` (`export-ignore`) and `.distignore`. Trade-off: direct
+  installs from the R2 CDN zip get English until a translation is supplied — WordPress.org language
+  packs auto-deliver only to installs from the directory.
+
 ## [0.9.0] - 2026-07-18 (re-cut)
 
 > The `v0.9.0` tag was **re-cut again on 2026-07-18** to carry the WordPress.org pre-review

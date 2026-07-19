@@ -6,6 +6,7 @@
 /vendor           export-ignore
 /phpstan          export-ignore
 /languages/*.po   export-ignore
+/languages/*.mo   export-ignore
 /.gitattributes   export-ignore
 /.gitignore       export-ignore
 /.distignore      export-ignore

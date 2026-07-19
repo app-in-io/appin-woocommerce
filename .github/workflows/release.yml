@@ -24,19 +24,15 @@ jobs:
             git commit -am "ci: set version $VERSION"
           fi
 
-      - name: Install gettext
-        run: sudo apt-get update && sudo apt-get install -y gettext
-
       - name: Build zip
         id: build_zip
-        # `.mo` are build artifacts (not committed). Export the clean tree via `git archive`
-        # (respects .gitattributes export-ignore — no .git/tests/vendor/.po), then compile the
-        # committed `languages/*.po` into it so the zip ships freshly-built `.mo` alongside the
-        # `.pot` template. `.po` sources stay out of the zip (export-ignored).
+        # Export the clean tree via `git archive` (respects .gitattributes export-ignore — no
+        # .git/tests/vendor/.po/.mo). We do NOT bundle compiled `.mo`: WordPress.org forbids
+        # shipping translations and delivers them via translate.wordpress.org language packs.
+        # Only the `.pot` template ships (source `.po`/`.mo` are excluded).
         run: |
           rm -rf build && mkdir -p build
           git archive --prefix=appinio-search/ HEAD | tar -x -C build
-          bash .github/scripts/compile-translations.sh build/appinio-search/languages
           rm -f appinio-search.zip
           (cd build && zip -qr ../appinio-search.zip appinio-search)
 
