@@ -6,20 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Changed
-- Translations are no longer bundled in the distributed plugin. WordPress.org delivers them as
-  language packs from translate.wordpress.org, and the directory review rejects shipping `.po`/`.mo`
-  in the zip. The `release.yml` zip and the `deploy-wordpress-org.yml` SVN deploy now carry only the
-  `.pot` template. `.github/scripts/compile-translations.sh` remains for the CI i18n smoke-test only.
+## [0.9.0] - 2026-07-19 (re-cut)
 
-### Removed
-- Compiled `.mo` files from every distribution channel (GitHub Release zip, R2 CDN zip, WP.org SVN).
-  Added `/languages/*.mo` to `.gitattributes` (`export-ignore`) and `.distignore`. Trade-off: direct
-  installs from the R2 CDN zip get English until a translation is supplied — WordPress.org language
-  packs auto-deliver only to installs from the directory.
-
-## [0.9.0] - 2026-07-18 (re-cut)
-
+> The `v0.9.0` tag was **re-cut again on 2026-07-19** to carry the WordPress.org review response
+> (review `R appinio-search/appinio/18Jul26/T2 19Jul26/4.1`) into the tag — the release zip is
+> built from the tag ref (#40). The reviewer's sole remaining issue was **bundled translation
+> files**: the directory generates and delivers translations via translate.wordpress.org, so a
+> hosted plugin must not ship its own. Both build paths drop the compile-and-bundle step, so the
+> zip now carries only the `.pot` template. This **supersedes the 2026-07-18 re-cut's decision**
+> to keep shipping `.mo` as a fallback. Details under **Changed** / **Removed**.
+>
 > The `v0.9.0` tag was **re-cut again on 2026-07-18** to carry the WordPress.org pre-review
 > response (review `AUTOPREREVIEW …/18Jul26/T1`) into the tag — the release zip is built from the
 > tag ref (#39). Two changes: the `Requires Plugins: woocommerce` header (WordPress checks
@@ -59,6 +55,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 > re-enter the keys.
 
 ### Changed
+- **Translations are no longer bundled in the distributed plugin** (#40). WordPress.org delivers
+  them as language packs from translate.wordpress.org and the directory review rejects shipping
+  `.po`/`.mo` in the zip, so both the `release.yml` zip and the `deploy-wordpress-org.yml` SVN
+  deploy dropped their compile-and-bundle step and now carry only the `.pot` template.
+  `.github/scripts/compile-translations.sh` is kept for the CI i18n smoke-test only.
+- ~~**Compiled translations (`languages/*.mo`) are now build artifacts** (#39)~~ — **superseded by
+  #40 above**: `.mo` are no longer bundled at all. The `.mo`-are-not-committed part still holds;
+  the "shipped as a fallback" part does not. Original entry, for the record:
 - **Compiled translations (`languages/*.mo`) are now build artifacts** (#39), no longer committed
   to the repo. They are compiled from the `.po` sources during packaging — in the GitHub release
   zip (`release.yml`) and the WordPress.org SVN deploy (`deploy-wordpress-org.yml`), via the shared
@@ -68,7 +72,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   language packs, which take priority over bundled files since WP 4.6.
 
 ### Removed
-- **`languages/*.mo` from version control** (#39) — now generated at packaging time (see Changed).
+- **Compiled `.mo` from every distribution channel** (#40) — GitHub Release zip, R2 CDN zip and
+  WP.org SVN. `/languages/*.mo` added to `.gitattributes` (`export-ignore`) and `.distignore` as a
+  guard. Trade-off: direct installs from the R2 CDN zip get English until a translation is supplied
+  — WordPress.org language packs auto-deliver only to installs from the directory.
+- **`languages/*.mo` from version control** (#39) — no longer committed (they are also no longer
+  packaged; see #40 above).
 
 ### Fixed
 - **Unescaped exception message (3 × Plugin Check ERROR).** `ProductSync::handleFailure()` threw
