@@ -78,8 +78,18 @@ vendor/bin/phpunit --filter=ClassName  # run specific test
 
 ## CI
 
-- **Test workflow**: PHP 8.2-8.4 matrix on PRs
-- **Release workflow**: tag push → inject version → create zip → upload artifact → Slack notify
+- **Test workflow**: PHP 8.2-8.4 matrix on PRs, plus WordPress Plugin Check and an i18n job
+- **A published GitHub Release fans out to TWO workflows**, both on `release: [published]`:
+  - `release.yml` — inject version → `git archive` zip → GitHub Release asset + R2 CDN
+    (`cdn.app-in.io/plugins/appinio-search.zip`) → Slack notify
+  - `deploy-wordpress-org.yml` — inject version → SVN publish to wordpress.org (`appinio-search`)
+- **Never re-cut a published tag — bump the patch instead.** 10up's `deploy.sh` early-exits **0** when
+  `tags/$VERSION` already exists in SVN, and that check runs *before* the trunk rsync. So re-tagging
+  a version that already shipped leaves wordpress.org serving the OLD bits while `release.yml`
+  happily replaces the R2 zip with the new ones — the two channels silently disagree and the run is
+  still green. The `v0.9.0` re-cuts in `CHANGELOG.md` predate approval and must not become a habit.
+- **Dry run before any risky deploy**: `gh workflow run deploy-wordpress-org.yml --ref vX.Y.Z -f dry_run=true`
+  builds `trunk/` and diffs it against SVN without committing.
 
 ## Key Decisions
 

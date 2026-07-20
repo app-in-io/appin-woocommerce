@@ -6,6 +6,37 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **WordPress.org SVN deploy is live.** The plugin was approved on the directory and the SVN repo
+  now exists, so `deploy-wordpress-org.yml` gains the `release: [published]` trigger it was written
+  to wait for — a published GitHub Release now fans out to both wordpress.org (SVN) and the zip
+  (GitHub Releases + R2 CDN), the same dual path `appin-chat` has run since 2026-07-17. The manual
+  dispatch trigger stays, and gains a `dry_run` input that builds `trunk/` and diffs it against SVN
+  without committing.
+
+### Fixed
+
+- **Deploy could publish a branch name as the version.** The tag guard's regex was unanchored at the
+  end, so a dispatch from a ref like `1.2.3-wip` passed and got sed'd into `Version:` and
+  `Stable tag:`. Anchored at both ends.
+- **Deploy patched a different line than the release build.** The version sed matched a bare
+  `Version:` while `release.yml` matches `\* Version:`; the two build paths could drift onto
+  different header fields. Both now use the same anchor.
+- **`dry-run` passed as an empty string on real releases.** The `release` event carries no inputs, so
+  an unguarded `inputs.dry_run` reaches 10up's `deploy.sh` as `''` and expands to `if ; then` — a
+  bash syntax error on every release. Guarded with `|| false`.
+- Docs corrected where enabling the second trigger made them false: `CLAUDE.md`'s CI section
+  described the release path as a single tag-push workflow, and `.gitignore` claimed `.mo` files are
+  compiled "during release/deploy packaging" — no such step exists in either workflow.
+
+### Notes
+
+- **Never re-cut a published tag; bump the patch.** `deploy.sh` early-exits **0** when `tags/$VERSION`
+  already exists in SVN, and that check precedes the trunk rsync — so re-tagging a shipped version
+  leaves wordpress.org on the old bits while `release.yml` replaces the R2 zip, with a green run and
+  no signal. Documented in `CLAUDE.md`.
+
 ## [0.9.0] - 2026-07-19 (re-cut)
 
 > The `v0.9.0` tag was **re-cut again on 2026-07-19** to carry the WordPress.org review response
