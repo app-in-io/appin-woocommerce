@@ -3,8 +3,11 @@
 /set-secrets.sh
 .DS_Store
 
-# Compiled translations are build artifacts — generated from languages/*.po during
-# release/deploy packaging (see release.yml, deploy-wordpress-org.yml), never committed.
+# Compiled translations are never committed AND never shipped. WordPress.org rejects
+# bundled translations — the directory generates them from translate.wordpress.org and
+# delivers them as language packs. Neither release.yml nor deploy-wordpress-org.yml
+# compiles anything; only the .pot template ships. The `i18n` CI job smoke-compiles each
+# .po for validation only (.github/scripts/compile-translations.sh), throwaway output.
 /languages/*.mo
 
 # graphify knowledge graph — derived artifacts + LLM cache, rebuilt locally.
