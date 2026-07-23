@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Appinio;
 
 use Appinio\Admin\SettingsPage;
+use Appinio\Api\ConnectionSignal;
 use Appinio\Frontend\SearchResults;
 use Appinio\Frontend\SearchWidget;
 use Appinio\Sync\BulkSync;
@@ -35,6 +36,10 @@ final class Plugin
 
         (new SettingsPage)->register();
         (new SearchWidget)->register();
+
+        // Registered before the no-key early return: its whole job is to fire when the
+        // key is saved for the first time, i.e. exactly when $apiKey is still empty here.
+        (new ConnectionSignal)->register();
 
         if ($apiKey === '') {
             return;

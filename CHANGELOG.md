@@ -8,6 +8,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **The plugin announces its connection on key save — founding-trial claim.** When the merchant
+  saves (or first sets) their API key, the plugin calls `POST /v1/plugin/connected` (secret-key
+  authed, `X-Platform: woocommerce`, carrying `home_url` + WP/WooCommerce versions). This lets an
+  account created on the Appinio website — signed in with Google/Microsoft and sitting on Free —
+  claim the founding free-trial once the store is wired up. New `Api\ConnectionSignal` hooks
+  WordPress's `add_option_/update_option_appinio_api_key` actions; the call is best-effort and never
+  blocks saving the key. New `Api\Client::pluginConnected()`.
 - **WordPress.org SVN deploy is live.** The plugin was approved on the directory and the SVN repo
   now exists, so `deploy-wordpress-org.yml` gains the `release: [published]` trigger it was written
   to wait for — a published GitHub Release now fans out to both wordpress.org (SVN) and the zip
