@@ -156,6 +156,23 @@ final class Client
     }
 
     /**
+     * Tell the API the store just connected (the merchant saved their API key), so a
+     * dashboard-first account can claim the founding trial. Secret-key authenticated
+     * (the header is added by request() from the stored key). Best-effort control-plane
+     * ping — no auto-retry (maxRetries=1): a failure must never disrupt saving the key.
+     *
+     * @return array{ok: bool, status: int, body: array<string, mixed>}
+     */
+    public function pluginConnected(string $homeUrl): array
+    {
+        return $this->request('POST', '/plugin/connected', [
+            'home_url' => $homeUrl,
+            'wp_version' => get_bloginfo('version'),
+            'wc_version' => defined('WC_VERSION') ? WC_VERSION : null,
+        ], 15, 1);
+    }
+
+    /**
      * Whether a failed request's status is worth retrying: network errors (status 0),
      * rate limits (429) and server-side errors (5xx). A 4xx is a permanent client error.
      */
