@@ -6,6 +6,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-08-03
+
 ### Added
 
 - **The plugin announces its connection on key save — founding-trial claim.** When the merchant
