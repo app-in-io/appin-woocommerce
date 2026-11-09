@@ -2,9 +2,9 @@
 Contributors: appinio
 Tags: woocommerce, semantic search, ai search, product search, multilingual
 Requires at least: 6.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.9.1
+Stable tag: 0.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -133,6 +133,9 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 2. WooCommerce → Appinio Search admin: connection settings, sync status, and Sync All / Delete All controls.
 
 == Changelog ==
+
+= 0.9.2 =
+* Confirmed compatibility with WordPress 7.1 ("Tested up to" bumped). No changes to the plugin's behavior.
 
 = 0.9.0 =
 * Public beta — first release.

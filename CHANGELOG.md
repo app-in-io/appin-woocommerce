@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-11-09
+
+### Changed
+
+- **`Tested up to` bumped to WordPress 7.1.** WordPress 7.1 is out, and Plugin Check fails
+  `outdated_tested_upto_header` on 7.0. With an outdated value the plugin does not show up in
+  wordpress.org searches. Plugin Check runs the plugin on 7.1 in CI. No code changes.
+
 ## [0.9.1] - 2026-08-03
 
 ### Added
