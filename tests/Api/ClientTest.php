@@ -8,6 +8,7 @@ use Appinio\Api\Client;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
@@ -16,6 +17,8 @@ class ClientTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
 
         // API key read by the Client constructor.
         Functions\when('get_option')->justReturn('sk_test_key');
@@ -87,6 +90,56 @@ class ClientTest extends TestCase
             ['ok' => true, 'status' => 202, 'body' => ['status' => 'queued']],
             $result
         );
+    }
+
+    public function test_request_sends_site_language_header(): void
+    {
+        Functions\when('get_locale')->justReturn('nl_BE');
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with(Mockery::any(), Mockery::on(function (array $args): bool {
+                self::assertSame('nl', $args['headers']['X-Site-Language']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(202);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+
+        (new Client)->indexProduct(['id' => '1']);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function unusableLocaleProvider(): array
+    {
+        return [
+            'empty' => [''],
+            'invalid' => ['_'],
+        ];
+    }
+
+    #[DataProvider('unusableLocaleProvider')]
+    public function test_request_omits_site_language_header_without_usable_locale(string $locale): void
+    {
+        Functions\when('get_locale')->justReturn($locale);
+        Functions\expect('wp_remote_request')
+            ->once()
+            ->with(Mockery::any(), Mockery::on(function (array $args): bool {
+                self::assertArrayNotHasKey('X-Site-Language', $args['headers']);
+
+                return true;
+            }))
+            ->andReturn('RESP');
+
+        Functions\when('is_wp_error')->justReturn(false);
+        Functions\when('wp_remote_retrieve_response_code')->justReturn(202);
+        Functions\when('wp_remote_retrieve_body')->justReturn('{}');
+
+        (new Client)->indexProduct(['id' => '1']);
     }
 
     public function test_index_product_batch_targets_batch_endpoint(): void

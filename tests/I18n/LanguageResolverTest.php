@@ -9,6 +9,7 @@ use Brain\Monkey;
 use Brain\Monkey\Actions;
 use Brain\Monkey\Filters;
 use Brain\Monkey\Functions;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
@@ -42,6 +43,14 @@ class LanguageResolverTest extends TestCase
         self::assertNull((new LanguageResolver)->postLanguage(42));
     }
 
+    public function test_post_language_ignores_site_locale_on_single_language_store(): void
+    {
+        // The site language goes to the API once, as the site default — never onto each product.
+        Functions\expect('get_locale')->never();
+
+        self::assertNull((new LanguageResolver)->postLanguage(42));
+    }
+
     public function test_current_language_null_when_no_multilingual_plugin(): void
     {
         self::assertNull((new LanguageResolver)->currentLanguage());
@@ -55,6 +64,61 @@ class LanguageResolverTest extends TestCase
     public function test_all_languages_query_args_empty_without_polylang(): void
     {
         self::assertSame([], (new LanguageResolver)->allLanguagesQueryArgs());
+    }
+
+    // --- site language (WordPress Site Language) ---------------------------
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function siteLocaleProvider(): array
+    {
+        return [
+            'language + region' => ['nl_BE', 'nl'],
+            'US English' => ['en_US', 'en'],
+            'bare language' => ['fr', 'fr'],
+            'formal variant' => ['de_DE_formal', 'de'],
+        ];
+    }
+
+    #[DataProvider('siteLocaleProvider')]
+    public function test_site_language_is_primary_subtag_of_locale(string $locale, string $expected): void
+    {
+        Functions\when('get_locale')->justReturn($locale);
+
+        self::assertSame($expected, (new LanguageResolver)->siteLanguage());
+    }
+
+    public function test_site_language_null_when_locale_empty(): void
+    {
+        Functions\when('get_locale')->justReturn('');
+
+        self::assertNull((new LanguageResolver)->siteLanguage());
+    }
+
+    public function test_site_language_null_when_locale_invalid(): void
+    {
+        Functions\when('get_locale')->justReturn('_');
+
+        self::assertNull((new LanguageResolver)->siteLanguage());
+    }
+
+    public function test_site_language_uses_polylang_default_language_not_locale(): void
+    {
+        // Polylang can filter the locale to the current request language; the default is stable.
+        Functions\when('pll_default_language')->justReturn('fr');
+        Functions\when('get_locale')->justReturn('nl_BE');
+
+        self::assertSame('fr', (new LanguageResolver)->siteLanguage());
+    }
+
+    public function test_site_language_uses_wpml_default_language_not_locale(): void
+    {
+        \define('ICL_SITEPRESS_VERSION', '4.6.0');
+        Filters\expectApplied('wpml_default_language')->andReturn('de');
+        Functions\when('get_locale')->justReturn('nl_BE');
+
+        self::assertSame('de', (new LanguageResolver)->siteLanguage());
     }
 
     // --- Polylang -----------------------------------------------------------

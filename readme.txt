@@ -4,7 +4,7 @@ Tags: woocommerce, semantic search, ai search, product search, multilingual
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.9.2
+Stable tag: 0.9.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,7 +59,7 @@ This plugin relies on the Appinio cloud service to provide AI search. It is **no
 
 **What is sent and when:**
 
-1. When a product is created, updated, or its stock changes — and during Bulk Sync — the plugin sends that product's data (title, description, price, currency, image URL, stock status, SKU, categories, tags, rating, review count, brand, and attributes) to the Appinio API (`https://api.app-in.io`), authenticated with your secret API key. Appinio indexes it for search.
+1. When a product is created, updated, or its stock changes — and during Bulk Sync — the plugin sends that product's data (title, description, price, currency, image URL, stock status, SKU, categories, tags, rating, review count, brand, attributes, and the product's language when Polylang or WPML sets one) to the Appinio API (`https://api.app-in.io`), authenticated with your secret API key. Appinio indexes it for search. Each request to the Appinio API also carries your site language (the default language of Polylang or WPML when one is active, otherwise the WordPress Site Language setting; for example `nl`). Appinio uses it as your store's default search language.
 2. When a product is trashed or unpublished, the plugin sends a delete request containing the product ID.
 3. On every storefront page load (once a Public Key is configured), the plugin loads the Appinio search widget JavaScript from `https://cdn.app-in.io/v1/search.js`. The visitor's browser fetches this file directly from Appinio's CDN, which receives standard HTTP request metadata (IP address, user agent, referrer).
 4. When a shopper searches, the widget sends the query text and your Public Key to the Appinio API, which returns ranked results.
@@ -133,6 +133,9 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 2. WooCommerce → Appinio Search admin: connection settings, sync status, and Sync All / Delete All controls.
 
 == Changelog ==
+
+= 0.9.3 =
+* The plugin now sends your site language (for example `nl`) with each request to the Appinio API. Appinio uses it as the default search language of your store. Product languages from Polylang or WPML are unchanged.
 
 = 0.9.2 =
 * Confirmed compatibility with WordPress 7.1 ("Tested up to" bumped). No changes to the plugin's behavior.

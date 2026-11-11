@@ -40,6 +40,8 @@ class RegistrationTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
 
         // In-memory option + transient stores so we can assert on writes.
         Functions\when('get_option')->alias(fn ($key, $default = '') => $this->options[$key] ?? $default);

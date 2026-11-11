@@ -121,6 +121,30 @@ class LanguageResolver
         }
     }
 
+    /**
+     * The site language, which the API uses as the site's default language. With Polylang or
+     * WPML active it is that plugin's default language: both can filter the locale to the
+     * current request language, and the API keeps the first value it receives. Otherwise it is
+     * the WordPress Site Language (`get_locale()`); WooCommerce has no language setting of its
+     * own. Reduced to the primary subtag: `nl_BE` → `nl`, `de_DE_formal` → `de`. It is never put
+     * on a product, because many stores keep the default `en_US` while writing products in
+     * another language. Null for an empty or invalid value.
+     */
+    public function siteLanguage(): ?string
+    {
+        if (\function_exists('pll_default_language')) {
+            $code = pll_default_language('slug');
+        } elseif ($this->wpmlActive()) {
+            $code = apply_filters('wpml_default_language', null);
+        } else {
+            $code = get_locale();
+        }
+
+        $primary = strtolower(explode('_', str_replace('-', '_', trim(\is_string($code) ? $code : '')))[0]);
+
+        return preg_match('/^[a-z]{2,3}$/', $primary) === 1 ? $primary : null;
+    }
+
     private function wpmlActive(): bool
     {
         return defined('ICL_SITEPRESS_VERSION');
