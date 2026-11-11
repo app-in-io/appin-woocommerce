@@ -6,7 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.9.3] - 2026-11-11
+## [1.0.0] - 2026-11-11
+
+### Changed
+
+- **First stable release: the plugin leaves the public beta.** `readme.txt` drops the "Public beta"
+  notice and keeps the link for bug reports and ideas.
 
 ### Added
 

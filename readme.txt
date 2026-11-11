@@ -4,7 +4,7 @@ Tags: woocommerce, semantic search, ai search, product search, multilingual
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.9.3
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ AI semantic, multilingual, typo-tolerant product search for WooCommerce. Auto-sy
 
 == Description ==
 
-**Public beta — your feedback shapes the roadmap.** Appinio Search is fully functional and safe to run on live stores, but it's new to the market: you're among the first shops using it, so expect the occasional rough edge — and please tell us what you find. Report bugs and ideas on [GitHub](https://github.com/app-in-io/appin-woocommerce/issues). Early adopters directly shape what ships next.
+Found a bug or have an idea? Tell us on [GitHub](https://github.com/app-in-io/appin-woocommerce/issues).
 
 Appinio Search connects your WooCommerce store to Appinio AI Search — semantic, typo-tolerant product search that understands what shoppers *mean*, not just the keywords they type. It also speaks 100+ languages out of the box, including true cross-language search: a query typed in one language finds products described in another.
 
@@ -134,7 +134,8 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 
 == Changelog ==
 
-= 0.9.3 =
+= 1.0.0 =
+* First stable release: the plugin leaves the public beta.
 * The plugin now sends your site language (for example `nl`) with each request to the Appinio API. Appinio uses it as the default search language of your store. Product languages from Polylang or WPML are unchanged.
 
 = 0.9.2 =
@@ -149,6 +150,9 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 * HPOS compatibility.
 
 == Upgrade Notice ==
+
+= 1.0.0 =
+First stable release. Adds the site language to API requests for better search in your store's language.
 
 = 0.9.0 =
 Public beta.
