@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-11
+
+### Changed
+
+- **First stable release: the plugin leaves the public beta.** `readme.txt` drops the "Public beta"
+  notice and keeps the link for bug reports and ideas.
+
+### Added
+
+- **The plugin now sends the site language to the API
+  ([app-in-io/api#424](https://github.com/app-in-io/api/issues/424)).** Every API request carries the
+  header `X-Site-Language` with the primary subtag of the store's default language: `nl_BE` → `nl`,
+  `de_DE_formal` → `de`. With Polylang or WPML active, the value is that plugin's default language,
+  because both can filter the WordPress locale to the language of the current request. Otherwise it
+  is the WordPress Site Language (`get_locale()`). The plugin leaves the header out when the value
+  is empty or invalid. The API stores it once as the site's default language, only when that is
+  empty, and an admin can correct it there. Before this, the API guessed the language of each
+  product on a single-language store. On code-like titles (for example `BR0003`) that guess is
+  noise: a Dutch store got 1 660 products tagged `de`. New public `LanguageResolver::siteLanguage()`.
+  Product `lang` still comes only from Polylang or WPML.
+- `readme.txt` "External services" now lists the product language and the site language.
+
 ## [0.9.2] - 2026-11-09
 
 ### Changed

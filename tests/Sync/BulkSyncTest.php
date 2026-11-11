@@ -23,6 +23,8 @@ class BulkSyncTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
         $this->options = [];
 
         // RetryPolicy transient helpers — default no-op so success paths don't fatal.

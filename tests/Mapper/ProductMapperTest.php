@@ -306,6 +306,18 @@ class ProductMapperTest extends TestCase
         self::assertArrayNotHasKey('lang', $data);
     }
 
+    public function test_site_locale_is_not_sent_as_product_lang(): void
+    {
+        $product = $this->makeWcProduct();
+        Functions\when('get_the_terms')->justReturn(false);
+        Functions\when('get_locale')->justReturn('nl_BE');
+
+        // The site language travels once as the X-Site-Language header, never per product.
+        $data = (new ProductMapper)->toApiData($product);
+
+        self::assertArrayNotHasKey('lang', $data);
+    }
+
     public function test_category_html_entities_are_decoded(): void
     {
         $product = $this->makeWcProduct();

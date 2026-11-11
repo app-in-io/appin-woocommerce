@@ -20,6 +20,8 @@ class ConnectionSignalTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
 
         // Client::apiUrl() resolves through the appinio_api_url filter (returns the default).
         Functions\when('apply_filters')->returnArg(2);

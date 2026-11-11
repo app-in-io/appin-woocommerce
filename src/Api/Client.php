@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Appinio\Api;
 
+use Appinio\I18n\LanguageResolver;
+
 if (! defined('ABSPATH')) {
     exit;
 }
@@ -18,8 +20,9 @@ final class Client
 
     private string $apiKey;
 
-    public function __construct()
-    {
+    public function __construct(
+        private LanguageResolver $lang = new LanguageResolver,
+    ) {
         $this->apiUrl = self::apiUrl();
         $this->apiKey = get_option('appinio_api_key', '');
     }
@@ -199,6 +202,12 @@ final class Client
         // header entirely rather than sending an empty X-API-Key that a WAF might reject.
         if ($this->apiKey !== '') {
             $headers['X-API-Key'] = $this->apiKey;
+        }
+
+        // The API stores it once as the site's default language. Omitted when the locale is unusable.
+        $siteLanguage = $this->lang->siteLanguage();
+        if ($siteLanguage !== null) {
+            $headers['X-Site-Language'] = $siteLanguage;
         }
 
         $args = [

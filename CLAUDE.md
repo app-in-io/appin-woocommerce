@@ -16,13 +16,15 @@ WordPress plugin: sync WooCommerce products with Appinio AI Search. Real-time ho
 
 **This plugin sends `X-Platform: woocommerce` header** — the API uses this to select the WooCommerce platform driver for validation.
 
+**This plugin sends `X-Site-Language` header** on every request when the value is valid (`LanguageResolver::siteLanguage()`). It carries the primary subtag of the store's default language: Polylang's or WPML's default language when one is active, otherwise the WordPress Site Language (`nl_BE` → `nl`). The API reads it on the index endpoints and stores it as the site's default language only when that is empty. It is never put on a product as `lang`.
+
 ## Purpose
 
 WordPress/WooCommerce plugin that:
 1. Syncs products to Appinio API (`POST /v1/index/products`) on create/update/delete
 2. Provides bulk sync and bulk delete via admin settings page
 3. Embeds the `<semantic-search>` Web Component from CDN for frontend search
-4. All API calls go through `Api/Client.php` with `X-API-Key` + `X-Platform: woocommerce` headers
+4. All API calls go through `Api/Client.php` with `X-API-Key` + `X-Platform: woocommerce` + `X-Site-Language` headers
 
 ## Structure
 

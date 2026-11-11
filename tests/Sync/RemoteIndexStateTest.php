@@ -22,6 +22,8 @@ class RemoteIndexStateTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
 
         // Client constructor reads the API key; default = cache miss. Tests that reach the
         // cache-write path stub set_transient themselves (so the failure test can assert it).

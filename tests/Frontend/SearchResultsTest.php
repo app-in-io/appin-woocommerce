@@ -21,6 +21,8 @@ class SearchResultsTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
 
         Functions\when('wp_json_encode')->alias(static fn ($data) => json_encode($data));
         // Default: all context guards pass.

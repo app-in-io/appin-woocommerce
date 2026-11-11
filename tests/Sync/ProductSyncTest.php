@@ -19,6 +19,8 @@ class ProductSyncTest extends TestCase
     {
         parent::setUp();
         Monkey\setUp();
+        // Client::request() reads the site language for the X-Site-Language header.
+        Functions\when('get_locale')->justReturn('en_US');
 
         // ProductSync::$processed is a per-process static de-dupe cache. Reset it so
         // syncProduct() tests are hermetic and order-independent (no reliance on unique ids).
