@@ -9,6 +9,3 @@
 # compiles anything; only the .pot template ships. The `i18n` CI job smoke-compiles each
 # .po for validation only (.github/scripts/compile-translations.sh), throwaway output.
 /languages/*.mo
-
-# graphify knowledge graph — derived artifacts + LLM cache, rebuilt locally.
-graphify-out/
