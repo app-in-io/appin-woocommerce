@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "appinio-search/search-button",
+	"title": "AI search button",
+	"category": "widgets",
+	"icon": "search",
+	"description": "A button that opens the Appinio AI search.",
+	"keywords": [ "search", "ai", "appinio" ],
+	"textdomain": "appinio-search",
+	"attributes": {
+		"label": {
+			"type": "string",
+			"default": ""
+		},
+		"variant": {
+			"type": "string",
+			"enum": [ "icon-text", "icon" ],
+			"default": "icon-text"
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"editorScript": "appinio-search-button-editor"
+}

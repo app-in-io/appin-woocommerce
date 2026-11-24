@@ -2,22 +2,26 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Appinio Search 1.0.0\n"
+"Project-Id-Version: Appinio Search 1.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/appinio-search\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-07T00:00:00+00:00\n"
+"POT-Creation-Date: 2026-11-24T09:40:10+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: appinio-search\n"
 
 #. Plugin Name of the plugin
 #: appinio-search.php
-#: src/Admin/SettingsPage.php:72
-#: src/Admin/SettingsPage.php:73
-msgid "Appinio Search"
+msgid "Appinio Search – AI Semantic & Multilingual Product Search for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: appinio-search.php
+msgid "https://app-in.io/woocommerce"
 msgstr ""
 
 #. Description of the plugin
@@ -25,119 +29,420 @@ msgstr ""
 msgid "Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync."
 msgstr ""
 
-#: appinio-search.php:54
+#. Author of the plugin
+#: appinio-search.php
+msgid "appinio"
+msgstr ""
+
+#: appinio-search.php:42
 msgid "Appinio Search requires WooCommerce to be installed and active."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:108
+#: src/Admin/ButtonSettings.php:76
+msgid "AI Search Button"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:79
+msgid "A button that opens the AI search. Add it with the \"AI search button\" block or the [appinio_search_button] shortcode. These settings apply to every button."
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:84
+msgid "Button Label"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:85
+msgid "Button Colour"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:86
+msgid "Button Text Colour"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:87
+msgid "Button Icon"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:131
+msgid "Button icon"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:132
+msgid "Use this icon"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:142
+#: blocks/search-button/index.js:59
+msgid "AI search"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:146
+msgid "Text on the button. Leave empty to show \"AI search\" in the visitor's language. With Polylang or WPML, translate your text under their string translations."
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:155
+msgid "Button background. Leave empty for the default blue."
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:164
+msgid "Text and icon colour on the button. Leave empty for white."
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:182
+msgid "Choose icon"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:186
+msgid "Remove"
+msgstr ""
+
+#: src/Admin/ButtonSettings.php:190
+msgid "Replaces the sparkle icon. Use a small square image; it is shown at 16 × 16 pixels."
+msgstr ""
+
+#: src/Admin/Registration.php:59
+msgid "Please agree to the Terms of Service, Privacy Policy, Data Processing Agreement and WooCommerce Service Terms to continue."
+msgstr ""
+
+#: src/Admin/Registration.php:71
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: src/Admin/Registration.php:89
+msgid "Your registration session expired. Please start again."
+msgstr ""
+
+#: src/Admin/Registration.php:99
+msgid "Enter the 6-digit code from the email."
+msgstr ""
+
+#: src/Admin/Registration.php:122
+#: src/Admin/Registration.php:194
+msgid "A store for this website is already registered. Paste its API key below instead."
+msgstr ""
+
+#: src/Admin/Registration.php:123
+msgid "That code is invalid or expired. Check the email or resend a new code."
+msgstr ""
+
+#: src/Admin/Registration.php:125
+msgid "Could not reach Appinio to verify the code. Please try again in a moment."
+msgstr ""
+
+#: src/Admin/Registration.php:146
+msgid "Connect your store"
+msgstr ""
+
+#: src/Admin/Registration.php:175
+msgid "We emailed you a 6-digit code. Enter it below to finish."
+msgstr ""
+
+#. translators: %d: number of seconds
+#: src/Admin/Registration.php:187
+#, php-format
+msgid "A code was already sent. You can request a new one in %d seconds."
+msgstr ""
+
+#: src/Admin/Registration.php:199
+msgid "That email or store address looks invalid. Please check and try again."
+msgstr ""
+
+#: src/Admin/Registration.php:204
+msgid "Could not reach Appinio. Please try again in a moment."
+msgstr ""
+
+#: src/Admin/Registration.php:216
+msgid "Create your free Appinio account right here — we'll email you a 6-digit code to confirm."
+msgstr ""
+
+#: src/Admin/Registration.php:223
+msgid "Email"
+msgstr ""
+
+#: src/Admin/Registration.php:229
+msgid "Store name"
+msgstr ""
+
+#: src/Admin/Registration.php:237
+msgid "Send code"
+msgstr ""
+
+#: src/Admin/Registration.php:242
+msgid "Already have an API key? Paste it in the settings form below instead."
+msgstr ""
+
+#. translators: %1$s: Terms of Service link, %2$s: Privacy Policy link, %3$s: Data Processing Agreement link, %4$s: WooCommerce Service Terms link
+#: src/Admin/Registration.php:259
+#, php-format
+msgid "I agree to the %1$s, %2$s, %3$s and %4$s."
+msgstr ""
+
+#: src/Admin/Registration.php:260
+msgid "Terms of Service"
+msgstr ""
+
+#: src/Admin/Registration.php:261
+msgid "Privacy Policy"
+msgstr ""
+
+#: src/Admin/Registration.php:262
+msgid "Data Processing Agreement"
+msgstr ""
+
+#: src/Admin/Registration.php:263
+msgid "WooCommerce Service Terms"
+msgstr ""
+
+#. translators: %s: email address
+#: src/Admin/Registration.php:293
+#, php-format
+msgid "We sent a 6-digit code to <strong>%s</strong>. Enter it below to finish."
+msgstr ""
+
+#: src/Admin/Registration.php:303
+msgid "Verification code"
+msgstr ""
+
+#: src/Admin/Registration.php:306
+msgid "Verify & connect"
+msgstr ""
+
+#: src/Admin/Registration.php:333
+msgid "Resend code"
+msgstr ""
+
+#: src/Admin/Registration.php:345
+msgid "Change email / start over"
+msgstr ""
+
+#. translators: %d: number of seconds remaining before the code can be resent
+#: src/Admin/Registration.php:363
+#, php-format
+msgid "Seconds until you can resend: %d"
+msgstr ""
+
+#: src/Admin/Registration.php:399
+msgid "You are not allowed to do this."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:54
+msgid "Settings"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:174
+#: src/Admin/SettingsPage.php:175
+msgid "Appinio Search"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:222
 msgid "Connection"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:111
+#: src/Admin/SettingsPage.php:225
 msgid "Connect your WooCommerce store to Appinio AI Search."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:118
+#: src/Admin/SettingsPage.php:232
 msgid "API Key"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:126
+#: src/Admin/SettingsPage.php:240
 msgid "Auto Sync"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:134
+#: src/Admin/SettingsPage.php:248
 msgid "Search Widget"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:137
+#: src/Admin/SettingsPage.php:251
 msgid "Configure the live search widget that appears on your store."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:144
+#: src/Admin/SettingsPage.php:258
 msgid "Public Key"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:152
+#: src/Admin/SettingsPage.php:266
 msgid "Search Input Selector"
 msgstr ""
 
+#: src/Admin/SettingsPage.php:274
+msgid "Search Results Page"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:282
+msgid "Widget Appearance"
+msgstr ""
+
 #. translators: %s: link to the Appinio dashboard
-#: src/Admin/SettingsPage.php:170
+#: src/Admin/SettingsPage.php:312
+#, php-format
 msgid "Your Appinio API key. Found in the %s under Sites > API Keys."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:182
+#: src/Admin/SettingsPage.php:324
 msgid "Automatically sync products when created, updated, or deleted."
 msgstr ""
 
 #. translators: %s: link to the Appinio dashboard
-#: src/Admin/SettingsPage.php:197
+#: src/Admin/SettingsPage.php:339
+#, php-format
 msgid "Public key for the search widget. Safe to expose in browser. Found in the %s under Sites > API Keys."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:212
+#: src/Admin/SettingsPage.php:354
 msgid "Custom CSS selector for the search input. Leave empty to use automatic detection."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:244
+#: src/Admin/SettingsPage.php:364
+msgid "Power the WordPress search results page (/?s=) with AI. Products use AI search; other content stays native. Falls back to native search if Appinio is unavailable."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:372
+msgid "Light"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:373
+msgid "Dark"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:374
+msgid "Auto (match store background)"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:389
+msgid "Colour theme for the search widget. Auto follows your store's background (light or dark)."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:405
+msgid "A bulk operation is already running — please wait for it to finish."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:413
+msgid "Your store is connected! You can now sync your products."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:436
 msgid "Appinio dashboard"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:254
-msgid "Getting started"
-msgstr ""
-
-#. translators: %s: link to the Appinio website
-#: src/Admin/SettingsPage.php:260
-msgid "Create a free account at %s."
-msgstr ""
-
-#. translators: %s: link to the Appinio dashboard
-#: src/Admin/SettingsPage.php:268
-msgid "Copy your API key from the %s under Sites > API Keys."
-msgstr ""
-
-#: src/Admin/SettingsPage.php:274
-msgid "Paste it below, save, then run Sync All Products."
-msgstr ""
-
-#: src/Admin/SettingsPage.php:280
-msgid "Create a free Appinio account"
-msgstr ""
-
-#: src/Admin/SettingsPage.php:304
+#: src/Admin/SettingsPage.php:466
 msgid "Sync Status"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:307
+#: src/Admin/SettingsPage.php:469
 msgid "Published products"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:310
-msgid "Synced"
+#: src/Admin/SettingsPage.php:472
+msgid "Synced (queued)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:314
+#: src/Admin/SettingsPage.php:475
+msgid "Indexed in search"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:481
 msgid "Last sync"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:321
+#. translators: 1: number of products in the search index, 2: number queued
+#: src/Admin/SettingsPage.php:495
+#, php-format
+msgid "%1$d of %2$d product is in the search index — some queued items haven't indexed yet or failed. Retry sync."
+msgid_plural "%1$d of %2$d products are in the search index — some queued items haven't indexed yet or failed. Retry sync."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Admin/SettingsPage.php:505
+msgid "The last indexing run reported a failure — retry sync to be safe."
+msgstr ""
+
+#. translators: %d: number of products
+#: src/Admin/SettingsPage.php:514
+#, php-format
+msgid "%d product could not be removed from the index — check the debug log or retry."
+msgid_plural "%d products could not be removed from the index — check the debug log or retry."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Admin/SettingsPage.php:527
+msgid "Delete in progress..."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:527
 msgid "Sync in progress..."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:327
+#: src/Admin/SettingsPage.php:534
 msgid "Sync All Products"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:333
+#: src/Admin/SettingsPage.php:540
 msgid "This will remove all products from Appinio index. Continue?"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:334
+#: src/Admin/SettingsPage.php:541
 msgid "Delete All from Index"
 msgstr ""
 
-#: src/Sync/BulkSync.php:53
-#: src/Sync/BulkSync.php:73
+#: src/Sync/BulkSync.php:95
+#: src/Sync/BulkSync.php:117
 msgid "Unauthorized."
+msgstr ""
+
+#: blocks/search-button/index.js:69
+msgid "Button"
+msgstr ""
+
+#: blocks/search-button/index.js:71
+msgid "Label"
+msgstr ""
+
+#: blocks/search-button/index.js:72
+msgid "Leave empty to use the label from the Appinio Search settings, or \"AI search\" in the visitor's language."
+msgstr ""
+
+#: blocks/search-button/index.js:82
+msgid "Style"
+msgstr ""
+
+#: blocks/search-button/index.js:85
+msgid "Icon and text"
+msgstr ""
+
+#: blocks/search-button/index.js:86
+msgid "Icon only"
+msgstr ""
+
+#: blocks/search-button/index.js:99
+msgid "Set the public search key in the Appinio Search settings. Until then, the button is not shown on the store."
+msgstr ""
+
+#: blocks/search-button/index.js:104
+msgid "Open settings"
+msgstr ""
+
+#: blocks/search-button/block.json
+msgctxt "block title"
+msgid "AI search button"
+msgstr ""
+
+#: blocks/search-button/block.json
+msgctxt "block description"
+msgid "A button that opens the Appinio AI search."
+msgstr ""
+
+#: blocks/search-button/block.json
+msgctxt "block keyword"
+msgid "search"
+msgstr ""
+
+#: blocks/search-button/block.json
+msgctxt "block keyword"
+msgid "ai"
+msgstr ""
+
+#: blocks/search-button/block.json
+msgctxt "block keyword"
+msgid "appinio"
 msgstr ""

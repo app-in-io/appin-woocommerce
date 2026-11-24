@@ -14,6 +14,12 @@ if (! defined('ABSPATH')) {
 
 final class SettingsPage
 {
+    /**
+     * Who may open the settings page and save it. One value for the menu, the page check
+     * and options.php, so a Shop Manager who sees the form can also save it.
+     */
+    private const CAPABILITY = 'manage_woocommerce';
+
     public function __construct(
         private IndexState $indexState = new IndexState,
         private Registration $registration = new Registration,
@@ -36,8 +42,18 @@ final class SettingsPage
         add_action('admin_menu', [$this, 'addMenu']);
         add_action('admin_init', [$this, 'registerSettings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+        add_filter('option_page_capability_appinio_search', [$this, 'settingsCapability']);
         add_filter('plugin_action_links_' . Plugin::instance()->basename(), [$this, 'addActionLinks']);
         $this->registration->register();
+    }
+
+    /**
+     * Capability options.php requires to save the `appinio_search` option group. WordPress
+     * defaults it to manage_options, which a Shop Manager does not have.
+     */
+    public function settingsCapability(): string
+    {
+        return self::CAPABILITY;
     }
 
     /**
@@ -173,7 +189,7 @@ final class SettingsPage
             'woocommerce',
             __('Appinio Search', 'appinio-search'),
             __('Appinio Search', 'appinio-search'),
-            'manage_woocommerce',
+            self::CAPABILITY,
             'appinio-search',
             [$this, 'render'],
         );
@@ -392,7 +408,7 @@ final class SettingsPage
 
     public function render(): void
     {
-        if (! current_user_can('manage_woocommerce')) {
+        if (! current_user_can(self::CAPABILITY)) {
             return;
         }
 

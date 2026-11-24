@@ -24,6 +24,7 @@ WordPress/WooCommerce plugin that:
 1. Syncs products to Appinio API (`POST /v1/index/products`) on create/update/delete
 2. Provides bulk sync and bulk delete via admin settings page
 3. Embeds the `<semantic-search>` Web Component from CDN for frontend search
+   and the "AI search button" (`<semantic-search-button>`) as a block + shortcode, with admin settings (since 1.1.0)
 4. All API calls go through `Api/Client.php` with `X-API-Key` + `X-Platform: woocommerce` + `X-Site-Language` headers
 
 ## Structure
@@ -38,13 +39,21 @@ src/
   Sync/ProductSync.php          ← Real-time hooks + Action Scheduler debounce (5s)
   Sync/BulkSync.php             ← Background batch sync/delete (20/batch)
   Admin/SettingsPage.php        ← WP admin settings + sync dashboard
+  Admin/ButtonSettings.php      ← "AI Search Button" settings: label (Polylang/WPML), colours, icon
   Frontend/SearchWidget.php     ← Enqueues search.js from CDN, renders <semantic-search>
+  Frontend/SearchButton.php     ← <semantic-search-button>: shortcode + dynamic block, admin colours as inline CSS
   Frontend/SearchResults.php    ← Powers /?s= results page with AI (pre_get_posts + post__in merge)
+blocks/search-button/           ← block.json + index.js (editor script, plain JS, no build)
+assets/js/button-settings.js    ← colour pickers + icon chooser on the settings page
+wpml-config.xml                 ← WPML admin-texts (keep in step with SearchButton::TRANSLATABLE_OPTIONS)
 tests/
   bootstrap.php                 ← Brain Monkey setup + WC_Product / WP_Query stubs
   Mapper/ProductMapperTest.php  ← category mapping
   Frontend/SearchWidgetTest.php ← widget hooks, assets, rendering
   Frontend/SearchResultsTest.php← results-page takeover guards + merge + nullify
+  Frontend/SearchButtonTest.php ← shortcode, block render, label precedence, colours, icon, editor settings
+  Admin/ButtonSettingsTest.php  ← button settings: sanitizers, assets, uninstall covers every option
+  TranslatableOptionsTest.php   ← SearchButton::TRANSLATABLE_OPTIONS == wpml-config.xml admin-texts
 ```
 
 ## Running (Docker)
@@ -150,4 +159,4 @@ Community-driven via translate.wordpress.org — **we do NOT bundle compiled tra
 - WordPress coding standards for hooks/filters (snake_case function names in callbacks)
 - Namespace: `Appinio`
 - Brain Monkey for mocking WordPress functions in tests
-- Requires: WordPress 6.0+, WooCommerce 8.0+
+- Requires: WordPress 6.3+ (block apiVersion 3), WooCommerce 8.0+
