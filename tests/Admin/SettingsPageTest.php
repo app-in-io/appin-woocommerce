@@ -276,6 +276,23 @@ class SettingsPageTest extends TestCase
         self::assertStringContainsString('value="dark" selected', $output);
     }
 
+    /**
+     * options.php saves an option group only for the capability that the filter
+     * option_page_capability_{group} returns, manage_options by default. The page is shown to
+     * manage_woocommerce, so without the filter a Shop Manager sees the form and gets a 403
+     * on save.
+     */
+    public function test_saving_the_settings_needs_the_same_capability_as_the_page(): void
+    {
+        Functions\when('plugin_basename')->returnArg();
+
+        $page = new SettingsPage;
+        $page->register();
+
+        self::assertNotFalse(has_filter('option_page_capability_appinio_search', [$page, 'settingsCapability']));
+        self::assertSame('manage_woocommerce', $page->settingsCapability());
+    }
+
     public function test_action_links_prepend_settings_shortcut(): void
     {
         Functions\when('admin_url')->alias(

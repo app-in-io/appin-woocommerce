@@ -1,10 +1,10 @@
 === Appinio Search – AI Semantic & Multilingual Product Search for WooCommerce ===
 Contributors: appinio
 Tags: woocommerce, semantic search, ai search, product search, multilingual
-Requires at least: 6.0
+Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,13 +42,14 @@ The plugin is a thin integration layer: all AI, indexing, embedding, and ranking
 * Variable & grouped products — the parent is indexed with min/max variation price and aggregated attributes; grouped products include their children.
 * AI search widget — the `<semantic-search>` element, loaded from the Appinio CDN and auto-wired to your store's search input.
 * Light / Dark / Auto appearance — pick a widget theme, or let Auto match your store's background.
+* AI search button — add an "AI search" button with a block or the `[appinio_search_button]` shortcode. Set its label (translatable with Polylang or WPML), colours and icon in the settings.
 * Category-aware — on category pages the widget scopes results to that category automatically.
 * Status guard — only published products are indexed; drafts and trashed products are removed from the index.
 * HPOS compatible — declares WooCommerce High-Performance Order Storage compatibility.
 
 = Requirements =
 
-* WordPress 6.0+
+* WordPress 6.3+
 * WooCommerce 8.0+
 * PHP 8.1+
 * An active Appinio account — [sign up at app-in.io](https://app-in.io).
@@ -127,12 +128,36 @@ It is removed from the Appinio index automatically. Only published products stay
 
 Yes. Use **Delete All from Index**, then **Sync All Products**.
 
+= How do I add an AI search button? =
+
+Add the **AI search button** block (in the Widgets category), or put the shortcode `[appinio_search_button]` in a page, a post or a widget. A click on the button opens the AI search. The shortcode takes two optional attributes: `label="Find a product"` and `variant="icon"` (icon only). The button shows only when a Public Key is set.
+
+= How do I change the button's label, colours or icon? =
+
+Go to **WooCommerce → Appinio Search → AI Search Button**. The label, the button colour, the text colour and the icon apply to every button. Leave the label empty to show "AI search" in the visitor's language. With Polylang or WPML, translate your own label under their string translations. A label set on a single block or shortcode wins over the settings. For other styles, your theme's CSS can target `semantic-search-button::part(button)`.
+
+= Can my theme open the AI search from its own code? =
+
+Yes. Dispatch the `appin-search:open` event on `window`:
+
+`window.dispatchEvent(new CustomEvent('appin-search:open'));`
+
+This works on every page where the search widget loads (a Public Key is set).
+
 == Screenshots ==
 
 1. The AI search widget on a WooCommerce storefront returning semantic results.
 2. WooCommerce → Appinio Search admin: connection settings, sync status, and Sync All / Delete All controls.
+3. WooCommerce → Appinio Search → AI Search Button: label, button colour, text colour and icon for every AI search button.
 
 == Changelog ==
+
+= 1.1.0 =
+* New: AI search button. Add it with the "AI search button" block or the `[appinio_search_button]` shortcode. A click opens the AI search.
+* New: button settings under WooCommerce → Appinio Search: label (translatable with Polylang or WPML), button colour, text colour and icon.
+* New: your theme can open the AI search with the `appin-search:open` event.
+* Fix: a Shop Manager can now save the plugin settings. Before, saving showed "Sorry, you are not allowed to manage options for this site".
+* WordPress 6.3 or later is now required.
 
 = 1.0.0 =
 * First stable release: the plugin leaves the public beta.
@@ -150,6 +175,9 @@ Yes. Use **Delete All from Index**, then **Sync All Products**.
 * HPOS compatibility.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds an AI search button (block and shortcode) with label, colour and icon settings. Requires WordPress 6.3 or later.
 
 = 1.0.0 =
 First stable release. Adds the site language to API requests for better search in your store's language.

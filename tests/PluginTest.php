@@ -24,6 +24,9 @@ class PluginTest extends TestCase
         // boot() reads the API key and short-circuits when it's empty (no real-time sync
         // registration), keeping this test focused on the file/basename wiring.
         Functions\when('get_option')->justReturn('');
+
+        // SearchButton registers its shortcode during boot(), before the no-key return.
+        Functions\when('add_shortcode')->justReturn(true);
     }
 
     protected function tearDown(): void

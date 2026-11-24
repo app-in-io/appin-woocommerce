@@ -4,7 +4,7 @@ Sync WooCommerce products with [Appinio AI Search](https://app-in.io) automatica
 
 ## Requirements
 
-- WordPress 6.0+
+- WordPress 6.3+
 - WooCommerce 8.0+
 - PHP 8.1+
 - Appinio API key ([get one here](https://my.app-in.io))
@@ -91,7 +91,9 @@ src/
   Sync/ProductSync.php    Real-time hooks + Action Scheduler debounce
   Sync/BulkSync.php       Background bulk sync/delete
   Admin/SettingsPage.php  WP admin settings + sync dashboard
+  Admin/ButtonSettings.php  AI search button settings (label, colours, icon)
   Frontend/SearchWidget.php   Search dropdown widget (<semantic-search>)
+  Frontend/SearchButton.php   AI search button (<semantic-search-button>): shortcode + block
   Frontend/SearchResults.php  AI-powered /?s= results page
 ```
 

@@ -6,6 +6,63 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-24
+
+Spec: `knowledge/specs/2026-11-24-search-button-wordpress-design.md` in the API repo.
+Needs search widget v0.14.0 (released 2026-11-24) for the text colour and the icon.
+
+### Added
+
+- **AI search button: the block `appinio-search/search-button` and the shortcode
+  `[appinio_search_button]`.** Both render `<semantic-search-button>` from `search.js`
+  (widget v0.13.0+). A click dispatches `appin-search:open`, and the `<semantic-search>`
+  modal opens. The shortcode takes `label` and `variant` (`icon-text` or `icon`; any other
+  value is dropped). The block has the same two attributes. It is a dynamic block: PHP
+  renders it (`SearchButton::renderBlock()`), inside the block wrapper, and it saves no
+  markup. Its editor script `blocks/search-button/index.js` is plain JS on the `wp.*`
+  globals, with no build step. The editor shows a static preview with the admin settings,
+  and a notice when the public key is not set. Without a public key, the block and the
+  shortcode render nothing, because `search.js` is not loaded then.
+- **Settings section "AI Search Button"** (`Admin\ButtonSettings`), on the same settings
+  page and in the same option group:
+  - `appinio_button_label`: text on every button that has no own label. Empty → no
+    `label` attribute, so the widget shows "AI search" in the visitor's language.
+    Translatable: Polylang through `pll_register_string()` + `pll__()`, WPML through the
+    new `wpml-config.xml` `<admin-texts>`. `TranslatableOptionsTest` checks that both list
+    the same options (the appin-chat pattern).
+  - `appinio_button_color` and `appinio_button_text_color`: WordPress colour pickers,
+    clearable, `sanitize_hex_color`. When set, the front end prints one inline rule
+    `semantic-search-button{--appin-primary:…;--appin-on-primary:…}`. Only the button
+    changes; the search modal keeps its colours. `--appin-on-primary` needs widget v0.14.0.
+  - `appinio_button_icon`: an image attachment ID from the media library. The button gets
+    `<img slot="icon" …>`, which replaces the sparkle (widget v0.14.0; an older widget
+    ignores the slot). A deleted attachment falls back to the sparkle.
+- `readme.txt` FAQ: the button, its settings, `::part(button)` for theme CSS, and the
+  `appin-search:open` event for theme code.
+
+### Changed
+
+- **`Requires at least` is now WordPress 6.3** (was 6.0). The block uses `apiVersion` 3,
+  which came in WordPress 6.3. `apiVersion` 2 would give a console warning from WordPress
+  6.9, whose `block.json` schema allows only 3.
+- `SearchWidget::searchKey()` is now public and static (was the private `getSearchKey()`),
+  so the button uses the same public-key check as the widget.
+- `languages/appinio-search.pot` is regenerated with `wp i18n make-pot` (103 strings; the old
+  template had 31 and missed strings added since July). The 5 `.po` files are merged with
+  it. The new button strings are translated (de_DE, en_US, et, nl_NL, uk); the 48 older
+  strings that the catalogues never had stay untranslated.
+- `uninstall.php` deletes the four new options.
+
+### Fixed
+
+- **A Shop Manager can now save the settings.** The page is shown to `manage_woocommerce`,
+  but `options.php` saves the `appinio_search` option group only for the capability that the
+  filter `option_page_capability_appinio_search` returns, `manage_options` by default. A
+  Shop Manager has `manage_woocommerce` and not `manage_options`, so they saw the form and
+  got "Sorry, you are not allowed to manage options for this site" on save. `SettingsPage`
+  now adds that filter. The menu, the page check and the filter use one constant
+  (`SettingsPage::CAPABILITY`). Found in the 1.1.0 code review; the bug is older.
+
 ## [1.0.0] - 2026-11-11
 
 ### Changed

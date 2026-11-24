@@ -40,7 +40,7 @@ final class SearchWidget
 
     public function enqueueAssets(): void
     {
-        if (empty($this->getSearchKey())) {
+        if (empty(self::searchKey())) {
             return;
         }
 
@@ -59,7 +59,7 @@ final class SearchWidget
 
     public function renderElement(): void
     {
-        $key = $this->getSearchKey();
+        $key = self::searchKey();
 
         if (empty($key)) {
             return;
@@ -174,8 +174,12 @@ final class SearchWidget
         return str_replace('<script ', '<script type="module" ', $tag);
     }
 
-    private function getSearchKey(): string
+    /**
+     * The public (search) key. search.js is enqueued and <semantic-search> rendered only
+     * when it is set, so every element that needs the widget checks it here.
+     */
+    public static function searchKey(): string
     {
-        return get_option('appinio_public_key', '');
+        return (string) get_option('appinio_public_key', '');
     }
 }

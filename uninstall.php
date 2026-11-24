@@ -13,6 +13,10 @@ $appinio_search_options = [
     'appinio_search_selector',
     'appinio_results_page',
     'appinio_widget_theme',
+    'appinio_button_label',
+    'appinio_button_color',
+    'appinio_button_text_color',
+    'appinio_button_icon',
     'appinio_last_sync',
     'appinio_synced_count', // legacy — count now derives from the _appinio_indexed meta
     'appinio_bulk_sync_running',

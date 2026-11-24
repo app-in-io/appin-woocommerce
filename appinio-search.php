@@ -4,13 +4,13 @@
  * Plugin Name:       Appinio Search – AI Semantic & Multilingual Product Search for WooCommerce
  * Plugin URI:        https://app-in.io/woocommerce
  * Description:       Sync WooCommerce products with Appinio AI Search. Real-time hooks + bulk sync.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Author:            appinio
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       appinio-search
  * Domain Path:       /languages
- * Requires at least: 6.0
+ * Requires at least: 6.3
  * Requires PHP:      8.1
  * WC requires at least: 8.0
  * WC tested up to:   10.6
